@@ -15,10 +15,28 @@ library(scales)
 
 source("Graph_plotting.R") # some of the work is already done in this file 
 
-NDVI_data <-read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/raw_data_k=12.csv")%>%
+NDVI_data <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv")%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
+NDVI_data$date <- as.Date(NDVI_data$date)
 
-CI_csv <- read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/k=12_norms_all_LC_types.csv")
+head(NDVI_data)
+
+#using for percentiles and density plots
+
+  #finding latest date available in data
+last_day <- head(NDVI_data, 1)
+last_day_date <- last_day$date
+
+# Setting the period for 2 weeks prior
+two_week_prior_date <- as.Date(last_day_date - 14)
+
+# Filtering the data between two_week_prior_date and last_day_date
+current_time_period <- NDVI_data %>%
+  filter(date >= two_week_prior_date & date <= last_day_date)
+
+head(current_time_period)
+
+CI_csv <- read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv")
 
 ####################################################################################################################
 #Function to determine color of KPI Status Box for each LC Type 
@@ -39,7 +57,8 @@ date_needed <-as.Date(latest_day$date)
 
 #pulling any rows with matching date 
 most_recent_data<- filter(NDVI_data, date == date_needed)
-###############################################################
+
+#Status Boxes Function
 LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   
   # Ensure consistent use of LC_type in filter() calls
@@ -65,28 +84,28 @@ LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Compute status
-  status <- round((most_recent_subset$NDVI - mean_value), digits = 5)
+  status <- round((most_recent_subset$NDVIReprojected - mean_value), digits = 5)
   
   # Determine color based on status
-  color <- ifelse(status >= 0, "green",
-                  ifelse(status >= -0.01, "yellow",
-                         ifelse(status >= -0.02, "orange", "red")))
-  
+  color <- ifelse(most_recent_subset$NDVIReprojected >= CI_final_subset$upr, "green",
+                  ifelse(most_recent_subset$NDVIReprojected < CI_final_subset$upr & most_recent_subset$NDVIReprojected >= mean_value, "yellow",
+                         ifelse(most_recent_subset$NDVIReprojected < mean_value & most_recent_subset$NDVIReprojected >= CI_final_subset$lwr, "orange", "red")))
   
   
   return(list(status = status, color = color))
 }
 
+
 #Percentile function
-ndvi_percentile <- function(LCtype, NDVI_data, CI_csv, most_recent_data){
+ndvi_percentile <- function(LCtype, current_time_period, CI_csv, most_recent_data){
   
-  NDVI_subset <- filter(NDVI_data, type == LCtype)
+  NDVI_subset <- filter(current_time_period, type == LCtype)
   CI_subset <- filter(CI_csv, type == LCtype)
   most_recent_subset <- filter(most_recent_data, type == LCtype)
   
   # Compute the percentile of the current NDVI value
-  current_NDVI <- most_recent_subset$NDVI[1]  # Extract current NDVI value
-  ecdf_function <- ecdf(NDVI_subset$NDVI)  # Create empirical cumulative distribution function
+  current_NDVI <- most_recent_subset$NDVIReprojected[1]  # Extract current NDVI value
+  ecdf_function <- ecdf(NDVI_subset$NDVIReprojected)  # Create empirical cumulative distribution function
   current_percentile <- ecdf_function(current_NDVI) * 100  # Convert to percentage
   
   return(current_percentile)
@@ -186,7 +205,7 @@ monthly_change <- function(LC_type, date_needed, NDVI_data) {
   }
   
   # Compute NDVI difference
-  difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
+  difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
   
   # Return monthly difference as a string
   return(paste("Monthly difference in NDVI:", difference))
@@ -223,7 +242,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
   }
   
   # Compute NDVI difference
-  difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
+  difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
   
   # Return yearly difference as a string
   return(paste("Yearly difference in NDVI:", difference))
@@ -231,30 +250,53 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
 ####################################################################################################################
 #Heat Map
 
-plot_ndvi_heatmap <- function(data, selected_years) {
-  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  # Prevents failure
+plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  
   
-  filtered_data <- data %>% filter(year %in% selected_years)
+  # Ensure yday is calculated from the Date field
+  filtered_data <- filtered_data %>%
+    mutate(
+      yday = as.numeric(format(date, "%j")),  # Ensure yday is numeric using the full date
+      year = factor(year, levels = rev(unique(year))),  # Ensure proper year ordering
+      status_category = factor(case_when(
+        NDVIReprojected >= upr ~ "Green: At or Above Upper Bound",
+        NDVIReprojected >= mean & NDVIReprojected < upr ~ "Yellow: Between Mean (inclusive) and Upper Bound",
+        NDVIReprojected >= lwr & NDVIReprojected < mean ~ "Orange: Between Lower Bound (inclusive) and Mean",
+        NDVIReprojected < lwr ~ "Red: Below Lower Bound"
+      ), levels = c("Green: At or Above Upper Bound",
+                    "Yellow: Between Mean (inclusive) and Upper Bound",
+                    "Orange: Between Lower Bound (inclusive) and Mean", 
+                    "Red: Below Lower Bound")))  
   
-  ggplot(filtered_data, aes(x = yday, y = factor(year))) +
-    geom_tile(aes(fill = difference), color = "gray40") +  # Slightly darker grid lines
-    scale_fill_gradientn(
-      colors = c("#4575b4", "#91bfdb", "#ffffbf", "#fdae61", "#d73027"), 
-      values = rescale(c(-0.5, -0.2, 0, 0.2, 0.5)),  # Ensures smooth transition
-      name = "NDVI Difference",
-      limits = c(-0.5, 0.5)
+  # Filter data based on selected years & LC_type
+  filtered_data <- filtered_data %>% filter(year %in% selected_years) %>% filter(type == LC_type)
+  
+  ggplot(filtered_data, aes(x = yday, y = year)) +
+    geom_tile(aes(fill = status_category), width = 1, height = 1) +  # Set width and height to 1 for pixel-like tiles
+    scale_fill_manual(
+      values = c("Green: At or Above Upper Bound" = "green",
+                 "Yellow: Between Mean (inclusive) and Upper Bound" = "yellow", 
+                 "Orange: Between Lower Bound (inclusive) and Mean" = "orange", 
+                 "Red: Below Lower Bound" = "red"),
+      name = "NDVI Category"
     ) +
     scale_x_continuous(
-      breaks = seq(0, 330, by = 30),
-      labels = month.abb
+      expand = c(0, 0),
+      breaks = seq(1, 366, by = 31),  # Cumulative days for each month
+      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     ) +
-    labs(x = "Month of Year", y = "Year", title = "Heatmap of NDVI Differences") +
-    theme_minimal(base_size = 14) +
+    scale_y_discrete(expand = c(0, 0)) +
+    labs(x = "Month of Year", y = "Year", title = paste0(naming, " Heat Map")) +
+    theme_minimal(base_size = 10) +
     theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, color = "black"),
-      axis.text.y = element_text(color = "black"),
-      plot.title = element_text(face = "bold", size = 16, color = "black"),
-      panel.background = element_rect(fill = "gray90"),  # Light gray background
-      legend.key.height = unit(1, "cm")
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      axis.title.x = element_text(face = "bold", size = 10),
+      axis.title.y = element_text(face = "bold", size = 10),
+      plot.title = element_text(face = "bold", size = 12),
+      legend.key.height = unit(1, "cm"),
+      legend.position = "bottom",
+      legend.text = element_text(size = 8),
+      legend.title = element_text(size = 10)
     )
 }

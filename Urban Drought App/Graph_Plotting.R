@@ -13,15 +13,18 @@ library(tidyverse)
 library(plotly)
 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-NDVI_data <-read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/raw_data_k=12.csv")%>%
+NDVI_data <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv")%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
+NDVI_data$date <- as.Date(NDVI_data$date)
+
+
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-CI_csv <- read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/k=12_norms_all_LC_types.csv")
+CI_csv <- read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv")
 
 ####################################################################################################################
 # All data overview graph
 all_data_graph <- function() {
-  ggplot(NDVI_data, aes(x = date, y = NDVI, color = type)) +
+  ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type)) +
     geom_line(size = 1) +
     scale_color_manual(values = c(
       "crop" = "#a50026",
@@ -64,7 +67,7 @@ twelve_month_graph <- function(start_date) {
   }
   
   # Generate the plot
-  ggplot(year_data, aes(x = date, y = NDVI, color = type)) +
+  ggplot(year_data, aes(x = date, y = NDVIReprojected, color = type)) +
     geom_line(size = 1) +
     scale_color_manual(values = c(
       "crop" = "#a50026",
@@ -100,7 +103,7 @@ monthly_graph <- function(mstart_date) {
   
   
   # Generate the plot
-  ggplot(month_data, aes(x = date, y = NDVI, color = type)) +
+  ggplot(month_data, aes(x = date, y = NDVIReprojected, color = type)) +
     geom_line(size = 1) +
     scale_color_manual(values = c(
       "crop" = "#a50026",
@@ -137,7 +140,7 @@ weekly_graph <- function(wstart_date) {
     filter(date >= wstart_date & date <= wend_date & !is.na(NDVI))
   
   
-  ggplot(week_data, aes(x = date, y = NDVI, color = type)) +
+  ggplot(week_data, aes(x = date, y = NDVIReprojected, color = type)) +
     geom_line(size = 1) +
     scale_color_manual(values = c(
       "crop" = "#a50026",
@@ -263,7 +266,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Plot
-  plot <- ggplot(NDVI_subset, aes(x = NDVI)) + 
+  plot <- ggplot(NDVI_subset, aes(x = NDVIReprojected)) + 
     geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
     
     # Add the bounds as dashed lines with legend
@@ -274,7 +277,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
     geom_point(aes(x = mean_value, y = 0, shape = "Mean"), color = "#40004b", size = 4) +
     
     # Current NDVI point (diamond)
-    geom_point(aes(x = most_recent_subset$NDVI, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
+    geom_point(aes(x = most_recent_subset$NDVIReprojected, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
     
     # Labels
     labs(

@@ -34,6 +34,71 @@ output$selected_LC_CI_graph <- renderPlot({
   req(input$LC_type)  # Ensure at least one LC type is selected
   selected_LC_CI_graph(input$LC_type)  # Pass selected LC types to the function
 })
+
+#CI function code
+#All 7 LC types 95% CI graph
+all_LC_CI_graph <-function(){
+  
+  ggplot(CI_csv, aes(x = yday, y = mean, color = type)) + 
+    geom_line(size = 1) +  
+    geom_ribbon(aes(ymin = lwr, ymax = upr, fill = type), alpha = 0.2) + 
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695",
+      "grassland" = "#f46d43"
+    )) +
+    scale_fill_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(title = "95% Confidence Intervals for All LC Type over 365 Days", x = "Day of Year", y = "Mean Value") +
+    theme_minimal()
+  
+}
+
+#95% CI for selected LC Types
+selected_LC_CI_graph <- function(LC_types){
+  LC_CI <- CI_csv %>%
+    filter(type %in% LC_types)  # Filter multiple selected types
+  
+  ggplot(LC_CI, aes(x = yday, y = mean, color = type, fill = type)) + 
+    geom_line(size = 1) +  
+    geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +  
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    scale_fill_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(title = "95% Confidence Intervals for Selected LC Type(s) Over 365 Days", 
+         x = "Day of Year", 
+         y = "Mean Value") +
+    theme_minimal() +
+    theme(legend.title = element_blank())  # Removes the legend title for better appearance
+}
+
+####################################################################################################################
 ####################################################################################################################
 #Below does the same as the density_plot function, keeping code here in case we need to troubleshoot updates are working correctly 
 

@@ -23,11 +23,11 @@ source("Helper_Functions_Code.R")
 
 
 #Files generated from Juliana's workflow - will need these to autoupdate
-NDVI_data <-read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/raw_data_k=12.csv")%>%
+NDVI_data <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv")%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
 NDVI_data$date <- as.Date(NDVI_data$date)
 
-CI_csv <- read_csv("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/drought_monitoring_csvs/k=12_norms_all_LC_types.csv")
+CI_csv <- read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv")
 
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
@@ -108,7 +108,7 @@ for (file in scatterplot_files) {
 img_list<- c()
 
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
-counties <- sf::read_sf("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/Urban Drought App/cb_2023_us_county_500k",
+counties <- sf::read_sf("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/cb_2023_us_county_500k",
                         layer = "cb_2023_us_county_500k")%>% 
   st_transform(crs = 4326)
 
@@ -117,14 +117,15 @@ il_counties <- subset(counties, counties$NAME %in% c(
     STATE_NAME == "Illinois")
 
 #for heat map
+
 # Join and compute differences
 merged_data <- NDVI_data %>%
   left_join(CI_csv, by = c("yday", "type")) %>%
-  mutate(difference = NDVI - mean)
+  mutate(difference = NDVIReprojected - mean)
 
 # Prepare data for heatmap
 heatmap_data <- merged_data %>%
-  select(yday, year, difference)
+  select(NDVIReprojected, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
 
 
@@ -141,7 +142,7 @@ ui <- dashboardPage(skin = "black",
                         menuItem("Analysis", tabName = "analysis", icon = icon("gears"),
                                  menuSubItem("NDVI Data Review",
                                              tabName = "NDVI_data_review"),
-                                 menuSubItem("NDVI Difference Heat Map Plot Review",
+                                 menuSubItem("Heat Maps for each LC Type",
                                              tabName = "ndvi_diff")),
                         menuItem("Specifics", tabName = "specifics", icon = icon("bookmark"))
                       )
@@ -217,12 +218,15 @@ ui <- dashboardPage(skin = "black",
                                     ),
                                     tabPanel(
                                       "Status Key",
-                                      h5(HTML("Most Recent NDVI Value - Mean = Status<br><br>")),
-                                      h5(HTML("<span style='color:green;'>Green</span> = Most Recent NDVI Value is At or Above Mean")),
-                                      h5(HTML("<span style='color:yellow;'>Yellow</span> = Most Recent NDVI Value is Below Mean (Status >= -.01)")),
-                                      h5(HTML("<span style='color:orange;'>Orange</span> = Most Recent NDVI Value is Below Mean ( -.02 <= Status < -.01)")),
-                                      h5(HTML("<span style='color:red;'>Red</span> = Most Recent NDVI Value is Below Mean (Stauts < -.02)"))
-                                    ),
+                                      h5(HTML("<span style='color:green;'>Green</span> = NDVI is at or Above Upper Bound of CI")),
+                                      h5(HTML("<span style='color:yellow;'>Yellow</span> = NDVI is at Mean or Between Mean and Upper Bound of CI")),
+                                      h5(HTML("<span style='color:orange;'>Orange</span> = NDVI is at Lower Bound of CI or Between Lower Bound of CI and Mean")),
+                                      h5(HTML("<span style='color:red;'>Red</span> = NDVI is below Lower Bound of CI")),
+                                      h5(HTML("Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
+                                      HTML("<img src='NDVI_Category_ref.png' alt='NDVI Categories' style='width:60%;'>")
+                                    )
+                                    
+                                    ,
                                     tabPanel(
                                       "Directory",
                                    h4("Dashboard"),
@@ -304,15 +308,23 @@ ui <- dashboardPage(skin = "black",
                                      tabPanel("Monthly", plotOutput("monthly_graph"),
                                               dateInput(inputId = "mstart_date", label = "Enter Start Date", value = Sys.Date() %m-% months(1))),
                                      tabPanel("Weekly", plotOutput("weekly_graph"),
+                                              h5(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
                                               dateInput(inputId = "wstart_date", label = "Enter Start Date", value = Sys.Date() - 7))
                                    )
                            ),
                         tabItem(tabName = "ndvi_diff",
+                                h5(HTML("Check Status Key Tab on Dashboard Page for NDVI Catergories Visual (shows ranges for color system being used)")),
                                 checkboxGroupInput("selected_years", "Select Years:", 
                                                    choices = unique(heatmap_data$year), 
                                                    selected = unique(heatmap_data$year)[1:5],
                                                    inline = TRUE),  # Default: first 5 years
-                                plotOutput("ndvi_heatmap")
+                                plotOutput("ndvi_heatmap_crop"),
+                                plotOutput("ndvi_heatmap_forest"),
+                                plotOutput("ndvi_heatmap_grass"),
+                                plotOutput("ndvi_heatmap_uh"),
+                                plotOutput("ndvi_heatmap_um"),
+                                plotOutput("ndvi_heatmap_ul"),
+                                plotOutput("ndvi_heatmap_uo")
                         ),
                         tabItem(tabName = "Specifics",
                                 textInput("txt", "Enter the text to display below:"),
@@ -481,7 +493,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("crop", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("crop", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -496,7 +508,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("forest", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("forest", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -511,7 +523,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("grassland", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("grassland", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -526,7 +538,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("urban-high", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("urban-high", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -541,7 +553,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("urban-medium", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("urban-medium", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -556,7 +568,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("urban-low", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("urban-low", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -571,7 +583,7 @@ server <- function(input, output, session) {
     req(NDVI_data, CI_csv, most_recent_data)
     
     # Calculate percentile
-    percentile <- ndvi_percentile("urban-open", NDVI_data, CI_csv, most_recent_data)
+    percentile <- ndvi_percentile("urban-open", current_time_period, CI_csv, most_recent_data)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -584,37 +596,37 @@ server <- function(input, output, session) {
   ####################################################################################################################
   #Density Plots
   output$crop_density_plot <- renderPlotly({
-    crop_plot <- density_plot("crop", "Crop", NDVI_data, CI_csv, most_recent_data)
+    crop_plot <- density_plot("crop", "Crop", current_time_period, CI_csv, most_recent_data)
     print(crop_plot)
   })
   
   output$forest_density_plot <- renderPlotly({
-    forest_plot <- density_plot("forest", "Forest", NDVI_data, CI_csv, most_recent_data)
+    forest_plot <- density_plot("forest", "Forest", current_time_period, CI_csv, most_recent_data)
     print(forest_plot)
   })
   
   output$grassland_density_plot <- renderPlotly({
-    grassland_plot <- density_plot("grassland", "Grassland", NDVI_data, CI_csv, most_recent_data)
+    grassland_plot <- density_plot("grassland", "Grassland", current_time_period, CI_csv, most_recent_data)
     print(grassland_plot)
   })
   
   output$uh_density_plot <- renderPlotly({
-    uh_plot <- density_plot("urban-high", "Urban-High", NDVI_data, CI_csv, most_recent_data)
+    uh_plot <- density_plot("urban-high", "Urban-High", current_time_period, CI_csv, most_recent_data)
     print(uh_plot)
   })
   
   output$um_density_plot <- renderPlotly({
-    um_plot <- density_plot("urban-medium", "Urban-Medium", NDVI_data, CI_csv, most_recent_data)
+    um_plot <- density_plot("urban-medium", "Urban-Medium", current_time_period, CI_csv, most_recent_data)
     print(um_plot)  
   })
   
   output$ul_density_plot <- renderPlotly({
-    ul_plot <- density_plot("urban-low", "Urban-Low", NDVI_data, CI_csv, most_recent_data)
+    ul_plot <- density_plot("urban-low", "Urban-Low", current_time_period, CI_csv, most_recent_data)
     print(ul_plot)  
   })
   
   output$uo_density_plot <- renderPlotly({
-    uo_plot <- density_plot("urban-open", "Urban-Open", NDVI_data, CI_csv, most_recent_data)
+    uo_plot <- density_plot("urban-open", "Urban-Open", current_time_period, CI_csv, most_recent_data)
     print(uo_plot)
   })
   ####################################################################################################################
@@ -684,16 +696,55 @@ server <- function(input, output, session) {
     paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
   })
   ####################################################################################################################
-  output$ndvi_heatmap <- renderPlot({
+  output$ndvi_heatmap_crop <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
+    
     filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years, "crop", "Crop")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_forest <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
     
-    print(head(filtered_data))  # Debugging: Check if data is filtering correctly
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years, "forest", "Forest")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_grass <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
     
-    plot_ndvi_heatmap(heatmap_data, input$selected_years)
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years, "grassland", "Grassland")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_uh <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
+    
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-high","Urban-High")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_um <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
+    
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-medium", "Urban-Medium")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_ul <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
+    
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years,"urban-low", "Urban-Low")  # Pass the filtered data
+  })
+  #####################
+  output$ndvi_heatmap_uo <- renderPlot({
+    req(input$selected_years)  # Ensure at least one year is selected
+    
+    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    plot_ndvi_heatmap(filtered_data, input$selected_years,"urban-open", "Urban-Open")  # Pass the filtered data
   })
   ####################################################################################################################
-
 }
 
 # Run the application
