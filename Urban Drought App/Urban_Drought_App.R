@@ -245,9 +245,9 @@ ui <- dashboardPage(skin = "black",
                                    h4("Specifics"),
                                    HTML(
                                      "<ul>
-      <li>Researchers</li>
-      <li>Workflows</li>
+      <li>Grant Information & Contributors</li>
       <li>Github & Documentation Links</li>
+      <li>Workflows</li>
     </ul>"      )
                                     )
                                 )),
@@ -326,14 +326,38 @@ ui <- dashboardPage(skin = "black",
                                 plotOutput("ndvi_heatmap_ul"),
                                 plotOutput("ndvi_heatmap_uo")
                         ),
-                        tabItem(tabName = "Specifics",
-                                textInput("txt", "Enter the text to display below:"),
-                                textOutput("text")
-                        ))
+                        tabItem(tabName = "specifics",
+                                tabBox(
+                                  height = "250px",
+                                  width = 12,
+                                  tabPanel("Grant Information",
+                                           h5(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
+                                                   The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types: 
+                                                   crop, forest, grassland, urban-high, urban-medium, urban-low, and urban-open.
+                                                   Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration."))
+                                  ),
+                                  tabPanel("Contributors",
+                                           h5(HTML("Jocelyn Garcia, The Morton Arboretum (jgarcia@mortonarb.org)<br><br>
+                                                    Juliana Harr, The Morton Arboretum (jharr@mortonarb.org)<br><br>
+                                                    Christine R. Rollinson, The Morton Arboretum (crollinson@mortonarb.org)"))
+                                  ),
+                                  tabPanel("Links to Github",
+                                           h5(HTML("Github Links: <br><br>
+<p> <a href='https://github.com/UrbanEcoDrought'>UrbanEcoDrought Repository</a><br><br>
+    <a href='https://github.com/UrbanEcoDrought/NDVI_drought_monitoring'>NDVI_Drought_Monitoring</a><br><br>
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago'>UrbanDrought_SpatialAnalysis_Chicago Workflow</a><br><br> 
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/NDVI_Automation_Workflow'>NDVI_Automation_Workflow</a><br><br>
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br><br><br></p>")),
+                                           h5(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
+                                  )
+                              )
+                            )
+                        )
+                      )
                         
                       
                     
-))
+)
 
 # Define server logic
 server <- function(input, output, session) {
@@ -638,7 +662,8 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("crop", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
+    
   })
   
   output$for_daily<-renderText({
@@ -648,7 +673,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("forest", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   output$grass_daily<-renderText({
     daily_diff <- daily_change("grassland", date_needed, NDVI_data)
@@ -657,7 +682,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("grassland", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   output$uh_daily<-renderText({
     daily_diff <- daily_change("urban-high", date_needed, NDVI_data)
@@ -666,7 +691,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("urban-high", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   output$um_daily<-renderText({
     daily_diff <- daily_change("urban-medium", date_needed, NDVI_data)
@@ -675,7 +700,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("urban-medium", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   output$ul_daily<-renderText({
     daily_diff <- daily_change("urban-low", date_needed, NDVI_data)
@@ -684,7 +709,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("urban-low", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   output$uo_daily<-renderText({
     daily_diff <- daily_change("urban-open", date_needed, NDVI_data)
@@ -693,7 +718,7 @@ server <- function(input, output, session) {
     yearly_diff <-yearly_change("urban-open", date_needed, NDVI_data)
     
     # Combine both outputs into a single string
-    paste(daily_diff, " |  ", weekly_diff," |  ", monthly_diff," |  ",yearly_diff)
+    paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   ####################################################################################################################
   output$ndvi_heatmap_crop <- renderPlot({

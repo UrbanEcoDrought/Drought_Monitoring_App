@@ -134,7 +134,7 @@ daily_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
   
   # Return daily difference as a string
-  return(paste("Daily difference in NDVI:", difference))
+  return(paste("Daily difference in NDVI: ", difference))
 }
 #####################################################
 weekly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -171,7 +171,7 @@ weekly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
   
   # Return weekly difference as a string
-  return(paste("Weekly difference in NDVI:", difference))
+  return(paste("Weekly difference in NDVI: ", difference))
 }
 #####################################################
 monthly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -208,7 +208,7 @@ monthly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
   
   # Return monthly difference as a string
-  return(paste("Monthly difference in NDVI:", difference))
+  return(paste("Monthly difference in NDVI: ", difference))
 }
 #####################################################
 yearly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -245,7 +245,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
   
   # Return yearly difference as a string
-  return(paste("Yearly difference in NDVI:", difference))
+  return(paste("Yearly difference in NDVI: ", difference))
 }
 ####################################################################################################################
 #Heat Map
