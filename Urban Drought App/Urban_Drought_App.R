@@ -121,11 +121,11 @@ il_counties <- subset(counties, counties$NAME %in% c(
 # Join and compute differences
 merged_data <- NDVI_data %>%
   left_join(CI_csv, by = c("yday", "type")) %>%
-  mutate(difference = NDVIReprojected - mean)
+  mutate(difference = NDVIMissionPred - mean)
 
 # Prepare data for heatmap
 heatmap_data <- merged_data %>%
-  select(NDVIReprojected, yday, year, difference, mean, lwr, upr, type, date)
+  select(NDVIMissionPred, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
 
 
@@ -218,12 +218,11 @@ ui <- dashboardPage(skin = "black",
                                     ),
                                     tabPanel(
                                       "Status Key",
-                                      h5(HTML("<span style='color:green;'>Green</span> = NDVI is at or Above Upper Bound of CI")),
-                                      h5(HTML("<span style='color:yellow;'>Yellow</span> = NDVI is at Mean or Between Mean and Upper Bound of CI")),
-                                      h5(HTML("<span style='color:orange;'>Orange</span> = NDVI is at Lower Bound of CI or Between Lower Bound of CI and Mean")),
-                                      h5(HTML("<span style='color:red;'>Red</span> = NDVI is below Lower Bound of CI")),
+                                      h5(HTML("<span style='color:blue;'>Blue</span> = NDVI is at or Above Upper Bound of CI")),
+                                      h5(HTML("<span style='color:yellow;'>Yellow</span> = NDVI is between Upper & Lower Bound of CI")),
+                                      h5(HTML("<span style='color:orange;'>Orange</span> = NDVI is below Lower Bound of CI")),
                                       h5(HTML("Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
-                                      HTML("<img src='NDVI_Category_ref.png' alt='NDVI Categories' style='width:60%;'>")
+                                      HTML("<img src='NDVI_Categories.png' alt='NDVI Categories' style='width:60%;'>")
                                     )
                                     
                                     ,
@@ -404,7 +403,8 @@ server <- function(input, output, session) {
       subtitle = result$status,  
       color = result$color
     )
-  })
+  }) 
+  
   
   output$forBox <- renderValueBox({
     result <- LC_status("forest", NDVI_data, CI_csv, most_recent_data)

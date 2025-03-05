@@ -266,7 +266,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Plot
-  plot <- ggplot(NDVI_subset, aes(x = NDVIReprojected)) + 
+  plot <- ggplot(NDVI_subset, aes(x = NDVIMissionPred)) + 
     geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
     
     # Add the bounds as dashed lines with legend
@@ -277,7 +277,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
     geom_point(aes(x = mean_value, y = 0, shape = "Mean"), color = "#40004b", size = 4) +
     
     # Current NDVI point (diamond)
-    geom_point(aes(x = most_recent_subset$NDVIReprojected, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
+    geom_point(aes(x = most_recent_subset$NDVIMissionPred, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
     
     # Labels
     labs(

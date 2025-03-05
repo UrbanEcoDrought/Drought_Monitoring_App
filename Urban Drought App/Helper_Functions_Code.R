@@ -84,12 +84,11 @@ LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Compute status
-  status <- round((most_recent_subset$NDVIReprojected - mean_value), digits = 5)
+  status <- round((most_recent_subset$NDVIMissionPred - mean_value), digits = 5)
   
   # Determine color based on status
-  color <- ifelse(most_recent_subset$NDVIReprojected >= CI_final_subset$upr, "green",
-                  ifelse(most_recent_subset$NDVIReprojected < CI_final_subset$upr & most_recent_subset$NDVIReprojected >= mean_value, "yellow",
-                         ifelse(most_recent_subset$NDVIReprojected < mean_value & most_recent_subset$NDVIReprojected >= CI_final_subset$lwr, "orange", "red")))
+  color <- ifelse(most_recent_subset$NDVIMissionPred >= CI_final_subset$upr, "blue",
+                  ifelse(most_recent_subset$NDVIMissionPred < CI_final_subset$upr & most_recent_subset$NDVIMissionPred >= CI_final_subset$lwr, "yellow", "orange"))
   
   
   return(list(status = status, color = color))
@@ -242,7 +241,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
   }
   
   # Compute NDVI difference
-  difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
+  difference <- round((most_recent_day$NDVIMissionPred - second_day$NDVIMissionPred), 3)
   
   # Return yearly difference as a string
   return(paste("Yearly difference in NDVI: ", difference))
@@ -259,14 +258,12 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
       yday = as.numeric(format(date, "%j")),  # Ensure yday is numeric using the full date
       year = factor(year, levels = rev(unique(year))),  # Ensure proper year ordering
       status_category = factor(case_when(
-        NDVIReprojected >= upr ~ "Green: At or Above Upper Bound",
-        NDVIReprojected >= mean & NDVIReprojected < upr ~ "Yellow: Between Mean (inclusive) and Upper Bound",
-        NDVIReprojected >= lwr & NDVIReprojected < mean ~ "Orange: Between Lower Bound (inclusive) and Mean",
-        NDVIReprojected < lwr ~ "Red: Below Lower Bound"
-      ), levels = c("Green: At or Above Upper Bound",
-                    "Yellow: Between Mean (inclusive) and Upper Bound",
-                    "Orange: Between Lower Bound (inclusive) and Mean", 
-                    "Red: Below Lower Bound")))  
+        NDVIMissionPred >= upr ~ "Blue: At or Above Upper Bound",
+        NDVIMissionPred >= lwr & NDVIMissionPred < upr ~ "Yellow: Within Confidence Interval",
+        NDVIMissionPred < lwr ~ "Orange: Below Lower Bound"
+      ), levels = c("Blue: At or Above Upper Bound",
+                    "Yellow: Within Confidence Interval",
+                    "Orange: Below Lower Bound")))  
   
   # Filter data based on selected years & LC_type
   filtered_data <- filtered_data %>% filter(year %in% selected_years) %>% filter(type == LC_type)
@@ -274,10 +271,9 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
   ggplot(filtered_data, aes(x = yday, y = year)) +
     geom_tile(aes(fill = status_category), width = 1, height = 1) +  # Set width and height to 1 for pixel-like tiles
     scale_fill_manual(
-      values = c("Green: At or Above Upper Bound" = "green",
-                 "Yellow: Between Mean (inclusive) and Upper Bound" = "yellow", 
-                 "Orange: Between Lower Bound (inclusive) and Mean" = "orange", 
-                 "Red: Below Lower Bound" = "red"),
+      values = c("Blue: At or Above Upper Bound" = "blue",
+                 "Yellow: Within Confidence Interval" = "yellow", 
+                 "Orange: Below Lower Bound" = "orange"),
       name = "NDVI Category"
     ) +
     scale_x_continuous(
@@ -297,6 +293,9 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
       legend.key.height = unit(1, "cm"),
       legend.position = "bottom",
       legend.text = element_text(size = 8),
-      legend.title = element_text(size = 10)
+      legend.title = element_text(size = 10),
+      # Set the background color of the plot area and entire plot
+      panel.background = element_rect(fill = "gray99"),  # Background for the plot area
+      plot.background = element_rect(fill = "gray99")    # Background for the entire plot
     )
 }
