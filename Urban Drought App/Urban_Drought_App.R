@@ -22,12 +22,17 @@ source("Graph_Plotting.R")
 source("Helper_Functions_Code.R")
 
 
-#Files generated from Juliana's workflow - will need these to autoupdate
-NDVI_data <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv")%>%
+# path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+
+#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
 NDVI_data$date <- as.Date(NDVI_data$date)
 
-CI_csv <- read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv")
+
+#CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
+CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
@@ -49,13 +54,13 @@ most_recent_data<- filter(NDVI_data, date == date_needed)
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
 panel_plot_files <- list.files(
-  path = "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI",
+  path = file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"),
   pattern = "\\.png$", 
   full.names = TRUE
 )
 
 scatterplot_files <- list.files(
-  path = "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season",
+  path = file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season"),
   pattern = "\\.png$", 
   full.names = TRUE
 )
@@ -108,7 +113,7 @@ for (file in scatterplot_files) {
 img_list<- c()
 
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
-counties <- sf::read_sf("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/cb_2023_us_county_500k",
+counties <- sf::read_sf("cb_2023_us_county_500k",
                         layer = "cb_2023_us_county_500k")%>% 
   st_transform(crs = 4326)
 
@@ -773,4 +778,5 @@ server <- function(input, output, session) {
 }
 
 # Run the application
-shinyApp(ui = ui, server = server)
+# shinyApp(ui = ui, server = server)
+

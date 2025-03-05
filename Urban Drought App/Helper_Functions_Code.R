@@ -15,7 +15,11 @@ library(scales)
 
 source("Graph_plotting.R") # some of the work is already done in this file 
 
-NDVI_data <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv")%>%
+# path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+
+#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
 NDVI_data$date <- as.Date(NDVI_data$date)
 
@@ -36,7 +40,7 @@ current_time_period <- NDVI_data %>%
 
 head(current_time_period)
 
-CI_csv <- read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv")
+CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 
 ####################################################################################################################
 #Function to determine color of KPI Status Box for each LC Type 
