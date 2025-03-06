@@ -14,6 +14,16 @@ library(tidyverse)
 library(ggplot2)
 library(DT)
 library(lubridate)
+library(ggplot2)
+library(hrbrthemes)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(tidyr)
+library(tidyquant)
+library(scales)
+library(plotly)
+
 
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
