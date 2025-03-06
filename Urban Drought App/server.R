@@ -18,8 +18,8 @@ library(lubridate)
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
 
-source("Graph_Plotting.R")
-source("Helper_Functions_Code.R")
+# source("Graph_Plotting.R")
+# source("Helper_Functions_Code.R")
 
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
@@ -132,6 +132,565 @@ merged_data <- NDVI_data %>%
 heatmap_data <- merged_data %>%
   select(NDVIMissionPred, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
+
+
+
+
+####################################################################################################################
+# All data overview graph
+all_data_graph <- function() {
+  ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(
+      x = "Date",
+      y = "NDVI Value",
+      title = "NDVI Trends Over Time for Selected Land Cover Types"
+    ) +
+    scale_x_date(
+      date_breaks = "6 months",
+      date_labels = "%b %Y"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+    )
+}
+
+
+#!2 month overview graph 
+twelve_month_graph <- function(start_date) {
+  
+  # Calculate end date (1 year after start date)
+  end_date <- as.Date(start_date) %m+% years(1)
+  
+  # Filter the full data frame, not just the date column
+  year_data <- NDVI_data %>%
+    filter(date >= start_date & date <= end_date)
+  
+  # Check if year_data has rows
+  if (nrow(year_data) == 0) {
+    print("No data available for this date range.")
+    return(NULL)
+  }
+  
+  # Generate the plot
+  ggplot(year_data, aes(x = date, y = NDVIReprojected, color = type)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grass" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(
+      y = "NDVI Value",
+      title = "NDVI Trends for Year Following Selected Start Date"
+    ) +
+    scale_x_date(
+      breaks = seq(start_date, end_date, by = "months"),  
+      date_labels = "%b %Y"
+    )
+}
+
+
+#Monthly overview graph
+monthly_graph <- function(mstart_date) {
+  
+  mstart_date <- as.Date(mstart_date)
+  
+  # Calculate end date (1 month after start date)
+  mend_date <- mstart_date %m+% months(1)
+  
+  # Filter the full data frame, not just the date column
+  month_data <- NDVI_data %>%
+    filter(date >= mstart_date & date <= mend_date)
+  
+  
+  # Generate the plot
+  ggplot(month_data, aes(x = date, y = NDVIReprojected, color = type)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grass" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(
+      x = "Date",
+      y = "NDVI Value",
+      title = "NDVI Trends for Month Following Selected Start Date"
+    ) +
+    scale_x_date(
+      breaks = seq(mstart_date, mend_date, by = "7 days"),  
+      labels = scales::date_format("%B %d")
+    )
+}
+
+
+
+#Weekly Overview graph
+weekly_graph <- function(wstart_date) {
+  wstart_date <- as.Date(wstart_date)
+  
+  
+  # Calculate end date (1 week after start date)
+  wend_date <- wstart_date + 7
+  
+  # Filter the data
+  week_data <- NDVI_data %>%
+    filter(date >= wstart_date & date <= wend_date & !is.na(NDVI))
+  
+  
+  ggplot(week_data, aes(x = date, y = NDVIReprojected, color = type)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(
+      x = "Date",
+      y = "NDVI Value",
+      title = "NDVI Trends for Week Following Selected Start Date"
+    ) +
+    scale_x_date(
+      breaks = seq(wstart_date, wend_date, by = "1 day"),  
+      labels = scales::date_format("%B %d")
+    )
+}
+
+####################################################################################################################
+
+#Working on 95% CI interval
+
+#All 7 LC types 95% CI graph
+all_LC_CI_graph <-function(){
+  
+  ggplot(CI_csv, aes(x = yday, y = mean, color = type)) + 
+    geom_line(size = 1) +  
+    geom_ribbon(aes(ymin = lwr, ymax = upr, fill = type), alpha = 0.2) + 
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695",
+      "grassland" = "#f46d43"
+    )) +
+    scale_fill_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(title = "95% Confidence Intervals for All LC Type over 365 Days", x = "Day of Year", y = "Mean Value") +
+    theme_minimal()
+  
+}
+
+#95% CI for selected LC Types
+selected_LC_CI_graph <- function(LC_types){
+  LC_CI <- CI_csv %>%
+    filter(type %in% LC_types)  # Filter multiple selected types
+  
+  ggplot(LC_CI, aes(x = yday, y = mean, color = type, fill = type)) + 
+    geom_line(size = 1) +  
+    geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +  
+    scale_color_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    scale_fill_manual(values = c(
+      "crop" = "#a50026",
+      "forest" = "#d73027",
+      "grassland" = "#f46d43",
+      "urban-high" = "#fee090",
+      "urban-medium" = "#74add1",
+      "urban-low" = "#4575b4",
+      "urban-open" = "#313695"
+    )) +
+    labs(title = "95% Confidence Intervals for Selected LC Type(s) Over 365 Days", 
+         x = "Day of Year", 
+         y = "Mean Value") +
+    theme_minimal() +
+    theme(legend.title = element_blank())  # Removes the legend title for better appearance
+}
+
+####################################################################################################################
+###################################################
+#Preliminary work
+
+#putting NDVI_data in order by date
+NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
+
+head(NDVI_data)
+
+#finding latest day & pulling date
+latest_day<-head(NDVI_data, 1)
+date_needed <-latest_day$date
+
+#pulling any rows with matching date 
+most_recent_data<- filter(NDVI_data, date == date_needed)
+###################################################
+
+#density plot
+#Notes: we need 7 density plots with the most recent data display (latest day) and upper and lower bound shown and mean and then the lastest day NDVI as a point
+# Distribution plot is of NDVI data, and updates as we get more NDVI data from satellites 
+
+density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
+  
+  NDVI_subset <- filter(NDVI_data, type == LCtype)
+  CI_subset <- filter(CI_csv, type == LCtype)
+  most_recent_subset <- filter(most_recent_data, type == LCtype)
+  
+  #finding yday
+  recent_yday <- most_recent_subset$yday[1]
+  
+  CI_final_subset <- filter(CI_subset, yday == recent_yday)
+  
+  # Extract values for bounds and mean from the first row of CI_subset (or whichever logic you want to apply)
+  lwr <- CI_final_subset$lwr[1]
+  upr <- CI_final_subset$upr[1]
+  mean_value <- CI_final_subset$mean[1]
+  
+  # Plot
+  plot <- ggplot(NDVI_subset, aes(x = NDVIMissionPred)) + 
+    geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
+    
+    # Add the bounds as dashed lines with legend
+    geom_vline(aes(xintercept = lwr), linetype = "dashed", color = "#40004b", size = 1) +
+    geom_vline(aes(xintercept = upr), linetype = "dashed", color = "#40004b", size = 1) +
+    
+    # Mean point
+    geom_point(aes(x = mean_value, y = 0, shape = "Mean"), color = "#40004b", size = 4) +
+    
+    # Current NDVI point (diamond)
+    geom_point(aes(x = most_recent_subset$NDVIMissionPred, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
+    
+    # Labels
+    labs(
+      x = paste0(naming, " Density Plot"),  # Dynamic x-axis label using the 'naming' parameter
+      y = "Density",
+      linetype = "Bound Type",  # Legend title for the lines
+      shape = "Point Type"      # Legend title for the points
+    ) +
+    
+    # Manual legend adjustments
+    scale_linetype_manual(values = c("Lower Bound" = "dashed", "Upper Bound" = "dashed")) +
+    scale_shape_manual(values = c("Mean" = 16, "Current NDVI" = 23)) +
+    
+    theme_minimal()
+  
+  # Return the plot
+  return(plot)
+}
+
+# Test the function with each land cover type (all inputs should now be lowercase)
+#ul_plot <- density_plot("urban-low", "Urban-Low", NDVI_data, CI_csv, most_recent_data)
+#print(ul_plot)
+
+#forest_plot <- density_plot("forest", "Forest", NDVI_data, CI_csv, most_recent_data)
+#print(forest_plot)
+
+#grassland_plot <- density_plot("grassland", "Grassland", NDVI_data, CI_csv, most_recent_data)
+#print(grassland_plot)
+
+
+#Making sure status match to what I got when I codede everything the long way 
+#uo_status <- round((uo_most_recent$NDVI - uo$mean), digits = 5)
+#f_status <- round((forest_most_recent$NDVI - f$mean), digits = 5)
+
+########################################################################################################################
+
+
+####################################################################################################################
+#Function to determine color of KPI Status Box for each LC Type 
+#Purpose: Need to pull mean and most recent NDVI value, find difference, and set box color to reflect it's status 
+
+###############################################################
+#Used in Stats Change functions too
+#putting NDVI_data in order by date
+NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
+
+head(NDVI_data)
+
+#Pulling yday of latest data (most recent day) 
+
+#finding latest day & pulling date
+latest_day<-head(NDVI_data, 1)
+date_needed <-as.Date(latest_day$date)
+
+#pulling any rows with matching date 
+most_recent_data<- filter(NDVI_data, date == date_needed)
+
+#Status Boxes Function
+LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
+  
+  # Ensure consistent use of LC_type in filter() calls
+  NDVI_subset <- filter(NDVI_data, type == LC_type)
+  CI_subset <- filter(CI_csv, type == LC_type)
+  most_recent_subset <- filter(most_recent_data, type == LC_type)
+  
+  # Check if most_recent_subset has any data
+  if (nrow(most_recent_subset) == 0) {
+    return(NULL)  # Avoid errors if no data matches
+  }
+  
+  # Extract recent yday
+  recent_yday <- most_recent_subset$yday[1]
+  CI_final_subset <- filter(CI_subset, yday == recent_yday)
+  
+  # Ensure CI_final_subset is not empty before extracting mean
+  if (nrow(CI_final_subset) == 0) {
+    return(NULL)  # Handle missing data
+  }
+  
+  # Extract mean value
+  mean_value <- CI_final_subset$mean[1]
+  
+  # Compute status
+  status <- round((most_recent_subset$NDVIMissionPred - mean_value), digits = 5)
+  
+  # Determine color based on status
+  color <- ifelse(most_recent_subset$NDVIMissionPred >= CI_final_subset$upr, "blue",
+                  ifelse(most_recent_subset$NDVIMissionPred < CI_final_subset$upr & most_recent_subset$NDVIMissionPred >= CI_final_subset$lwr, "yellow", "orange"))
+  
+  
+  return(list(status = status, color = color))
+}
+
+
+#Percentile function
+ndvi_percentile <- function(LCtype, current_time_period, CI_csv, most_recent_data){
+  
+  NDVI_subset <- filter(current_time_period, type == LCtype)
+  CI_subset <- filter(CI_csv, type == LCtype)
+  most_recent_subset <- filter(most_recent_data, type == LCtype)
+  
+  # Compute the percentile of the current NDVI value
+  current_NDVI <- most_recent_subset$NDVIReprojected[1]  # Extract current NDVI value
+  ecdf_function <- ecdf(NDVI_subset$NDVIReprojected)  # Create empirical cumulative distribution function
+  current_percentile <- ecdf_function(current_NDVI) * 100  # Convert to percentage
+  
+  return(current_percentile)
+}
+####################################################################################################################
+#Function to generate change stats for density plot 
+# Doesn't handle if one of the start or end values is NA
+
+daily_change <- function(LC_type, date_needed, NDVI_data) {
+  prev_day <- date_needed - 1
+  
+  # Filtering by LC type 
+  NDVI_subset <- filter(NDVI_data, type == LC_type)
+  
+  # Filtering for days 
+  daily_range <- filter(NDVI_subset, NDVI_subset$date == date_needed | NDVI_subset$date == prev_day)
+  
+  if (nrow(daily_range) < 2) {
+    return("Insufficient data")  # Handle case where not enough data
+  }
+  
+  most_recent_day <- daily_range[daily_range$date == date_needed, ]
+  second_day <- daily_range[daily_range$date == prev_day, ]
+  
+  # Difference
+  difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
+  
+  # Return daily difference as a string
+  return(paste("Daily difference in NDVI: ", difference))
+}
+#####################################################
+weekly_change <- function(LC_type, date_needed, NDVI_data) {
+  # Ensure date_needed is a Date object
+  date_needed <- as.Date(date_needed)  
+  prev_week <- date_needed - 7  # Calculate the date one week before
+  
+  # Ensure NDVI_data has date as Date type
+  NDVI_data <- NDVI_data %>%
+    mutate(date = as.Date(date))
+  
+  # Filter by land cover type
+  NDVI_subset <- NDVI_data %>%
+    filter(type == LC_type)
+  
+  # Get closest available date on or before date_needed
+  most_recent_day <- NDVI_subset %>%
+    filter(date <= date_needed) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Get closest available date on or before prev_week
+  second_day <- NDVI_subset %>%
+    filter(date <= prev_week) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Check if both dates exist
+  if (nrow(most_recent_day) == 0 | nrow(second_day) == 0) {
+    return("Insufficient data")
+  }
+  
+  # Compute NDVI difference
+  difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
+  
+  # Return weekly difference as a string
+  return(paste("Weekly difference in NDVI: ", difference))
+}
+#####################################################
+monthly_change <- function(LC_type, date_needed, NDVI_data) {
+  # Ensure date_needed is a Date object
+  date_needed <- as.Date(date_needed)  
+  prev_month <- date_needed - 30  # Get date 30 days before
+  
+  # Ensure NDVI_data$date is in Date format
+  NDVI_data <- NDVI_data %>%
+    mutate(date = as.Date(date))
+  
+  # Filter by land cover type
+  NDVI_subset <- NDVI_data %>%
+    filter(type == LC_type)
+  
+  # Get closest available date on or before date_needed
+  most_recent_day <- NDVI_subset %>%
+    filter(date <= date_needed) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Get closest available date on or before prev_month
+  second_day <- NDVI_subset %>%
+    filter(date <= prev_month) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Check if both dates exist
+  if (nrow(most_recent_day) == 0 | nrow(second_day) == 0) {
+    return("Insufficient data")
+  }
+  
+  # Compute NDVI difference
+  difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
+  
+  # Return monthly difference as a string
+  return(paste("Monthly difference in NDVI: ", difference))
+}
+#####################################################
+yearly_change <- function(LC_type, date_needed, NDVI_data) {
+  # Ensure date_needed is a Date object
+  date_needed <- as.Date(date_needed)  
+  prev_year <- date_needed - 365  # Get date 1 year before
+  
+  # Ensure NDVI_data$date is in Date format
+  NDVI_data <- NDVI_data %>%
+    mutate(date = as.Date(date))
+  
+  # Filter by land cover type
+  NDVI_subset <- NDVI_data %>%
+    filter(type == LC_type)
+  
+  # Get closest available date on or before date_needed
+  most_recent_day <- NDVI_subset %>%
+    filter(date <= date_needed) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Get closest available date on or before prev_year
+  second_day <- NDVI_subset %>%
+    filter(date <= prev_year) %>%
+    arrange(desc(date)) %>%
+    slice(1)
+  
+  # Check if both dates exist
+  if (nrow(most_recent_day) == 0 | nrow(second_day) == 0) {
+    return("Insufficient data")
+  }
+  
+  # Compute NDVI difference
+  difference <- round((most_recent_day$NDVIMissionPred - second_day$NDVIMissionPred), 3)
+  
+  # Return yearly difference as a string
+  return(paste("Yearly difference in NDVI: ", difference))
+}
+####################################################################################################################
+#Heat Map
+
+plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  
+  
+  # Ensure yday is calculated from the Date field
+  filtered_data <- filtered_data %>%
+    mutate(
+      yday = as.numeric(format(date, "%j")),  # Ensure yday is numeric using the full date
+      year = factor(year, levels = rev(unique(year))),  # Ensure proper year ordering
+      status_category = factor(case_when(
+        NDVIMissionPred >= upr ~ "Blue: At or Above Upper Bound",
+        NDVIMissionPred >= lwr & NDVIMissionPred < upr ~ "Yellow: Within Confidence Interval",
+        NDVIMissionPred < lwr ~ "Orange: Below Lower Bound"
+      ), levels = c("Blue: At or Above Upper Bound",
+                    "Yellow: Within Confidence Interval",
+                    "Orange: Below Lower Bound")))  
+  
+  # Filter data based on selected years & LC_type
+  filtered_data <- filtered_data %>% filter(year %in% selected_years) %>% filter(type == LC_type)
+  
+  ggplot(filtered_data, aes(x = yday, y = year)) +
+    geom_tile(aes(fill = status_category), width = 1, height = 1) +  # Set width and height to 1 for pixel-like tiles
+    scale_fill_manual(
+      values = c("Blue: At or Above Upper Bound" = "blue",
+                 "Yellow: Within Confidence Interval" = "yellow", 
+                 "Orange: Below Lower Bound" = "orange"),
+      name = "NDVI Category"
+    ) +
+    scale_x_continuous(
+      expand = c(0, 0),
+      breaks = seq(1, 366, by = 31),  # Cumulative days for each month
+      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    ) +
+    scale_y_discrete(expand = c(0, 0)) +
+    labs(x = "Month of Year", y = "Year", title = paste0(naming, " Heat Map")) +
+    theme_minimal(base_size = 10) +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      axis.title.x = element_text(face = "bold", size = 10),
+      axis.title.y = element_text(face = "bold", size = 10),
+      plot.title = element_text(face = "bold", size = 12),
+      legend.key.height = unit(1, "cm"),
+      legend.position = "bottom",
+      legend.text = element_text(size = 8),
+      legend.title = element_text(size = 10),
+      # Set the background color of the plot area and entire plot
+      panel.background = element_rect(fill = "gray99"),  # Background for the plot area
+      plot.background = element_rect(fill = "gray99")    # Background for the entire plot
+    )
+}
 
 
 ####################################################################################################################

@@ -19,6 +19,9 @@ file.copy(from=file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtrac
 file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"), 
           to="data/k=12_norms_all_LC_types.csv")
 
+source("Graph_Plotting.R")
+source("Helper_Functions_Code.R")
+
 
 #This is to run the app LOCALLY
 #If you open this script and are in it's directory, all you have to do is runApp.
