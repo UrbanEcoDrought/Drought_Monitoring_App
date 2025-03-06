@@ -30,6 +30,7 @@ library(plotly)
 
 # source("Graph_Plotting.R")
 # source("Helper_Functions_Code.R")
+paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
@@ -140,7 +141,7 @@ merged_data <- NDVI_data %>%
 
 # Prepare data for heatmap
 heatmap_data <- merged_data %>%
-  select(NDVIMissionPred, yday, year, difference, mean, lwr, upr, type, date)
+  select(ReprojPred, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
 
 
@@ -149,17 +150,11 @@ heatmap_data$year <- as.numeric(heatmap_data$year)
 ####################################################################################################################
 # All data overview graph
 all_data_graph <- function() {
-  ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type)) +
-    geom_line(size = 1) +
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grassland" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+  ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
+    geom_point(size = 1) +
+    geom_smooth(method="gam") +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(
       x = "Date",
       y = "NDVI Value",
@@ -192,17 +187,11 @@ twelve_month_graph <- function(start_date) {
   }
   
   # Generate the plot
-  ggplot(year_data, aes(x = date, y = NDVIReprojected, color = type)) +
-    geom_line(size = 1) +
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grass" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+  ggplot(year_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
+    geom_point(size = 1) +
+    geom_smooth(method="gam") +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(
       y = "NDVI Value",
       title = "NDVI Trends for Year Following Selected Start Date"
@@ -228,17 +217,10 @@ monthly_graph <- function(mstart_date) {
   
   
   # Generate the plot
-  ggplot(month_data, aes(x = date, y = NDVIReprojected, color = type)) +
+  ggplot(month_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
     geom_line(size = 1) +
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grass" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(
       x = "Date",
       y = "NDVI Value",
@@ -265,17 +247,11 @@ weekly_graph <- function(wstart_date) {
     filter(date >= wstart_date & date <= wend_date & !is.na(NDVI))
   
   
-  ggplot(week_data, aes(x = date, y = NDVIReprojected, color = type)) +
-    geom_line(size = 1) +
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grassland" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+  ggplot(week_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
+    geom_point(size = 1) +
+    geom_smooth(method="lm") +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(
       x = "Date",
       y = "NDVI Value",
@@ -297,24 +273,8 @@ all_LC_CI_graph <-function(){
   ggplot(CI_csv, aes(x = yday, y = mean, color = type)) + 
     geom_line(size = 1) +  
     geom_ribbon(aes(ymin = lwr, ymax = upr, fill = type), alpha = 0.2) + 
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695",
-      "grassland" = "#f46d43"
-    )) +
-    scale_fill_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grassland" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(title = "95% Confidence Intervals for All LC Type over 365 Days", x = "Day of Year", y = "Mean Value") +
     theme_minimal()
   
@@ -328,24 +288,8 @@ selected_LC_CI_graph <- function(LC_types){
   ggplot(LC_CI, aes(x = yday, y = mean, color = type, fill = type)) + 
     geom_line(size = 1) +  
     geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +  
-    scale_color_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grassland" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
-    scale_fill_manual(values = c(
-      "crop" = "#a50026",
-      "forest" = "#d73027",
-      "grassland" = "#f46d43",
-      "urban-high" = "#fee090",
-      "urban-medium" = "#74add1",
-      "urban-low" = "#4575b4",
-      "urban-open" = "#313695"
-    )) +
+    scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
     labs(title = "95% Confidence Intervals for Selected LC Type(s) Over 365 Days", 
          x = "Day of Year", 
          y = "Mean Value") +
