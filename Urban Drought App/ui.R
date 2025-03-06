@@ -54,13 +54,13 @@ most_recent_data<- filter(NDVI_data, date == date_needed)
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
 panel_plot_files <- list.files(
-  path = file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"),
+  path = "figures/04_panel_plots_usdm_deviation_meanNDVI",
   pattern = "\\.png$", 
   full.names = TRUE
 )
 
 scatterplot_files <- list.files(
-  path = file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season"),
+  path = "figures/06_scatterplots_usdm_deviation_growing_season",
   pattern = "\\.png$", 
   full.names = TRUE
 )
