@@ -137,7 +137,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
 # Join and compute differences
 merged_data <- NDVI_data %>%
   left_join(CI_csv, by = c("yday", "type")) %>%
-  mutate(difference = NDVIMissionPred - mean)
+  mutate(difference = ReprojPred - mean)
 
 # Prepare data for heatmap
 heatmap_data <- merged_data %>%
@@ -152,7 +152,7 @@ heatmap_data$year <- as.numeric(heatmap_data$year)
 all_data_graph <- function() {
   ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
     geom_point(size = 1) +
-    geom_smooth(method="gam") +
+    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -189,7 +189,7 @@ twelve_month_graph <- function(start_date) {
   # Generate the plot
   ggplot(year_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
     geom_point(size = 1) +
-    geom_smooth(method="gam") +
+    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -218,7 +218,8 @@ monthly_graph <- function(mstart_date) {
   
   # Generate the plot
   ggplot(month_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
-    geom_line(size = 1) +
+    geom_point(size = 1) +
+    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=3)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -335,7 +336,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Plot
-  plot <- ggplot(NDVI_subset, aes(x = NDVIMissionPred)) + 
+  plot <- ggplot(NDVI_subset, aes(x = ReprojPred)) + 
     geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
     
     # Add the bounds as dashed lines with legend
@@ -346,7 +347,7 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
     geom_point(aes(x = mean_value, y = 0, shape = "Mean"), color = "#40004b", size = 4) +
     
     # Current NDVI point (diamond)
-    geom_point(aes(x = most_recent_subset$NDVIMissionPred, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
+    geom_point(aes(x = most_recent_subset$ReprojPred, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
     
     # Labels
     labs(
@@ -430,11 +431,11 @@ LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   mean_value <- CI_final_subset$mean[1]
   
   # Compute status
-  status <- round((most_recent_subset$NDVIMissionPred - mean_value), digits = 5)
+  status <- round((most_recent_subset$ReprojPred - mean_value), digits = 5)
   
   # Determine color based on status
-  color <- ifelse(most_recent_subset$NDVIMissionPred >= CI_final_subset$upr, "blue",
-                  ifelse(most_recent_subset$NDVIMissionPred < CI_final_subset$upr & most_recent_subset$NDVIMissionPred >= CI_final_subset$lwr, "yellow", "orange"))
+  color <- ifelse(most_recent_subset$ReprojPred >= CI_final_subset$upr, "blue",
+                  ifelse(most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= CI_final_subset$lwr, "yellow", "orange"))
   
   
   return(list(status = status, color = color))
@@ -449,8 +450,8 @@ ndvi_percentile <- function(LCtype, current_time_period, CI_csv, most_recent_dat
   most_recent_subset <- filter(most_recent_data, type == LCtype)
   
   # Compute the percentile of the current NDVI value
-  current_NDVI <- most_recent_subset$NDVIReprojected[1]  # Extract current NDVI value
-  ecdf_function <- ecdf(NDVI_subset$NDVIReprojected)  # Create empirical cumulative distribution function
+  current_NDVI <- most_recent_subset$ReprojPred[1]  # Extract current NDVI value
+  ecdf_function <- ecdf(NDVI_subset$ReprojPred)  # Create empirical cumulative distribution function
   current_percentile <- ecdf_function(current_NDVI) * 100  # Convert to percentage
   
   return(current_percentile)
@@ -587,7 +588,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
   }
   
   # Compute NDVI difference
-  difference <- round((most_recent_day$NDVIMissionPred - second_day$NDVIMissionPred), 3)
+  difference <- round((most_recent_day$ReprojPred - second_day$ReprojPred), 3)
   
   # Return yearly difference as a string
   return(paste("Yearly difference in NDVI: ", difference))
@@ -595,7 +596,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
 ####################################################################################################################
 #Heat Map
 
-plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
+plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming, upr, lwr) {
   if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  
   
   # Ensure yday is calculated from the Date field
@@ -604,9 +605,9 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
       yday = as.numeric(format(date, "%j")),  # Ensure yday is numeric using the full date
       year = factor(year, levels = rev(unique(year))),  # Ensure proper year ordering
       status_category = factor(case_when(
-        NDVIMissionPred >= upr ~ "Blue: At or Above Upper Bound",
-        NDVIMissionPred >= lwr & NDVIMissionPred < upr ~ "Yellow: Within Confidence Interval",
-        NDVIMissionPred < lwr ~ "Orange: Below Lower Bound"
+        ReprojPred >= upr ~ "Blue: At or Above Upper Bound",
+        ReprojPred >= lwr & ReprojPred < upr ~ "Yellow: Within Confidence Interval",
+        ReprojPred < lwr ~ "Orange: Below Lower Bound"
       ), levels = c("Blue: At or Above Upper Bound",
                     "Yellow: Within Confidence Interval",
                     "Orange: Below Lower Bound")))  
