@@ -23,21 +23,21 @@ file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_nor
 
 dir.create("figures/04_panel_plots_usdm_deviation_meanNDVI")
 
-figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"))
-for(i in 1:length(figs.cp)){
-  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]), 
-          to=file.path("figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]))
+#figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"))
+#for(i in 1:length(figs.cp)){
+#  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]), 
+#          to=file.path("figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]))
   
-}
+#}
 
-dir.create("figures/06_scatterplots_usdm_deviation_growing_season")
+#dir.create("figures/06_scatterplots_usdm_deviation_growing_season")
 
-figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season"))
-for(i in 1:length(figs.cp)){
-  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]), 
-            to=file.path("figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]))
+#figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season"))
+#for(i in 1:length(figs.cp)){
+#  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]), 
+#            to=file.path("figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]))
   
-}
+#}
 
 # file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"),
 

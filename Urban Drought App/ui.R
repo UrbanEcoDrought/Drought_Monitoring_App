@@ -33,8 +33,23 @@ library(scales)
 
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-# path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+ path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
+################################
+#for testing
+#path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+
+#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+#NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
+ # mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
+
+
+#CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
+#CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+################################
+####################
+#Uncomment after testing 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
@@ -43,7 +58,7 @@ NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
 CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
-
+####################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
 
@@ -62,65 +77,6 @@ most_recent_data<- filter(NDVI_data, date == date_needed)
 
 #Need to run this code before app
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
-
-panel_plot_files <- list.files(
-  path = "figures/04_panel_plots_usdm_deviation_meanNDVI",
-  pattern = "\\.png$", 
-  full.names = TRUE
-)
-
-scatterplot_files <- list.files(
-  path = "figures/06_scatterplots_usdm_deviation_growing_season",
-  pattern = "\\.png$", 
-  full.names = TRUE
-)
-
-for_files <- c()
-crop_files <- c()
-grass_files <- c()
-uh_files <- c()
-um_files <- c()
-ul_files <- c()
-uo_files <- c()
-
-
-for (file in panel_plot_files) {
-  if (grepl("forest", file)) {
-    for_files <- append(for_files, file)
-  } else if (grepl("crop", file)) {
-    crop_files <- append(crop_files, file)
-  } else if (grepl("grassland", file)) {
-    grass_files <- append(grass_files, file)
-  } else if (grepl("urban-high", file)) {
-    uh_files <- append(uh_files, file)
-  } else if (grepl("urban-medium", file)) {
-    um_files <- append(um_files, file)
-  } else if (grepl("urban-low", file)) {
-    ul_files <- append(ul_files, file)
-  } else if (grepl("urban-open", file)) {
-    uo_files <- append(uo_files, file)
-  }
-}
-
-for (file in scatterplot_files) {
-  if (grepl("forest", file)) {
-    for_files <- append(for_files, file)
-  } else if (grepl("crop", file)) {
-    crop_files <- append(crop_files, file)
-  } else if (grepl("grassland", file)) {
-    grass_files <- append(grass_files, file)
-  } else if (grepl("urban-high", file)) {
-    uh_files <- append(uh_files, file)
-  } else if (grepl("urban-medium", file)) {
-    um_files <- append(um_files, file)
-  } else if (grepl("urban-low", file)) {
-    ul_files <- append(ul_files, file)
-  } else if (grepl("urban-open", file)) {
-    uo_files <- append(uo_files, file)
-  }
-}
-
-img_list<- c()
 
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 counties <- sf::read_sf("cb_2023_us_county_500k",
@@ -194,7 +150,7 @@ ui <- dashboardPage(skin = "black",
         justify-content: space-around; /* or space-between/center, etc. */
       ",
                                            # Let each valueBoxOutput have no fixed Bootstrap column width
-                                           valueBoxOutput("cropBox", width = NULL),
+                                           uiOutput("cropBox", width = NULL),
                                            valueBoxOutput("forBox", width = NULL),
                                            valueBoxOutput("grassBox", width = NULL),
                                            valueBoxOutput("uhBox", width = NULL),

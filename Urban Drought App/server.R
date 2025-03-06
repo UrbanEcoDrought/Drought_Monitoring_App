@@ -23,6 +23,7 @@ library(tidyr)
 library(tidyquant)
 library(scales)
 library(plotly)
+library(dplyr)
 
 
 #For documentation of this app
@@ -32,9 +33,23 @@ library(plotly)
 # source("Helper_Functions_Code.R")
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 
+#filepaths to NDVI & CI data
+####################################################################################################################
+#for testing
+#path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+#NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
+#  mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
+#CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
+#CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+####################################################################################################################
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-# path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+ path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+
+####################################################################################################################
+#Uncomment after testing 
 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
@@ -44,85 +59,39 @@ NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
 CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+####################################################################################################################
 
+####################################################################################################################
+#Subsetting all data here for reference (anything used for the functions)
+####################################################################################################################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
+#head(NDVI_data)
 
-head(NDVI_data)
+##################################################
+#DENSITY PLOTS & STATUS BOXES & PERCENTILE
 
-
-#Pulling yday of latest data (most recent day) 
-
-#finding latest day & pulling date
+#finding latest day & pulling date (NDVI should already be in decreasing order)
 latest_day<-head(NDVI_data, 1)
-date_needed <-latest_day$date
+date_needed <-as.Date(latest_day$date)
 
 #pulling any rows with matching date 
 most_recent_data<- filter(NDVI_data, date == date_needed)
+##################################################
+#DENSITY PLOTS & PERCENTILE (gives 2 week period)
+# Setting the period for 2 weeks prior
+last_day_date <- latest_day$date
+two_week_prior_date <- as.Date(last_day_date - 14)
 
+# Filtering the data between two_week_prior_date and last_day_date
+current_time_period <- NDVI_data %>%
+  filter(date >= two_week_prior_date & date <= last_day_date)
+
+#head(current_time_period)
+##################################################
 
 #Need to run this code before app
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
-
-panel_plot_files <- list.files(
-  path = "figures/04_panel_plots_usdm_deviation_meanNDVI",
-  pattern = "\\.png$", 
-  full.names = TRUE
-)
-
-scatterplot_files <- list.files(
-  path = "figures/06_scatterplots_usdm_deviation_growing_season",
-  pattern = "\\.png$", 
-  full.names = TRUE
-)
-
-for_files <- c()
-crop_files <- c()
-grass_files <- c()
-uh_files <- c()
-um_files <- c()
-ul_files <- c()
-uo_files <- c()
-
-
-for (file in panel_plot_files) {
-  if (grepl("forest", file)) {
-    for_files <- append(for_files, file)
-  } else if (grepl("crop", file)) {
-    crop_files <- append(crop_files, file)
-  } else if (grepl("grassland", file)) {
-    grass_files <- append(grass_files, file)
-  } else if (grepl("urban-high", file)) {
-    uh_files <- append(uh_files, file)
-  } else if (grepl("urban-medium", file)) {
-    um_files <- append(um_files, file)
-  } else if (grepl("urban-low", file)) {
-    ul_files <- append(ul_files, file)
-  } else if (grepl("urban-open", file)) {
-    uo_files <- append(uo_files, file)
-  }
-}
-
-for (file in scatterplot_files) {
-  if (grepl("forest", file)) {
-    for_files <- append(for_files, file)
-  } else if (grepl("crop", file)) {
-    crop_files <- append(crop_files, file)
-  } else if (grepl("grassland", file)) {
-    grass_files <- append(grass_files, file)
-  } else if (grepl("urban-high", file)) {
-    uh_files <- append(uh_files, file)
-  } else if (grepl("urban-medium", file)) {
-    um_files <- append(um_files, file)
-  } else if (grepl("urban-low", file)) {
-    ul_files <- append(ul_files, file)
-  } else if (grepl("urban-open", file)) {
-    uo_files <- append(uo_files, file)
-  }
-}
-
-img_list<- c()
-
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 counties <- sf::read_sf("cb_2023_us_county_500k",
                         layer = "cb_2023_us_county_500k")%>% 
@@ -144,10 +113,10 @@ heatmap_data <- merged_data %>%
   select(ReprojPred, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
 
-
-
-
 ####################################################################################################################
+#Functions
+####################################################################################################################
+
 # All data overview graph
 all_data_graph <- function() {
   ggplot(NDVI_data, aes(x = date, y = NDVIReprojected, color = type, fill=type)) +
@@ -299,23 +268,7 @@ selected_LC_CI_graph <- function(LC_types){
 }
 
 ####################################################################################################################
-###################################################
-#Preliminary work
-
-#putting NDVI_data in order by date
-NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
-
-head(NDVI_data)
-
-#finding latest day & pulling date
-latest_day<-head(NDVI_data, 1)
-date_needed <-latest_day$date
-
-#pulling any rows with matching date 
-most_recent_data<- filter(NDVI_data, date == date_needed)
-###################################################
-
-#density plot
+#DENSITY PLOT FUNCTIONS
 #Notes: we need 7 density plots with the most recent data display (latest day) and upper and lower bound shown and mean and then the lastest day NDVI as a point
 # Distribution plot is of NDVI data, and updates as we get more NDVI data from satellites 
 
@@ -366,46 +319,28 @@ density_plot <- function(LCtype, naming, NDVI_data, CI_csv, most_recent_data) {
   # Return the plot
   return(plot)
 }
-
-# Test the function with each land cover type (all inputs should now be lowercase)
-#ul_plot <- density_plot("urban-low", "Urban-Low", NDVI_data, CI_csv, most_recent_data)
-#print(ul_plot)
-
-#forest_plot <- density_plot("forest", "Forest", NDVI_data, CI_csv, most_recent_data)
-#print(forest_plot)
-
-#grassland_plot <- density_plot("grassland", "Grassland", NDVI_data, CI_csv, most_recent_data)
-#print(grassland_plot)
-
-
-#Making sure status match to what I got when I codede everything the long way 
-#uo_status <- round((uo_most_recent$NDVI - uo$mean), digits = 5)
-#f_status <- round((forest_most_recent$NDVI - f$mean), digits = 5)
-
-########################################################################################################################
-
-
 ####################################################################################################################
-#Function to determine color of KPI Status Box for each LC Type 
-#Purpose: Need to pull mean and most recent NDVI value, find difference, and set box color to reflect it's status 
+#STATUS BOXES FUNCTION
+#Needs color to be separate function for value boxes to work 
+# Function to calculate status
 
-###############################################################
-#Used in Stats Change functions too
-#putting NDVI_data in order by date
-NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
 
-head(NDVI_data)
+# Function to calculate color
+get_color <- function(most_recent_subset, CI_final_subset) {
+  
+  # Apply conditions to determine color
+  color <- case_when(
+    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .02) ~ "#c51b7d",  # Red
+    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .01) ~ "#e9a3c9",  # Pink
+    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .01) ~ "gray60",  # Gray
+    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .02) ~ "#a1d76a",  # Light Green
+    TRUE ~ "#4d9221"  # Default Green
+  )
+  
+  return(color)
+}
 
-#Pulling yday of latest data (most recent day) 
-
-#finding latest day & pulling date
-latest_day<-head(NDVI_data, 1)
-date_needed <-as.Date(latest_day$date)
-
-#pulling any rows with matching date 
-most_recent_data<- filter(NDVI_data, date == date_needed)
-
-#Status Boxes Function
+# Main function calling both functions
 LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   
   # Ensure consistent use of LC_type in filter() calls
@@ -430,19 +365,25 @@ LC_status <- function(LC_type, NDVI_data, CI_csv, most_recent_data) {
   # Extract mean value
   mean_value <- CI_final_subset$mean[1]
   
-  # Compute status
-  status <- round((most_recent_subset$ReprojPred - mean_value), digits = 5)
+  # Convert to numeric
+  most_recent_subset$ReprojPred <- as.numeric(most_recent_subset$ReprojPred)
+  CI_final_subset$upr <- as.numeric(CI_final_subset$upr)
+  CI_final_subset$lwr <- as.numeric(CI_final_subset$lwr)
   
-  # Determine color based on status
-  color <- ifelse(most_recent_subset$ReprojPred >= CI_final_subset$upr, "blue",
-                  ifelse(most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= CI_final_subset$lwr, "yellow", "orange"))
+  status <- round((most_recent_subset$NDVIMissionPred - mean_value), digits = 5)
+  
+  # Call the color function
+  color <- get_color(most_recent_subset, CI_final_subset)
   
   
   return(list(status = status, color = color))
 }
 
 
-#Percentile function
+
+
+####################################################################################################################
+#PERCENTILE FUNCTION
 ndvi_percentile <- function(LCtype, current_time_period, CI_csv, most_recent_data){
   
   NDVI_subset <- filter(current_time_period, type == LCtype)
@@ -480,7 +421,7 @@ daily_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
   
   # Return daily difference as a string
-  return(paste("Daily difference in NDVI: ", difference))
+  return(paste("Daily Change: ", difference))
 }
 #####################################################
 weekly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -517,7 +458,7 @@ weekly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVI - second_day$NDVI), 3)
   
   # Return weekly difference as a string
-  return(paste("Weekly difference in NDVI: ", difference))
+  return(paste("Weekly change: ", difference))
 }
 #####################################################
 monthly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -554,7 +495,7 @@ monthly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$NDVIReprojected - second_day$NDVIReprojected), 3)
   
   # Return monthly difference as a string
-  return(paste("Monthly difference in NDVI: ", difference))
+  return(paste("Monthly change: ", difference))
 }
 #####################################################
 yearly_change <- function(LC_type, date_needed, NDVI_data) {
@@ -591,7 +532,7 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
   difference <- round((most_recent_day$ReprojPred - second_day$ReprojPred), 3)
   
   # Return yearly difference as a string
-  return(paste("Yearly difference in NDVI: ", difference))
+  return(paste("Yearly Change: ", difference))
 }
 ####################################################################################################################
 #Heat Map
@@ -646,8 +587,8 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming, up
       plot.background = element_rect(fill = "gray99")    # Background for the entire plot
     )
 }
-
-
+####################################################################################################################
+#END OF FUNCTIONS
 ####################################################################################################################
 
 # Define server logic
@@ -686,78 +627,140 @@ server <- function(input, output, session) {
   })
   
   ####################################################################################################################
+  # Status KPI Boxes for each LC Type
   #Status KPI Boxes for each LC Type
-  output$cropBox <- renderValueBox({
+  output$cropBox <- renderUI({
     result <- LC_status("crop", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Crop Status",
-      subtitle = result$status,  
-      color = result$color
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent crop data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Crop Status"),
+      h4(result$status)
     )
-  }) 
+  })
   
-  
-  output$forBox <- renderValueBox({
+  output$forBox <- renderUI({
     result <- LC_status("forest", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Forest Status",
-      subtitle = result$status,  
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent forest data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Forest Status"),
+      h4(result$status)
     )
   })
   
   output$grassBox <- renderValueBox({
-    result <- LC_status("grassland", NDVI_data, CI_csv, most_recent_data)
+    result <- LC_status("grass", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Grassland Status",
-      subtitle = result$status,
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent grassland data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Grass Status"),
+      h4(result$status)
     )
   })
   
   output$uhBox <- renderValueBox({
     result <- LC_status("urban-high", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Urban-High Status",
-      subtitle = result$status,  
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent urban-high data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Urban-High Status"),
+      h4(result$status)
     )
   })
   
   output$umBox <- renderValueBox({
     result <- LC_status("urban-medium", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Urban-Medium Status",
-      subtitle = result$status,  
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent urban-medium data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Urban-Medium Status"),
+      h4(result$status)
     )
   })
   
   output$ulBox <- renderValueBox({
     result <- LC_status("urban-low", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Urban-Low Status",
-      subtitle = result$status,  
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent urban-low data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Urban-Low Status"),
+      h4(result$status)
     )
   })
   
   output$uoBox <- renderValueBox({
     result <- LC_status("urban-open", NDVI_data, CI_csv, most_recent_data)
     
-    valueBox(
-      value = "Urban-Open Status",
-      subtitle = result$status,  
-      color = result$color  
+    if (is.null(result)) {
+      return(tags$div(
+        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
+        h3("No Data"),
+        h4("No recent urban-open data available")
+      ))
+    }
+    
+    tags$div(
+      class = "small-box",  # Adds default small-box styling
+      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
+      h4("Urban-Open Status"),
+      h4(result$status)
     )
   })
-  
   
   ####################################################################################################################
   #NDVI graphs
@@ -778,7 +781,6 @@ server <- function(input, output, session) {
       return(NULL)
     }
   })
-  
   
   #Monthly Data
   output$monthly_graph <- renderPlot({
