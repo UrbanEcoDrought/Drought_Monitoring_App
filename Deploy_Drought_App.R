@@ -13,35 +13,12 @@ library(shinyWidgets)
 path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-setwd("Urban Drought App")
 
 file.copy(from=file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), 
-          to="data/allNDVI_data.csv")
+          to="Urban Drought App/data/allNDVI_data.csv")
 
 file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"), 
-          to="data/k=12_norms_all_LC_types.csv")
-
-dir.create("figures/04_panel_plots_usdm_deviation_meanNDVI")
-
-#figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"))
-#for(i in 1:length(figs.cp)){
-#  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]), 
-#          to=file.path("figures/04_panel_plots_usdm_deviation_meanNDVI", figs.cp[i]))
-  
-#}
-
-#dir.create("figures/06_scatterplots_usdm_deviation_growing_season")
-
-#figs.cp <- dir(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season"))
-#for(i in 1:length(figs.cp)){
-#  file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]), 
-#            to=file.path("figures/06_scatterplots_usdm_deviation_growing_season", figs.cp[i]))
-  
-#}
-
-# file.path(path.UrbDrought, "data/NDVI_drought_monitoring/figures/04_panel_plots_usdm_deviation_meanNDVI"),
-
-setwd("..")
+          to="Urban Drought App/data/k=12_norms_all_LC_types.csv")
 
 
 

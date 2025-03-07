@@ -1,6 +1,60 @@
+
+library(rgee); library(raster); library(terra)
+# user.ee <- "jgarcia@mortonarb.org"
+user.ee <- "crollinson@mortonarb.org"
+
+ee_check() # For some reason, it's important to run this before initializing right now
+rgee::ee_Initialize(user = user.ee, drive=T, project = "urbanecodrought")
+path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
+path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+assetHome <- ee_get_assethome()
+NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract")
+
+
 #############################################################################
 #Code taken out of 03_Pulling_New_Landsat_Data.R since it doesn't need to be run everytime  
 ####################### Only needs to run once yearly ####################### 
+Chicago = ee$FeatureCollection("projects/breidyee/assets/SevenCntyChiReg") 
+# Chicago = ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg") 
+ee_print(Chicago)
+
+chiBounds <- Chicago$geometry()$bounds()
+chiBBox <- ee$Geometry$BBox(-88.70738, 41.20155, -87.52453, 42.49575)
+
+
+####################################################################################################################
+# Setting the center point for the Arb because I think we'll have more variation
+Map$setCenter(-88.04526, 41.81513, 11);
+
+nlcdPalette = c(
+  '#5475A8', # Open Water (11)
+  # '#d1def8', # Ice/Snow (12)
+  '#dec5c5', # Developed, Open Space (21)
+  '#d99282', # Developed, Low Intensity (22)
+  '#eb0000', # Developed, Medium Intensity (23)
+  '#ab0000', # Developed High Intensity (24)
+  '#b3ac9f', # Barren Land (31)
+  '#68ab5f', # Deciduous Forest (41)
+  '#1c5f2c', # Evergreen Forest (42)
+  '#b5c58f', # Mixed Forest (43)
+  # '#af963c', # Dwarf Shrub/Scrub (51); Alaska Only
+  '#ccb879', # Shrub/Scrub (52)
+  '#dfdfc2', # Grassland/Herbaceous (71)
+  # '#d1d182', # Sedge/herbaceous (72); Alaska Only
+  # '#a3cc51', # lichens (73); Alaska Only
+  # '#82ba9e', # Moss (74); Alaska Only
+  '#dcd939', # Pasture/Hay (81)
+  '#ab6c28', # Cultivated Crops (82)
+  '#b8d9eb', # Woody Wetlands (90)
+  '#6c9fb8' # Emergent Herbaceous Wetlands (95)
+);
+
+nlcdvis = list(
+  min= 0,
+  max= 95,
+  palette= nlcdPalette
+);
+
 # https://developers.google.com/earth-engine/datasets/catalog/USGS_NLCD_RELEASES_2019_REL_NLCD
 nlcdChi <- ee$ImageCollection('USGS/NLCD_RELEASES/2019_REL/NLCD')$select('landcover')$map(function(img){
   d <- ee$Date(ee$Number(img$get('system:time_start')));
