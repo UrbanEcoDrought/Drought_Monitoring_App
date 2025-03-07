@@ -23,6 +23,7 @@ library(tidyverse)
 library(tidyr)
 library(tidyquant)
 library(scales)
+library(bs4Dash)
 
 
 #For documentation of this app
@@ -33,31 +34,24 @@ library(scales)
 
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
- path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+# path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 ################################
 #for testing
-#path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-
-#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-#NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
- # mutate(date = as.Date(date, format="%Y-%m-%d"))
-#NDVI_data$date <- as.Date(NDVI_data$date)
-
-
-#CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-#CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
+NDVI_data$date <- as.Date(NDVI_data$date)
+CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ################################
 ####################
 #Uncomment after testing 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
-  mutate(date = as.Date(date, format="%Y-%m-%d"))
-NDVI_data$date <- as.Date(NDVI_data$date)
-
+#NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
+  #mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+#CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
@@ -150,13 +144,13 @@ ui <- dashboardPage(skin = "black",
         justify-content: space-around; /* or space-between/center, etc. */
       ",
                                            # Let each valueBoxOutput have no fixed Bootstrap column width
-                                           uiOutput("cropBox", width = NULL),
+                                           valueBoxOutput("cropBox", width = NULL),
                                            valueBoxOutput("forBox", width = NULL),
                                            valueBoxOutput("grassBox", width = NULL),
-                                           valueBoxOutput("uhBox", width = NULL),
-                                           valueBoxOutput("umBox", width = NULL),
+                                           valueBoxOutput("uoBox", width = NULL),
                                            valueBoxOutput("ulBox", width = NULL),
-                                           valueBoxOutput("uoBox", width = NULL)
+                                           valueBoxOutput("umBox", width = NULL),
+                                           valueBoxOutput("uhBox", width = NULL),
                                          )
                                   )
                                 )
@@ -172,47 +166,48 @@ ui <- dashboardPage(skin = "black",
                                     width = 7,
                                     tabPanel(
                                       "Latest Data Report",
-                                      h5(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                      h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
                                       br(),
-                                      h5(HTML("<u>Percentiles for Current NDVI data:</u>")),
+                                      h6(HTML("<u>Percentiles for Current NDVI data:</u>")),
                                       # Proper text output for the percentile value
-                                      h5(textOutput("percentile_crop")),  
-                                      h5(textOutput("percentile_for")),  
-                                      h5(textOutput("percentile_grass")),  
-                                      h5(textOutput("percentile_uh")),  
-                                      h5(textOutput("percentile_um")),  
-                                      h5(textOutput("percentile_ul")),
-                                      h5(textOutput("percentile_uo")),  
+                                      h6(textOutput("percentile_crop")),  
+                                      h6(textOutput("percentile_for")),  
+                                      h6(textOutput("percentile_grass")),  
+                                      h6(textOutput("percentile_uh")),  
+                                      h6(textOutput("percentile_um")),  
+                                      h6(textOutput("percentile_ul")),
+                                      h6(textOutput("percentile_uo")),  
                                       br(),
                                       
                                       p("For a more in-depth exploration, take a look at the other tabs or the directory.")
                                     ),
                                     tabPanel(
                                       "Status Key",
-                                      h5(HTML("<span style='color:blue;'>Blue</span> = NDVI is at or Above Upper Bound of CI")),
-                                      h5(HTML("<span style='color:yellow;'>Yellow</span> = NDVI is between Upper & Lower Bound of CI")),
-                                      h5(HTML("<span style='color:orange;'>Orange</span> = NDVI is below Lower Bound of CI")),
-                                      h5(HTML("Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
-                                      HTML("<img src='NDVI_Categories.png' alt='NDVI Categories' style='width:60%;'>")
+                                      h6(HTML("<span style='color:green;'>Green</span> = Significantly greener than normal")),
+                                      h6(HTML("<span style='color:olive;'>Olive</span> = Greener than normal")),
+                                      h6(HTML("<span style='color:grey;'>Grey</span> = NDVI is within CI")),
+                                      h6(HTML("<span style='color:pink;'>Pink</span> = Browner than normal")),
+                                      h6(HTML("<span style='color:maroon;'>Maroon</span> = Significantly browner than normal")),
+                                      #h6(HTML("<br>Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
+                                      #HTML("<img src='NDVI_Categories.png' alt='NDVI Categories' style='width:60%;'>")
                                     )
-                                    
                                     ,
                                     tabPanel(
                                       "Directory",
-                                      h4("Dashboard"),
+                                      h6("Dashboard"),
                                       HTML(
                                         "<ul>
       <li>Map of LC Types</li>
       <li>Distribution Plots of LC Types</li>
       <li>Status of LC Types</li>
     </ul>"      ),
-                                      h4("Analysis"),
+                                      h6("Analysis"),
                                       HTML(
                                         "<ul>
       <li>Yearly, Monthly & Weekly NDVI Graphs</li>
       <li>Distribution Plot Statistics</li>
     </ul>"      ),
-                                      h4("Specifics"),
+                                      h6("Specifics"),
                                       HTML(
                                         "<ul>
       <li>Grant Information & Contributors</li>
@@ -278,16 +273,29 @@ ui <- dashboardPage(skin = "black",
                                   tabPanel("Monthly", plotOutput("monthly_graph"),
                                            dateInput(inputId = "mstart_date", label = "Enter Start Date", value = Sys.Date() %m-% months(1))),
                                   tabPanel("Weekly", plotOutput("weekly_graph"),
-                                           h5(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
+                                           h6(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
                                            dateInput(inputId = "wstart_date", label = "Enter Start Date", value = Sys.Date() - 7))
                                 )
                         ),
                         tabItem(tabName = "ndvi_diff",
-                                h5(HTML("Check Status Key Tab on Dashboard Page for NDVI Catergories Visual (shows ranges for color system being used)")),
+                                h6(HTML("Check Status Key Tab on Dashboard Page for NDVI Catergories Visual (shows ranges for color system being used)")),
+                                # Adjust checkbox size and styling using tags$style
+                                tags$style(HTML("
+  #selected_years label {
+    font-size: 13px;  /* Adjust label text size */
+    height: 10px;    /* Adjust height of the label */
+  }
+  #selected_years input[type='checkbox'] {
+    transform: scale(0.8);  /* Resize the checkboxes */
+  }
+")),
+                                
+                                # The checkboxGroupInput with custom CSS
                                 checkboxGroupInput("selected_years", "Select Years:", 
                                                    choices = unique(heatmap_data$year), 
                                                    selected = unique(heatmap_data$year)[1:5],
                                                    inline = TRUE),  # Default: first 5 years
+                                
                                 plotOutput("ndvi_heatmap_crop"),
                                 plotOutput("ndvi_heatmap_forest"),
                                 plotOutput("ndvi_heatmap_grass"),
@@ -301,31 +309,29 @@ ui <- dashboardPage(skin = "black",
                                   height = "250px",
                                   width = 12,
                                   tabPanel("Grant Information",
-                                           h5(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
+                                           h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
                                                    The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types: 
                                                    crop, forest, grassland, urban-high, urban-medium, urban-low, and urban-open.
                                                    Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration."))
                                   ),
                                   tabPanel("Contributors",
-                                           h5(HTML("Jocelyn Garcia, The Morton Arboretum (jgarcia@mortonarb.org)<br><br>
+                                           h6(HTML("Jocelyn Garcia, The Morton Arboretum (jgarcia@mortonarb.org)<br><br>
                                                     Juliana Harr, The Morton Arboretum (jharr@mortonarb.org)<br><br>
                                                     Christine R. Rollinson, The Morton Arboretum (crollinson@mortonarb.org)"))
                                   ),
                                   tabPanel("Links to Github",
-                                           h5(HTML("Github Links: <br><br>
-<p> <a href='https://github.com/UrbanEcoDrought'>UrbanEcoDrought Repository</a><br><br>
-    <a href='https://github.com/UrbanEcoDrought/NDVI_drought_monitoring'>NDVI_Drought_Monitoring</a><br><br>
-    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago'>UrbanDrought_SpatialAnalysis_Chicago Workflow</a><br><br> 
-    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/NDVI_Automation_Workflow'>NDVI_Automation_Workflow</a><br><br>
-    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br><br><br></p>")),
-                                           h5(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
+                                           h6(HTML("Github Links: <br>
+<p> <a href='https://github.com/UrbanEcoDrought'>UrbanEcoDrought Repository</a><br>
+    <a href='https://github.com/UrbanEcoDrought/NDVI_drought_monitoring'>NDVI_Drought_Monitoring</a><br>
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago'>UrbanDrought_SpatialAnalysis_Chicago Workflow</a><br> 
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/NDVI_Automation_Workflow'>NDVI_Automation_Workflow</a><br>
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br></p>")),
+                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
                                   )
                                 )
                         )
                       )
-                    )
-                    
-                    
+                    )       
                     
 )
 

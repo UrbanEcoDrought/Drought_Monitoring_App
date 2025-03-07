@@ -24,6 +24,7 @@ library(tidyquant)
 library(scales)
 library(plotly)
 library(dplyr)
+library(bs4Dash)
 
 
 #For documentation of this app
@@ -36,29 +37,25 @@ paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urb
 #filepaths to NDVI & CI data
 ####################################################################################################################
 #for testing
-#path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-#NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"))%>%
-#  mutate(date = as.Date(date, format="%Y-%m-%d"))
-#NDVI_data$date <- as.Date(NDVI_data$date)
-#CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-#CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
+NDVI_data$date <- as.Date(NDVI_data$date)
+CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ####################################################################################################################
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
- path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+# path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 ####################################################################################################################
 #Uncomment after testing 
 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
-  mutate(date = as.Date(date, format="%Y-%m-%d"))
-NDVI_data$date <- as.Date(NDVI_data$date)
-
+#NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
+#  mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+#CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################################################################################################################
 
 ####################################################################################################################
@@ -101,7 +98,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
   "Cook","DuPage","Kane","McHenry","Lake","Will","Kendall") &
     STATE_NAME == "Illinois")
 
-#for heat map
+# DATA PREP FOR HEAT MAP
 
 # Join and compute differences
 merged_data <- NDVI_data %>%
@@ -112,6 +109,32 @@ merged_data <- NDVI_data %>%
 heatmap_data <- merged_data %>%
   select(ReprojPred, yday, year, difference, mean, lwr, upr, type, date)
 heatmap_data$year <- as.numeric(heatmap_data$year)
+
+
+# Ensure the complete dataset by expanding grid for all ydays, years, and types
+complete_data <- expand.grid(
+  yday = 1:366,
+  year = unique(heatmap_data$year),
+  type = unique(heatmap_data$type)
+) %>%
+  left_join(heatmap_data, by = c("yday", "year", "type")) %>%
+  arrange(type, year, yday) %>%
+  group_by(type, year) %>%
+  fill(ReprojPred, difference, mean, lwr, upr, date, .direction = "downup") %>%
+  ungroup()
+
+
+
+# Ensure the complete dataset by expanding grid for all ydays, years, and types
+expected_combinations <- expand.grid(
+  yday = 1:366,
+  year = unique(complete_data$year),
+  type = unique(complete_data$type)
+)
+
+missing_combinations <- anti_join(expected_combinations, complete_data, by = c("yday", "year", "type"))
+print(missing_combinations)
+
 
 ####################################################################################################################
 #Functions
@@ -330,11 +353,11 @@ get_color <- function(most_recent_subset, CI_final_subset) {
   
   # Apply conditions to determine color
   color <- case_when(
-    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .02) ~ "#c51b7d",  # Red
-    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .01) ~ "#e9a3c9",  # Pink
-    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .01) ~ "gray60",  # Gray
-    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .02) ~ "#a1d76a",  # Light Green
-    TRUE ~ "#4d9221"  # Default Green
+    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .02) ~ "maroon",  # Red
+    most_recent_subset$ReprojPred >= (CI_final_subset$upr + .01) ~ "pink",  # Pink
+    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .01) ~ "gray",  # Gray
+    most_recent_subset$ReprojPred < CI_final_subset$upr & most_recent_subset$ReprojPred >= (CI_final_subset$lwr - .02) ~ "olive",  # Light Green
+    TRUE ~ "success"  # Default Green
   )
   
   return(color)
@@ -537,56 +560,56 @@ yearly_change <- function(LC_type, date_needed, NDVI_data) {
 ####################################################################################################################
 #Heat Map
 
-plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming, upr, lwr) {
-  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  
+plot_ndvi_heatmap <- function(complete_data, selected_years, LC_type, naming) {  
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))    
   
-  # Ensure yday is calculated from the Date field
+  # Step 1: Filter for the selected year and land cover type
+  filtered_data <- complete_data %>% 
+    filter(type == LC_type, year %in% selected_years) %>%  
+    mutate(yday = as.numeric(format(date, "%j")))  # Ensure yday is numeric  
+  
+  # Step 2: Aggregate to ensure one row per yday
   filtered_data <- filtered_data %>%
+    group_by(year, yday) %>%  # Group by year and yday
+    summarise(
+      ReprojPred = mean(ReprojPred, na.rm = TRUE),  # Aggregate NDVI values  
+      lwr = mean(lwr, na.rm = TRUE)  # Aggregate lwr values  
+    ) %>%
+    ungroup() %>%
     mutate(
-      yday = as.numeric(format(date, "%j")),  # Ensure yday is numeric using the full date
-      year = factor(year, levels = rev(unique(year))),  # Ensure proper year ordering
-      status_category = factor(case_when(
-        ReprojPred >= upr ~ "Blue: At or Above Upper Bound",
-        ReprojPred >= lwr & ReprojPred < upr ~ "Yellow: Within Confidence Interval",
-        ReprojPred < lwr ~ "Orange: Below Lower Bound"
-      ), levels = c("Blue: At or Above Upper Bound",
-                    "Yellow: Within Confidence Interval",
-                    "Orange: Below Lower Bound")))  
+      status_category = factor(case_when(  
+        ReprojPred >= (lwr + .02) ~ "maroon",  # Dark red  
+        ReprojPred >= (lwr + .01) ~ "pink",  # Light pink  
+        ReprojPred < lwr & ReprojPred >= (lwr - .01) ~ "gray",  # Gray  
+        ReprojPred < lwr & ReprojPred >= (lwr - .02) ~ "#3d9970",  # Light green  
+        TRUE ~ "#28a745"  # Default green  
+      ), levels = c("maroon", "pink", "gray", "#3d9970", "#28a745"))
+    )
   
-  # Filter data based on selected years & LC_type
-  filtered_data <- filtered_data %>% filter(year %in% selected_years) %>% filter(type == LC_type)
-  
-  ggplot(filtered_data, aes(x = yday, y = year)) +
-    geom_tile(aes(fill = status_category), width = 1, height = 1) +  # Set width and height to 1 for pixel-like tiles
-    scale_fill_manual(
-      values = c("Blue: At or Above Upper Bound" = "blue",
-                 "Yellow: Within Confidence Interval" = "yellow", 
-                 "Orange: Below Lower Bound" = "orange"),
-      name = "NDVI Category"
-    ) +
-    scale_x_continuous(
-      expand = c(0, 0),
-      breaks = seq(1, 366, by = 31),  # Cumulative days for each month
-      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-    ) +
-    scale_y_discrete(expand = c(0, 0)) +
-    labs(x = "Month of Year", y = "Year", title = paste0(naming, " Heat Map")) +
-    theme_minimal(base_size = 10) +
-    theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
-      axis.text.y = element_text(size = 8),
-      axis.title.x = element_text(face = "bold", size = 10),
-      axis.title.y = element_text(face = "bold", size = 10),
-      plot.title = element_text(face = "bold", size = 12),
-      legend.key.height = unit(1, "cm"),
-      legend.position = "bottom",
-      legend.text = element_text(size = 8),
-      legend.title = element_text(size = 10),
-      # Set the background color of the plot area and entire plot
-      panel.background = element_rect(fill = "gray99"),  # Background for the plot area
-      plot.background = element_rect(fill = "gray99")    # Background for the entire plot
+  # Step 3: Generate the heatmap
+  ggplot(filtered_data, aes(x = yday, y = factor(year))) +  # Use 'year' from the data frame
+    geom_tile(aes(fill = status_category), width = 1, height = 1) +  # Pixel-like tiles    
+    scale_fill_identity(name = "NDVI Category") +    
+    scale_x_continuous(      
+      expand = c(0, 0),      
+      breaks = seq(1, 366, by = 31),  # Monthly tick marks      
+      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")    
+    ) +    
+    labs(x = "Month of Year", y = "Year", title = paste0(naming, " Heat Map")) +    
+    theme_minimal(base_size = 10) +    
+    theme(      
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),      
+      axis.text.y = element_text(size = 8),      
+      axis.title.x = element_text(face = "bold", size = 10),      
+      axis.title.y = element_text(face = "bold", size = 10),      
+      plot.title = element_text(face = "bold", size = 12),      
+      panel.background = element_rect(fill = "gray99"),      
+      plot.background = element_rect(fill = "gray99")    
     )
 }
+
+
+
 ####################################################################################################################
 #END OF FUNCTIONS
 ####################################################################################################################
@@ -633,56 +656,68 @@ server <- function(input, output, session) {
     result <- LC_status("crop", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent crop data available")
+      return(valueBox(
+        "No recent crop data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Crop Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Crop Status", 
+      icon = icon("tractor"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
   output$forBox <- renderUI({
-    result <- LC_status("forest", NDVI_data, CI_csv, most_recent_data)
+    result <- LC_status("crop", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent forest data available")
+      return(valueBox(
+        "No recent forest data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Forest Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Forest Status", 
+      icon = icon("tree"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
   output$grassBox <- renderValueBox({
-    result <- LC_status("grass", NDVI_data, CI_csv, most_recent_data)
+    result <- LC_status("grassland", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent grassland data available")
+      return(valueBox(
+        "No recent grass data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Grass Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Grass Status", 
+      icon = icon("seedling"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
@@ -690,18 +725,22 @@ server <- function(input, output, session) {
     result <- LC_status("urban-high", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent urban-high data available")
+      return(valueBox(
+        "No recent urban-high data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Urban-High Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Urban-High Status", 
+      icon = icon("city"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
@@ -709,18 +748,22 @@ server <- function(input, output, session) {
     result <- LC_status("urban-medium", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent urban-medium data available")
+      return(valueBox(
+        "No recent urban-medium data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Urban-Medium Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Urban-Medium Status", 
+      icon = icon("building-columns"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
@@ -728,18 +771,22 @@ server <- function(input, output, session) {
     result <- LC_status("urban-low", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent urban-low data available")
+      return(valueBox(
+        "No recent urban-low data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Urban-Low Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Urban-Low Status", 
+      icon = icon("house"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
@@ -747,18 +794,22 @@ server <- function(input, output, session) {
     result <- LC_status("urban-open", NDVI_data, CI_csv, most_recent_data)
     
     if (is.null(result)) {
-      return(tags$div(
-        style = "background-color: gray; color: white; padding: 20px; border-radius: 5px; text-align: center;",
-        h3("No Data"),
-        h4("No recent urban-open data available")
+      return(valueBox(
+        "No recent urban-open data available", 
+        subtitle = "No Data", 
+        icon = icon("exclamation-circle"),
+        color = "gray",  # You can use a neutral color like gray for no data
+        width = 11
       ))
     }
     
-    tags$div(
-      class = "small-box",  # Adds default small-box styling
-      style = paste0("background-color: ", "#c51b7d", "; color: white; padding: 20px; border-radius: 5px; text-align: center;"),
-      h4("Urban-Open Status"),
-      h4(result$status)
+    # If data is available, display the result
+    valueBox(
+      result$status, 
+      subtitle = "Urban-Open Status", 
+      icon = icon("shop"),
+      color = result$color,  # You can use a color of your choice
+      width = 11
     )
   })
   
@@ -1016,51 +1067,52 @@ server <- function(input, output, session) {
   })
   ####################################################################################################################
   output$ndvi_heatmap_crop <- renderPlot({
-    req(input$selected_years)  # Ensure at least one year is selected
+    req(input$selected_years)
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-    plot_ndvi_heatmap(filtered_data, input$selected_years, "crop", "Crop")  # Pass the filtered data
+    filtered_data <- complete_data %>% filter(as.numeric(year) %in% as.numeric(input$selected_years))
+    plot_ndvi_heatmap(complete_data, input$selected_years, "crop", "Crop")
   })
+  
   #####################
   output$ndvi_heatmap_forest <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years, "forest", "Forest")  # Pass the filtered data
   })
   #####################
   output$ndvi_heatmap_grass <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years, "grassland", "Grassland")  # Pass the filtered data
   })
   #####################
   output$ndvi_heatmap_uh <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-high","Urban-High")  # Pass the filtered data
   })
   #####################
   output$ndvi_heatmap_um <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-medium", "Urban-Medium")  # Pass the filtered data
   })
   #####################
   output$ndvi_heatmap_ul <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years,"urban-low", "Urban-Low")  # Pass the filtered data
   })
   #####################
   output$ndvi_heatmap_uo <- renderPlot({
     req(input$selected_years)  # Ensure at least one year is selected
     
-    filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
+    filtered_data <- complete_data %>% filter(year %in% input$selected_years)
     plot_ndvi_heatmap(filtered_data, input$selected_years,"urban-open", "Urban-Open")  # Pass the filtered data
   })
   ####################################################################################################################
