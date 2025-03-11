@@ -37,21 +37,21 @@ library(bs4Dash)
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 ################################
-#for testing
-path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
-NDVI_data$date <- as.Date(NDVI_data$date)
-CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+# #for testing
+# path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+# NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
+# NDVI_data$date <- as.Date(NDVI_data$date)
+# CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ################################
 ####################
 #Uncomment after testing 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-#NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
-  #mutate(date = as.Date(date, format="%Y-%m-%d"))
-#NDVI_data$date <- as.Date(NDVI_data$date)
+NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
+mutate(date = as.Date(date, format="%Y-%m-%d"))
+NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-#CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
