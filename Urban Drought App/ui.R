@@ -24,6 +24,7 @@ library(tidyr)
 library(tidyquant)
 library(scales)
 library(bs4Dash)
+library(shinyalert)
 
 
 #For documentation of this app
@@ -109,10 +110,11 @@ ui <- dashboardPage(skin = "black",
                                              tabName = "NDVI_data_review"),
                                  menuSubItem("Heat Maps for each LC Type",
                                              tabName = "ndvi_diff")),
-                        menuItem("Specifics", tabName = "specifics", icon = icon("bookmark"))
+                        menuItem("About", tabName = "specifics", icon = icon("bookmark"))
                       )
                     ),
                     dashboardBody(
+                      useShinyalert(),
                       # Custom CSS
                       tags$head(
                         tags$style(HTML("
@@ -130,7 +132,6 @@ ui <- dashboardPage(skin = "black",
         }
       "))
                       ),
-                      
                       tabItems(
                         tabItem(tabName = "dashboard",
                                 # Row for drought status for each LC type
@@ -153,9 +154,7 @@ ui <- dashboardPage(skin = "black",
                                            valueBoxOutput("uhBox", width = NULL),
                                          )
                                   )
-                                )
-                                ,
-                                
+                                ),
                                 # Map layout
                                 fluidRow(
                                   column(width = 5, 
@@ -178,7 +177,6 @@ ui <- dashboardPage(skin = "black",
                                       h6(textOutput("percentile_ul")),
                                       h6(textOutput("percentile_uo")),  
                                       br(),
-                                      
                                       p("For a more in-depth exploration, take a look at the other tabs or the directory.")
                                     ),
                                     tabPanel(
@@ -190,8 +188,7 @@ ui <- dashboardPage(skin = "black",
                                       h6(HTML("<span style='color:maroon;'>Maroon</span> = Significantly browner than normal")),
                                       #h6(HTML("<br>Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
                                       #HTML("<img src='NDVI_Categories.png' alt='NDVI Categories' style='width:60%;'>")
-                                    )
-                                    ,
+                                    ),
                                     tabPanel(
                                       "Directory",
                                       h6("Dashboard"),
@@ -205,11 +202,12 @@ ui <- dashboardPage(skin = "black",
                                       HTML(
                                         "<ul>
       <li>Yearly, Monthly & Weekly NDVI Graphs</li>
-      <li>Distribution Plot Statistics</li>
+      <li>Heat Maps for each LC Type</li>
     </ul>"      ),
-                                      h6("Specifics"),
+                                      h6("About"),
                                       HTML(
                                         "<ul>
+      <li>Preliminary Information</li>
       <li>Grant Information & Contributors</li>
       <li>Github & Documentation Links</li>
       <li>Workflows</li>
@@ -289,7 +287,6 @@ ui <- dashboardPage(skin = "black",
     transform: scale(0.8);  /* Resize the checkboxes */
   }
 ")),
-                                
                                 # The checkboxGroupInput with custom CSS
                                 checkboxGroupInput("selected_years", "Select Years:", 
                                                    choices = unique(heatmap_data$year), 
@@ -306,8 +303,11 @@ ui <- dashboardPage(skin = "black",
                         ),
                         tabItem(tabName = "specifics",
                                 tabBox(
-                                  height = "250px",
+                                  height = "3000px",
                                   width = 12,
+                                  tabPanel("Preliminary Information",
+                                           h6(HTML("-insert NDVI info-"))
+                                  ),
                                   tabPanel("Grant Information",
                                            h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
                                                    The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types: 
@@ -317,6 +317,7 @@ ui <- dashboardPage(skin = "black",
                                   tabPanel("Contributors",
                                            h6(HTML("Jocelyn Garcia, The Morton Arboretum (jgarcia@mortonarb.org)<br><br>
                                                     Juliana Harr, The Morton Arboretum (jharr@mortonarb.org)<br><br>
+                                                    Ayo Andra J. Deas, The City University of New York (adeas@gc.cuny.edu)<br><br>
                                                     Christine R. Rollinson, The Morton Arboretum (crollinson@mortonarb.org)"))
                                   ),
                                   tabPanel("Links to Github",
@@ -328,11 +329,11 @@ ui <- dashboardPage(skin = "black",
     <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br></p>")),
                                            h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
                                   )
+                                  
                                 )
                         )
                       )
-                    )       
-                    
+                    ) 
 )
 
 

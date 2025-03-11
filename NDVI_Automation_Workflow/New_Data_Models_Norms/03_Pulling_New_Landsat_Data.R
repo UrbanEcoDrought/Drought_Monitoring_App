@@ -16,7 +16,7 @@
 #assetHome <- "projects/urbanecodrought/assets/UHI-analysis"
 
 
-library(rgee); library(raster); library(terra)
+library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
 ee_check() # For some reason, it's important to run this before initializing right now
 rgee::ee_Initialize(user = 'jgarcia@mortonarb.org', drive=T, project = "urbanecodrought")
 path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
@@ -28,7 +28,7 @@ NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract")
 ##################### 
 # 0. Read in helper functions ----
 ##################### 
-source("/Users/jocelyngarcia/Documents/GitHub/UrbanDrought_SpatialAnalysis_Chicago/NDVI_Automation_Workflow/Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
+source("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/NDVI_Automation_Workflow/Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
 
 
 ####################################################################################################################
@@ -152,7 +152,12 @@ landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$m
 # ee_print(landsat8)
 # Map$addLayer(landsat8$first()$select('NDVI'))
 
-l8Mosaic = mosaicByDate(landsat8, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
+l8Mosaic = mosaicByDate(imcol = landsat8, dayWindow = 7)$select(
+  c('blue_median', 'green_median', 'red_median', 'nir_median', 
+    'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),
+  c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI")
+)$sort("date")
+
 # ee_print(l8Mosaic, "landsat8-Mosaic")
 # Map$addLayer(l8Mosaic$first()$select('NDVI'), ndviVis, "NDVI - First")
 
