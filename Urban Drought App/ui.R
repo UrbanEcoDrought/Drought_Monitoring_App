@@ -38,15 +38,14 @@ library(shinyalert)
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 ################################
-# #for testing
+#####for testing######
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
 # NDVI_data$date <- as.Date(NDVI_data$date)
 # CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ################################
-####################
-#Uncomment after testing 
-#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+#####Uncomment after testing ######
+#####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
 mutate(date = as.Date(date, format="%Y-%m-%d"))
 NDVI_data$date <- as.Date(NDVI_data$date)
@@ -56,10 +55,7 @@ CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
-
-head(NDVI_data)
-
-
+#head(NDVI_data)
 #Pulling yday of latest data (most recent day) 
 
 #finding latest day & pulling date
@@ -109,7 +105,9 @@ ui <- dashboardPage(skin = "black",
                                  menuSubItem("NDVI Data Review",
                                              tabName = "NDVI_data_review"),
                                  menuSubItem("Heat Maps for each LC Type",
-                                             tabName = "ndvi_diff")),
+                                             tabName = "ndvi_diff"),
+                                 menuSubItem("Percentiles (Broader Context)",
+                                             tabName = "percentile_broad")),
                         menuItem("About", tabName = "specifics", icon = icon("bookmark"))
                       )
                     ),
@@ -167,7 +165,7 @@ ui <- dashboardPage(skin = "black",
                                       "Latest Data Report",
                                       h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
                                       br(),
-                                      h6(HTML("<u>Percentiles for Current NDVI data:</u>")),
+                                      h6(HTML("<u>Percentiles of Current NDVI data compared to recent observed data (past 2 weeks):</u>")),
                                       # Proper text output for the percentile value
                                       h6(textOutput("percentile_crop")),  
                                       h6(textOutput("percentile_for")),  
@@ -220,36 +218,43 @@ ui <- dashboardPage(skin = "black",
                                     width = 12,
                                     tabPanel(
                                       "Crop Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("crop_density_plot"),
-                                      textOutput("crop_daily")
+                                      textOutput("crop_daily"),
                                     ),
                                     tabPanel(
                                       "Forest Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
                                       "Grassland Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
                                       "Urban-High Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Medium Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Low Density Plot",
+                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Open Density Plot",
+                                      h6(HTML("Note:The density plot values indicate relative likelihood in the distribution")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
@@ -306,7 +311,8 @@ ui <- dashboardPage(skin = "black",
                                   height = "3000px",
                                   width = 12,
                                   tabPanel("Preliminary Information",
-                                           h6(HTML("-insert NDVI info-"))
+                                           h6(HTML("<b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>"))
                                   ),
                                   tabPanel("Grant Information",
                                            h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
@@ -331,11 +337,105 @@ ui <- dashboardPage(skin = "black",
                                   )
                                   
                                 )
-                        )
+                        ),
+                        
+                        tabItem(tabName = "percentile_broad", 
+                                tabBox(
+                                  height = "3000px",
+                                  width = 12,
+                                  tabPanel("Crop Percentile & Boxplot",#CROP
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Crop Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    # The checkboxGroupInput with custom CSS
+                                    checkboxGroupInput("selected_years_crop", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_crop_broad")),  
+                                   plotOutput("crop_boxplot")
+                                  ),
+                                  tabPanel("Forest Percentile & Boxplot",#FOREST
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Forest Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    # The checkboxGroupInput with custom CSS
+                                    checkboxGroupInput("selected_years_for", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_for_broad")),  
+                                    plotOutput("for_boxplot")
+                                  ),
+                                  tabPanel("Grass Percentile & Boxplot",#GRASS
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Grass Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    # The checkboxGroupInput with custom CSS
+                                    checkboxGroupInput("selected_years_grass", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_grass_broad")),  
+                                    plotOutput("grass_boxplot")
+                                  ),
+                                  tabPanel("Urban-High Percentile & Boxplot",#URBAN-HIGH
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Urban-high Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    # The checkboxGroupInput with custom CSS
+                                    checkboxGroupInput("selected_years_uh", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_uh_broad")),  
+                                    plotOutput("uh_boxplot")
+                                  ),
+                                  tabPanel("Urban-Medium Percentile & Boxplot",#URBAN-MEDIUM
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Urban-medium Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    # The checkboxGroupInput with custom CSS
+                                    checkboxGroupInput("selected_years_um", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_um_broad")),  
+                                    plotOutput("um_boxplot")
+                                  ),
+                                  tabPanel("Urban-Low Percentile & Boxplot",#URBAN-LOW
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Urban-low Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                                    
+                                    checkboxGroupInput("selected_years_ul", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  
+                                    h6(htmlOutput("percentile_ul_broad")),  
+                                    plotOutput("ul_boxplot")
+                                  ),
+                                  tabPanel("Urban-Open Percentile & Boxplot",#URBAN-OPEN
+                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                                    br(),
+                                    h6(HTML("<u>Urban-open Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                     
+                                    checkboxGroupInput("selected_years_uo", "Select Years:", 
+                                                       choices = unique(NDVI_data$year), 
+                                                       selected = unique(NDVI_data$year)[1:5],
+                                                       inline = TRUE),  #
+                                    h6(htmlOutput("percentile_uo_broad")),  
+                                    plotOutput("uo_boxplot")
+                                  )
                       )
                     ) 
 )
-
+))
 
 # Run the application
 # shinyApp(ui = ui, server = server)

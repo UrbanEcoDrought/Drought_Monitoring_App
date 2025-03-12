@@ -9,18 +9,24 @@ rgee::ee_Authenticate()
 
 library(reticulate)
 library(rgee)
+rgee::ee_clean_user_credentials()
+reticulate::use_virtualenv("/Users/jocelyngarcia/.virtualenvs/r-reticulate", required = TRUE)
+
+
 reticulate::import("ee")
 rgee::ee_Authenticate()
-rgee::ee_Initialize(email = "jgarcia@mortonarb.org", drive = TRUE)
+#rgee::ee_Initialize(email = "jgarcia@mortonarb.org", drive = TRUE)
+#rgee::ee_Initialize(user = "users/jgarcia", drive = TRUE)
+rgee::ee_Initialize(user = 'users/jgarcia', drive=T, project = "urbanecodrought")
 
-#Checking to make sure my account is linked 
+#Checking to make sure my account is linked
 reticulate::py_run_string("import ee; print(ee.data.getList({'id': 'users/jgarcia'}))")
 
 
 
 #Troubleshooting code to try if not working 
 #deleting old credentials not stored in the right place, setting path manually, and then authorizing
-unlink("~/.config/earthengine/credentials", recursive = TRUE)
+unlink("~/.config/earthengine", recursive = TRUE)
 
 # Set Python version explicitly (if needed)
 use_python("~/.pyenv/versions/3.10.14/bin/python3", required = TRUE)

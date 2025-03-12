@@ -20,8 +20,13 @@ bitwiseExtract <- function(input, fromBit, toBit) {
   return(input$rightShift(fromBit)$bitwiseAnd(mask))
 }
 
-addNDVI <- function(img){
-  return( img$addBands(img$normalizedDifference(c('nir','red'))$rename('NDVI')));
+#addNDVI <- function(img){
+#  return( img$addBands(img$normalizedDifference(c('nir','red'))$rename('NDVI')));
+#}
+
+addNDVI <- function(img) {
+  ndvi <- img$normalizedDifference(c('nir', 'red'))$rename('NDVI')
+  return(img$addBands(ndvi))
 }
 
 
