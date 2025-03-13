@@ -33,6 +33,12 @@ library(bs4Dash)
 # source("Graph_Plotting.R")
 # source("Helper_Functions_Code.R")
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
+heatmap_colors <- c("Much browner than normal" = "maroon",
+                    "Browner than normal" = "pink", 
+                    "NDVI within confidence interval" = "gray",
+                    "Greener than normal" = "#3d9970",  # Using exact hex values
+                    "Much greener than normal" = "#28a745")
+
 
 #filepaths to NDVI & CI data
 ####################################################################################################################
@@ -109,19 +115,25 @@ heatmap_data <- merged_data %>%
 heatmap_data$year <- as.numeric(heatmap_data$year)
 
 #Adding column of what each color should be because map is showing up as mostly grey right now & I'm not sure if thats a bug or not
+# heatmap_colors <- c("Much browner than normal" = "maroon",
+#                     "Browner than normal" = "pink", 
+#                     "NDVI within confidence interval" = "gray",
+#                     "Greener than normal" = "#3d9970",  # Using exact hex values
+#                     "Much greener than normal" = "#28a745")
+
 heatmap_data <- heatmap_data %>%
   mutate(color = case_when(
-    heatmap_data$ReprojPred >= (heatmap_data$upr + .02) ~ "maroon",  # Red
-    heatmap_data$ReprojPred >= (heatmap_data$upr + .01) ~ "pink",  # Pink
-    heatmap_data$ReprojPred < heatmap_data$upr & heatmap_data$ReprojPred >= (heatmap_data$lwr) ~ "gray",  # Gray
-    heatmap_data$ReprojPred < heatmap_data$upr & heatmap_data$ReprojPred >= (heatmap_data$lwr - .01) ~ "#3d9970",  # Light Green
-    TRUE ~ "#28a745"  # Default Green
+    heatmap_data$ReprojPred < (heatmap_data$lwr - heatmap_data$mean-heatmap_data$lwr) ~ "Much browner than normal",  # Red --> change to "signficiantly browner than normal" or whatever levels are down below
+    heatmap_data$ReprojPred <= (heatmap_data$lwr) ~ "Browner than normal",  # Pink
+    heatmap_data$ReprojPred > (heatmap_data$upr +  heatmap_data$upr-heatmap_data$mean) ~ "Much greener than normal",  # Default Green
+    heatmap_data$ReprojPred >= (heatmap_data$upr) ~ "Greener than normal",  # light green
+    TRUE ~ "NDVI within confidence interval"  # Default Gray
   ) )
 #Checking that every yday has data since this is predicted
 heatmap_data_for <- filter(heatmap_data, year == 2021 & type == "crop")
 str(heatmap_data_for)
 heatmap_data_for <- heatmap_data_for[!is.na(heatmap_data_for$yday), ]
-color_test <- filter(heatmap_data_for, (color != "gray")) #nothing showing in heatmap
+color_test <- filter(heatmap_data_for, (color != "NDVI within confidence interval")) #nothing showing in heatmap
 
 #Not giving full 365 days even for predicted
 crop_tester <- filter(NDVI_data, year == 2024 & type == "crop")
@@ -607,7 +619,6 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
   print(unique(filtered_data$color))
   
   # Ensure factor levels are correctly assigned (forces ggplot to recognize all categories)
-  color_levels <- c("maroon", "pink", "gray", "#3d9970", "#28a745")
   #filtered_data <- filtered_data %>%
    # mutate(color = factor(color, levels = color_levels))
   
@@ -623,16 +634,12 @@ plot_ndvi_heatmap <- function(filtered_data, selected_years, LC_type, naming) {
   ggplot(filtered_data, aes(x = yday, y = factor(year))) +
     geom_tile(aes(fill = color), width = 1, height = 1) +  
     scale_fill_manual(
-      values = c("maroon" = "maroon",
-                 "pink" = "pink", 
-                 "gray" = "gray",
-                 "#3d9970" = "#3d9970",  # Using exact hex values
-                 "#28a745" = "#28a745"), 
-      labels = c("Significantly greener than normal",
-                 "Greener than normal",
-                 "NDVI within confidence interval",
-                 "Browner than normal",
-                 "Significantly browner than normal"),
+      values = heatmap_colors, 
+      # labels = c("Much greener than normal",
+      #            "Greener than normal",
+      #            "NDVI within confidence interval",
+      #            "Browner than normal",
+      #            "Much browner than normal"),
       name = "NDVI Category",
       drop = FALSE  
     ) +
