@@ -120,15 +120,21 @@ heatmap_data$year <- as.numeric(heatmap_data$year)
 #                     "NDVI within confidence interval" = "gray",
 #                     "Greener than normal" = "#3d9970",  # Using exact hex values
 #                     "Much greener than normal" = "#28a745")
-
+# heatmap_data$color <- NA
+# heatmap_data$color[!is.na(heatmap_data$mean) & heatmap_data$ReprojPred < (heatmap_data$lwr - heatmap_data$mean-heatmap_data$lwr)] <- "Much browner than normal"
+# heatmap_data$color[!is.na(heatmap_data$mean) &heatmap_data$ReprojPred < (heatmap_data$lwr) & heatmap_data$ReprojPred >= (heatmap_data$lwr - heatmap_data$mean-heatmap_data$lwr)] <- "Browner than normal"
+# heatmap_data$color[!is.na(heatmap_data$mean) &heatmap_data$ReprojPred >= (heatmap_data$lwr) & heatmap_data$ReprojPred <= (heatmap_data$upr)] <- "NDVI within confidence interval"
+# heatmap_data$color[!is.na(heatmap_data$mean) &heatmap_data$ReprojPred > (heatmap_data$upr) & heatmap_data$ReprojPred <= (heatmap_data$upr +  heatmap_data$upr-heatmap_data$mean)] <- "Greener than normal"
+# heatmap_data$color[!is.na(heatmap_data$mean) &heatmap_data$ReprojPred > (heatmap_data$upr +  heatmap_data$upr-heatmap_data$mean)] <- "Much greener than normal"
 heatmap_data <- heatmap_data %>%
   mutate(color = case_when(
-    heatmap_data$ReprojPred < (heatmap_data$lwr - heatmap_data$mean-heatmap_data$lwr) ~ "Much browner than normal",  # Red --> change to "signficiantly browner than normal" or whatever levels are down below
     heatmap_data$ReprojPred <= (heatmap_data$lwr) ~ "Browner than normal",  # Pink
-    heatmap_data$ReprojPred > (heatmap_data$upr +  heatmap_data$upr-heatmap_data$mean) ~ "Much greener than normal",  # Default Green
     heatmap_data$ReprojPred >= (heatmap_data$upr) ~ "Greener than normal",  # light green
-    TRUE ~ "NDVI within confidence interval"  # Default Gray
+    heatmap_data$ReprojPred < (heatmap_data$lwr - heatmap_data$mean-heatmap_data$lwr) ~ "Much browner than normal",  # Red --> change to "signficiantly browner than normal" or whatever levels are down below
+    heatmap_data$ReprojPred > (heatmap_data$upr +  heatmap_data$upr-heatmap_data$mean) ~ "Much greener than normal",  # Default Green
+    heatmap_data$ReprojPred > (heatmap_data$lwr) &  heatmap_data$ReprojPred < (heatmap_data$upr) ~ "NDVI within confidence interval"  # Default Gray
   ) )
+
 #Checking that every yday has data since this is predicted
 heatmap_data_for <- filter(heatmap_data, year == 2021 & type == "crop")
 str(heatmap_data_for)
