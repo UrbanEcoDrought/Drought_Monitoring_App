@@ -13,7 +13,8 @@ rgee::ee_Initialize(user = user.ee, drive=T, project = "urbanecodrought")
 path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 assetHome <- ee_get_assethome()
-NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract")
+NDVIsave <- ("UrbanEcoDrought_NDVI_LocalExtract-RAW")
+
 
 ##################### 
 # 0. Read in helper functions ----
@@ -58,7 +59,8 @@ nlcdvis = list(
 ##################### 
 # Read in base layers ----
 ##################### 
-Chicago = ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg") 
+# Chicago = ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg") 
+Chicago = ee$FeatureCollection("projects/breidyee/assets/SevenCntyChiReg") 
 ee_print(Chicago)
 
 chiBounds <- Chicago$geometry()$bounds()
@@ -85,20 +87,23 @@ ndviVis = list(
 # Landcover names and mask ----
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
-forMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Forest')
+# forMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Forest')
+# grassMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Grass')
+# cropMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Crop')
+# urbOMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Open')
+# urbLMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Low')
+# urbMMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Medium')
+# urbHMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-High')
 
-grassMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Grass')
+forMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Forest'))
+grassMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Grass'))
+cropMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Crop'))
+urbOMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Open'))
+urbLMask <-ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Low'))
+urbMMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Medium'))
+urbHMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-High'))
 
-cropMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Crop')
-
-urbOMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Open')
-
-urbLMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Low')
-
-urbMMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Medium')
-
-urbHMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-High')
-
+# ee_print(forMask)
 ##################### 
 # Read in & Format Landsat 8 ----
 ##################### 
@@ -127,14 +132,14 @@ landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$m
 # ee_print(landsat8)
 # Map$addLayer(landsat8$first()$select('NDVI'))
 
-l8Mosaic = mosaicByDate(landsat8, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
+# l8Mosaic = mosaicByDate(landsat8, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
 # ee_print(l8Mosaic, "landsat8-Mosaic")
 # Map$addLayer(l8Mosaic$first()$select('NDVI'), ndviVis, "NDVI - First")
 
 # Mask NDVI by Landcover & condense to regional means
 for(LCTYPE in lcnames){
   # print(LCTYPE)
-  extractByLC(imcol=l8Mosaic, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
+  extractByLC(imcol=landsat8, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
 }
 
 ##################### 
@@ -164,12 +169,12 @@ landsat9 <- ee$ImageCollection("LANDSAT/LC09/C02/T1_L2")$filterBounds(Chicago)$m
   return(img$addBands(srcImg=lAdj, overwrite=T)$addBands(srcImg=lst_k, overwrite=T)$set('date',d, 'day',dy, 'month',m, 'year',y))
 })$select(c('SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'ST_B10'),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K'))$map(addNDVI)
 
-l9Mosaic = mosaicByDate(landsat9, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
+# l9Mosaic = mosaicByDate(landsat9, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
 
 # Mask NDVI by Landcover & condense to regional means
 for(LCTYPE in lcnames){
   # print(LCTYPE)
-  extractByLC(imcol=l9Mosaic, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat9_", LCTYPE))
+  extractByLC(imcol=landsat9, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat9_", LCTYPE))
 }
 
 ##################### 
@@ -200,12 +205,12 @@ landsat7 <- ee$ImageCollection("LANDSAT/LE07/C02/T1_L2")$filterBounds(Chicago)$f
 })$select(c('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'ST_B6'),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K'))$map(addNDVI)
 
 
-l7Mosaic = mosaicByDate(landsat7, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
+# l7Mosaic = mosaicByDate(landsat7, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
 
 # Mask NDVI by Landcover & condense to regional means
 for(LCTYPE in lcnames){
   # print(LCTYPE)
-  extractByLC(imcol=l7Mosaic, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat7_", LCTYPE))
+  extractByLC(imcol=landsat7, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat7_", LCTYPE))
 }
 
 ##################### 
@@ -236,71 +241,14 @@ landsat5 <- ee$ImageCollection("LANDSAT/LT05/C02/T1_L2")$filterBounds(Chicago)$f
   return(img$addBands(srcImg=lAdj, overwrite=T)$addBands(srcImg=lst_k, overwrite=T)$set('date',d, 'day',dy, 'month',m, 'year',y))
 })$select(c('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'ST_B6'),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K'))$map(addNDVI)
 
-l5Mosaic = mosaicByDate(landsat5, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
+# l5Mosaic = mosaicByDate(landsat5, 7)$select(c('blue_median', 'green_median', 'red_median', 'nir_median', 'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI"))$sort("date")
 
 # Mask NDVI by Landcover & condense to regional means
 for(LCTYPE in lcnames){
   # print(LCTYPE)
-  extractByLC(imcol=l5Mosaic, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat5_", LCTYPE))
+  extractByLC(imcol=landsat5, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat5_", LCTYPE))
 }
 #End of Christy's second script 
 ##################### 
-path.google <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org"
-pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract")
-NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract")
-
-# Check if files are being detected
-fNDVI <- dir(file.path(path.google, NDVIsave))
-print(fNDVI)  # Should list all files in that directory
-
-day.labels <- data.frame(Date=seq.Date(as.Date("2023-01-01"), as.Date("2023-12-01"), by="month"))
-day.labels$yday <- lubridate::yday(day.labels$Date)
-day.labels$Text <- paste(lubridate::month(day.labels$Date, label=T), lubridate::day(day.labels$Date))
-day.labels
-summary(day.labels)
-
-# Clunky code, but should pull the latest file
-lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
-
-ndviAll <- data.frame()
-for(LCTYPE in lcnames){
-  fileL8 <- dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE)))]
-  fileL9 <- dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE)))]
-  fileL7 <- dir(file.path(path.google, NDVIsave), paste0("Landsat7_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat7_", LCTYPE)))]
-  fileL5 <- dir(file.path(path.google, NDVIsave), paste0("Landsat5_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat5_", LCTYPE)))]
-  
-  if(!file.exists(file.path(pathShare, fileL8))) file.copy(from=file.path(path.google, NDVIsave, fileL8), to=file.path(pathShare, fileL8), overwrite=T, copy.mode=T)
-  if(!file.exists(file.path(pathShare, fileL9))) file.copy(from=file.path(path.google, NDVIsave, fileL9), to=file.path(pathShare, fileL9), overwrite=T, copy.mode=T)
-  if(!file.exists(file.path(pathShare, fileL7))) file.copy(from=file.path(path.google, NDVIsave, fileL7), to=file.path(pathShare, fileL7), overwrite=T, copy.mode=T)
-  if(!file.exists(file.path(pathShare, fileL5))) file.copy(from=file.path(path.google, NDVIsave, fileL5), to=file.path(pathShare, fileL5), overwrite=T, copy.mode=T)
-  
-  landsat8 <- read.csv(file.path(path.google, NDVIsave, fileL8))
-  landsat9 <- read.csv(file.path(path.google, NDVIsave, fileL9))
-  landsat7 <- read.csv(file.path(path.google, NDVIsave, fileL7))
-  landsat5 <- read.csv(file.path(path.google, NDVIsave, fileL5))
-  
-  landsat8$mission <- "landsat 8"
-  landsat9$mission <- "landsat 9"
-  landsat7$mission <- "landsat 7"
-  landsat5$mission <- "landsat 5"
-  
-  landsatAll <- rbind(landsat8, landsat9, landsat7, landsat5)
-  # landsatAll <- rbind(landsat8, landsat9)
-  landsatAll$type <- LCTYPE
-  
-  ndviAll <- rbind(ndviAll, landsatAll)
-}
-summary(ndviAll)
-unique(ndviAll$mission)
-
-ndviAll$date <- as.Date(ndviAll$date)
-ndviAll$year <- lubridate::year(ndviAll$date)
-ndviAll$yday <- lubridate::yday(ndviAll$date)
-ndviAll$type <- factor(ndviAll$type, levels=rev(c("forest", "grassland", "crop", "urban-open", "urban-low", "urban-medium", "urban-high")))
-head(ndviAll)
-summary(ndviAll)
-unique(ndviAll$type)
-
-write.csv(ndviAll, file.path(pathShare, "NDVIall_latest.csv"), row.names=F)
 
 ##################### 
