@@ -17,6 +17,7 @@ path.google <- "~/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")
 pathDat <- "../data_all"
 pathMods <- "../gam_models"
+if(!dir.exists(pathDat)) dir.create(pathDat, recursive=T)
 if(!dir.exists(pathMods)) dir.create(pathMods, recursive = T)
 
 source("0_Calculate_GAMM_Posteriors_Updated_Copy.R")
@@ -32,7 +33,7 @@ ndvi.base <- read.csv(file.path(pathDat, "NDVIall_baseline.csv"))
 ndvi.base$date <- as.Date(ndvi.base$date)
 ndvi.base$type <- as.factor(ndvi.base$type)
 ndvi.base$mission <- as.factor(ndvi.base$mission)
-ndvi.base <- ndvi.base[ndvi.base$year < max(ndvi.base$year),]
+# ndvi.base <- ndvi.base[ndvi.base$year < max(ndvi.base$year),]
 summary(ndvi.base)
 
 ndvi.norms <- data.frame(yday=1:365, type=rep(unique(ndvi.base$type), each=365), NormMean=NA, NormLwr=NA, NormUpr=NA)
@@ -65,12 +66,16 @@ for(LC in unique(ndvi.base$type)){
   # summary(ndvi.norms)
   saveRDS(gamNorm, file.path(pathMods, paste0("GAM-Normal_", LC, ".RDS")))
   
-  gamYRs <-gam(NDVIReprojected ~ s(yday, k=12, by=as.factor(year)) + as.factor(year), data=ndvi.base[rowsLC,])
-  # plot(gamYRs)
-  YRpost <- post.distns(model.gam = gamYRs, newdata = ndviyrs[ndviyrs$type==LC,], vars=c("yday", "year"))
-  # summary(YRpost)
-  ndviyrs[ndviyrs$type==LC, c("YrMean", "YrLwr", "YrUpr")] <- YRpost[,c("mean", "lwr", "upr")]
-  saveRDS(gamNorm, file.path(pathMods, paste0("GAM-Years-Baseline_", LC, ".RDS")))
+  if(!dir.exists(file.path(pathMods, LC))) dir.create(file.path(pathMods, LC))
+  for(YR in unique(ndvi.base$year[rowsLC])){
+    gamYRs <-gam(NDVIReprojected ~ s(yday, k=12)  , data=ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR,])
+    # plot(gamYRs)
+    YRpost <- post.distns(model.gam = gamYRs, newdata = ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR,], vars=c("yday", "year"))
+    # summary(YRpost)
+    ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR, c("YrMean", "YrLwr", "YrUpr")] <- YRpost[,c("mean", "lwr", "upr")]
+    saveRDS(gamYRs, file.path(pathMods, LC, paste0("GAM-Years-Baseline_", LC, "_", YR, ".RDS")))
+    
+  }
 }
 
 summary(ndvi.base)
@@ -79,4 +84,4 @@ summary(ndviyrs)
 
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndvi.norms, file.path(pathDat, "NDVIall_normals_modeled.csv"), row.names=F)
-write.csv(ndvi.norms, file.path(pathDat, "NDVIall_years_modeled.csv"), row.names=F)
+write.csv(ndviyrs, file.path(pathDat, "NDVIall_years_modeled.csv"), row.names=F)
