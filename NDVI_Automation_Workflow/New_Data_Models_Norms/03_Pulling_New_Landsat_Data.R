@@ -18,37 +18,34 @@
 
 library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
 ee_check() # For some reason, it's important to run this before initializing right now
-rgee::ee_Initialize(user = 'jgarcia@mortonarb.org', drive=T, project = "urbanecodrought")
+# user.ee <- "jgarcia@mortonarb.org"
+user.ee <- "crollinson@mortonarb.org"
+
+rgee::ee_Initialize(user =user.ee, drive=T, project = "urbanecodrought")
 path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 assetHome <- ee_get_assethome()
-NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract")
+NDVIsave <- ("UrbanEcoDrought_NDVI_LocalExtract-RAW")
+pathDat <- "../data_all"
 
 
 ##################### 
 # 0. Read in helper functions ----
 ##################### 
-source("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/NDVI_Automation_Workflow/Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
+source("../Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
 
 
 ####################################################################################################################
 #Reading in previous data to get latest date, will need later
+if(!file.exists(file.path(pathDat, "NDVIall_latest.csv"))) file.copy(from=file.path(pathDat, "NDVIall_baseline.csv"), to=file.path(pathDat, "NDVIall_latest.csv"), copy.date = T)
 
-#Files generated from Juliana's workflow - will need these to autoupdate
 
 #After first run, change the file path to the allNDVI_data.csv, needed this file path for first run because its the baseline
-GAM_fit_NDVI <-read_csv("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought/data/UrbanEcoDrought_NDVI_LocalExtract/NDVIall_latest.csv")%>%
+GAM_fit_NDVI <-read_csv(file.path(pathDat, "NDVIall_latest.csv"))%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
 
-#putting NDVI_data in order by date
-GAM_fit_NDVI <-GAM_fit_NDVI[order(as.Date(GAM_fit_NDVI$date, format="%Y-%m-%d"), decreasing = TRUE), ]
-
-head(GAM_fit_NDVI)
-
-#finding latest day & pulling date
-latest_day<-head(GAM_fit_NDVI, 1)
-date_needed <-latest_day$date
-date_needed <- as.Date(date_needed)
+date_needed <- max(GAM_fit_NDVI$date)
+date_today <- as.Date(today())
 ####################################################################################################################
 
 
@@ -94,7 +91,8 @@ nlcdvis = list(
 #Chicago = ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg") 
 #ee_print(Chicago)
 # Access a feature collection
-Chicago <- ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg")
+# Chicago <- ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg")
+Chicago = ee$FeatureCollection("projects/breidyee/assets/SevenCntyChiReg") 
 print(Chicago$getInfo())
 
 chiBounds <- Chicago$geometry()$bounds()
@@ -110,19 +108,13 @@ lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban
 
 ######################For updating data, START HERE##################### 
 
-forMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Forest')
-
-grassMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Grass')
-
-cropMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Crop')
-
-urbOMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Open')
-
-urbLMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Low')
-
-urbMMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-Medium')
-
-urbHMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-High')
+forMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Forest'))
+grassMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Grass'))
+cropMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Crop'))
+urbOMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Open'))
+urbLMask <-ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Low'))
+urbMMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-Medium'))
+urbHMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-High'))
 
 ##################### 
 # Read in & Format Landsat 8 ----
@@ -130,7 +122,8 @@ urbHMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Urban-High')
 # "LANDSAT/LC08/C02/T1_RT"
 # Load MODIS NDVI data; attach month & year
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
-landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$map(function(image){
+# Filtering by date so we can only pull a bit of data if we need it
+landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$filterDate(as.character(date_needed-1), as.character(date_today))$map(function(image){
   return(image$clip(Chicago))
 })$map(function(img){
   d= ee$Date(img$get('system:time_start'));
@@ -152,11 +145,23 @@ landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$m
 # ee_print(landsat8)
 # Map$addLayer(landsat8$first()$select('NDVI'))
 
-l8Mosaic = mosaicByDate(imcol = landsat8, dayWindow = 7)$select(
-  c('blue_median', 'green_median', 'red_median', 'nir_median', 
-    'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),
-  c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI")
-)$sort("date")
+# Need to check to see if the latest image is one we already have (if we don't do -1, it bonks because there's nothign enw)
+imlist = landsat8$toList(landsat8$size())
+imlist$getInfo()
+
+# Note: needed to specify the ee_utils_pyfunc since it's not an image collection
+unique_dates <- imlist$map(function(image) {
+  ee$Image(image)$date()$format("YYYY-MM-dd")
+})$distinct()
+# dates_list$getInfo()
+
+ee$Date(landsat8$first()$get("system:time_start"))$format("YYYY-MM-dd")$getInfo()
+
+# l8Mosaic = mosaicByDate(imcol = landsat8, dayWindow = 7)$select(
+#   c('blue_median', 'green_median', 'red_median', 'nir_median', 
+#     'swir1_median', 'swir2_median', 'LST_K_median', "NDVI_median"),
+#   c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K', "NDVI")
+# )$sort("date")
 
 # ee_print(l8Mosaic, "landsat8-Mosaic")
 # Map$addLayer(l8Mosaic$first()$select('NDVI'), ndviVis, "NDVI - First")
@@ -164,7 +169,7 @@ l8Mosaic = mosaicByDate(imcol = landsat8, dayWindow = 7)$select(
 # Mask NDVI by Landcover & condense to regional means
 for(LCTYPE in lcnames){
   # print(LCTYPE)
-  extractByLC(imcol=l8Mosaic, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
+  extractByLC(imcol=landsat8, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
 }
 
 ##################### 
