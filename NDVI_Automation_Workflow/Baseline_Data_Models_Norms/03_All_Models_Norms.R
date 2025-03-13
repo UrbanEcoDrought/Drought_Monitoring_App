@@ -43,6 +43,8 @@ for(LC in unique(ndvi.base$type)){
   print(LC)
   
   rowsLC <- which(ndvi.base$type==LC) 
+  # 1. Satellite correction
+  # 1.a. estimate the shape & intercept of each satellite
   gamLC <- gam(NDVI ~ s(yday, k=12, by=mission) + mission-1, data=ndvi.base[rowsLC,]) #k=1 per month 
   summary(gamLC)
   AIC(gamLC)
@@ -52,13 +54,14 @@ for(LC in unique(ndvi.base$type)){
   ndvi.base[rowsLC, "NDVIMissionPred"] <- predict(gamLC, newdata=ndvi.base[rowsLC,])
   ndvi.base[rowsLC, "MissionResid"] <- ndvi.base$NDVI[rowsLC] - ndvi.base$NDVIMissionPred[rowsLC]
   
-  # Going to "reproject" the predicted mean/normal
+  # 1.b. harmonize by "reprojecting" the into what it would be like if it were landsat 8 data
   ndviLCDupe <- ndvi.base[rowsLC,]
   ndviLCDupe$mission <- "landsat 8"
   
   ndvi.base[rowsLC, "ReprojPred"] <- predict(gamLC, newdata=ndviLCDupe)
   ndvi.base[rowsLC, "NDVIReprojected"] <- ndvi.base$MissionResid[rowsLC] + ndvi.base$ReprojPred[rowsLC]
   
+  # 2. Calculate "normal" for the whole time series we have
   gamNorm <- gam(NDVIReprojected ~ s(yday, k=12), data=ndvi.base[rowsLC,])
   # ndvi.norms$NormMean[ndvi.norms$type==LC] <- predict(gamNorm, newdata=ndvi.norms[ndvi.norms$type==LC,])
   LCpost <- post.distns(model.gam = gamNorm, newdata = ndvi.norms[ndvi.norms$type==LC,], vars="yday")
@@ -66,6 +69,7 @@ for(LC in unique(ndvi.base$type)){
   # summary(ndvi.norms)
   saveRDS(gamNorm, file.path(pathMods, paste0("GAM-Normal_", LC, ".RDS")))
   
+  # 3. calculate the year-by-year trends 
   if(!dir.exists(file.path(pathMods, LC))) dir.create(file.path(pathMods, LC))
   for(YR in unique(ndvi.base$year[rowsLC])){
     gamYRs <-gam(NDVIReprojected ~ s(yday, k=12)  , data=ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR,])
@@ -81,6 +85,8 @@ for(LC in unique(ndvi.base$type)){
 summary(ndvi.base)
 summary(ndvi.norms)
 summary(ndviyrs)
+
+ndviyrs <- ndviyrs[ndviyrs$year<max(ndvi.base$year) | (ndviyrs$year==max(ndvi.base$year) & ndviyrs$yday<=lubridate::yday(max(ndvi.base$date))),]
 
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndvi.norms, file.path(pathDat, "NDVIall_normals_modeled.csv"), row.names=F)
