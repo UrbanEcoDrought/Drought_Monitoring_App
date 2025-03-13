@@ -2,3 +2,5 @@ Urban Drought App/data/k=12_norms_all_LC_types.csv
 Urban Drought App/data/allNDVI_data.csv
 Urban Drought App/rsconnect/shinyapps.io/mortonarb-forestecology/urban_drought_app.dcf
 *.png
+*.csv
+*.RDS
