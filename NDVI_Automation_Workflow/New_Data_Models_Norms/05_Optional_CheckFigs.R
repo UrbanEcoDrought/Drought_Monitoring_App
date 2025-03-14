@@ -8,7 +8,7 @@ yrDrought <- c(2005, 2012, 2023)
 LClevels <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#68ab5f", "urban-open"="#dec5c5", "urban-low"="#d99282", "urban-medium"="#eb0000", "urban-high"="#ab0000")
 
 trendLevels <- c("Getting Browner"="tan3", 
-                 "Normal"="gray", 
+                 "No Change"="gray", 
                  "Getting Greener"="green4")
 ndviFlagLevels <- c("Significantly Browner than Normal"="#d01c8b", 
                     "Slightly Browner than Normal"="#f1b6da", 
@@ -21,7 +21,7 @@ trendFlagLevels <- c("Abnormal Browning"="tan3",
                      "Normal"="gray", 
                      "Greening Slower than Normal"="#b8e186", 
                      "Greening Faster than Normal"="#4dac26", 
-                     "Abnormal Greening"="green3")
+                     "Abnormal Greening"="turquoise3")
 
 # Read in the data
 datYrs <- read.csv("../data_all/NDVIall_years_modeled.csv")
@@ -42,7 +42,7 @@ yrNow <- max(datYrs$year)
 LC="urban-medium"
 yrColors <- c("2025"="dodgerblue2", "2024"="cadetblue3", "2023"="orange2", "2012"="red3", "2005"="goldenrod2")
 
-png("../figs/TimeSeries-Test.png", height=8, width=12, units = "in", res=320)
+png("../figs/TimeSeries.png", height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
   facet_wrap(~type) +
   geom_ribbon(data=datNorms[, ], aes(x=yday, ymin=NormLwr, ymax=NormUpr, fill="normal"), alpha=0.2) +
@@ -64,7 +64,40 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
 dev.off()
   
 # Doing a test heatmap
-png("../figs/HeatMap-Test.png", height=8, width=12, units = "in", res=320)
+
+png("../figs/HeatMap-NDVI.png", height=8, width=12, units = "in", res=320)
+ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+  facet_wrap(~type) +
+  geom_tile(aes(fill = YrMean), width = 1, height = 1) +  
+  scale_fill_gradientn(
+    colors = c("#ffffcc", "#c2e699", "#78c679", "#31a354", "#006837"), 
+    name = "NDVI" 
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(1, 366, by = 31),
+    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  ) +
+  scale_y_discrete(expand = c(0, 0)) +
+  labs(x = "Month of Year", y = "Year", title = paste0("NDVI Heat Map")) +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 8),
+    axis.title.x = element_text(face = "bold", size = 10),
+    axis.title.y = element_text(face = "bold", size = 10),
+    plot.title = element_text(face = "bold", size = 12),
+    legend.key.height = unit(1, "cm"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    panel.background = element_rect(fill = "gray99"),
+    plot.background = element_rect(fill = "gray99")
+  )
+dev.off()
+
+
+png("../figs/HeatMap-NDVI-Anom.png", height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +  
@@ -79,7 +112,71 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   ) +
   scale_y_discrete(expand = c(0, 0)) +
-  labs(x = "Month of Year", y = "Year", title = paste0("Heat Map")) +
+  labs(x = "Month of Year", y = "Year", title = paste0("NDVI Anomaly Heat Map")) +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 8),
+    axis.title.x = element_text(face = "bold", size = 10),
+    axis.title.y = element_text(face = "bold", size = 10),
+    plot.title = element_text(face = "bold", size = 12),
+    legend.key.height = unit(1, "cm"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    panel.background = element_rect(fill = "gray99"),
+    plot.background = element_rect(fill = "gray99")
+  )
+dev.off()
+
+png("../figs/HeatMap-Derivs-Anom.png", height=8, width=12, units = "in", res=320)
+ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+  facet_wrap(~type) +
+  geom_tile(aes(fill = FlagTrend), width = 1, height = 1) +  
+  scale_fill_manual(
+    values = trendFlagLevels, 
+    name = "NDVI Trend Category",
+    drop = FALSE  
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(1, 366, by = 31),
+    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  ) +
+  scale_y_discrete(expand = c(0, 0)) +
+  labs(x = "Month of Year", y = "Year", title = paste0("Trend Anomaly Heat Map")) +
+  theme_minimal(base_size = 10) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 8),
+    axis.title.x = element_text(face = "bold", size = 10),
+    axis.title.y = element_text(face = "bold", size = 10),
+    plot.title = element_text(face = "bold", size = 12),
+    legend.key.height = unit(1, "cm"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    panel.background = element_rect(fill = "gray99"),
+    plot.background = element_rect(fill = "gray99")
+  )
+dev.off()
+
+png("../figs/HeatMap-Derivs.png", height=8, width=12, units = "in", res=320)
+ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+  facet_wrap(~type) +
+  geom_tile(aes(fill = YrDerivTrend), width = 1, height = 1) +  
+  scale_fill_manual(
+    values = trendLevels, 
+    name = "NDVI Trend Category",
+    drop = FALSE  
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(1, 366, by = 31),
+    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  ) +
+  scale_y_discrete(expand = c(0, 0)) +
+  labs(x = "Month of Year", y = "Year", title = paste0("Trend Heat Map")) +
   theme_minimal(base_size = 10) +
   theme(
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
