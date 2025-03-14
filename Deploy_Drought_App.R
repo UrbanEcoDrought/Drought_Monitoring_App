@@ -10,22 +10,34 @@ library(shiny)
 library(shinyWidgets)
 
 # First, copy over any updated data
-path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/data/DroughtApp-latest"
+if(!dir.exists(path.UrbDrought)) dir.create(path.UrbDrought, recursive = T)
 
-#NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+#Should we overwrite existing files (really norms only)
 overwrite=F
 
 # Copy the file with all of the yearly data
 file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_years_modeled.csv", 
           to="Urban Drought App/data/NDVIall_years_modeled.csv", overwrite=T)
- 
+
+file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_years_modeled.csv", 
+          to=file.path(path.UrbDrought, "NDVIall_years_modeled.csv"), overwrite=T)
+
 # Copy the normals file only if we need to
 if(!file.exists("Urban Drought App/data/NDVIall_normals_modeled.csv") | overwrite){
   file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_normals_modeled.csv",
             to="Urban Drought App/data/NDVIall_normals_modeled.csv", overwrite=T)
+  file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_normals_modeled.csv",
+            to=file.path(path.UrbDrought, "NDVIall_normals_modeled.csv"), overwrite=T)
 }
 
+# datYrs <- read.csv("Urban Drought App/data/NDVIall_years_modeled.csv")
+# summary(datYrs)
+# head(datYrs)
 
+# datNorm <- read.csv("Urban Drought App/data/NDVIall_normals_modeled.csv")
+# summary(datNorm)
+# head(datNorm)
 
 #This is to run the app LOCALLY
 #If you open this script and are in it's directory, all you have to do is runApp.

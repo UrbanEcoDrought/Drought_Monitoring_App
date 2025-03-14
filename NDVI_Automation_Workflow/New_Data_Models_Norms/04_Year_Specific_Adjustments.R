@@ -118,9 +118,9 @@ for(LC in unique(ndviNew$type)){
   #   Significantly Greener than norm = year CI > norm CI
   # Trend Flag
   #   Greening faster than normal -- both yr & norm pos; yr > norm
-  #   Greening slower than normal -- both yr & norm pos; abs(yr < norm)
+  #   Greening slower than normal -- norm pos &  yr not neg; abs(yr < norm)
   #   Browning faster than normal -- both yr & norm neg; yr < norm
-  #   Browning slower than normal -- both yr & norm neg; abs(yr < norm)
+  #   Browning slower than normal -- norm neg & yr not pos; abs(yr < norm)
   #   Abnormal greening - yr pos & norm not pos
   #   Abnormal browning - yr neg & norm not neg
   for(YDAY in unique(yrNew$yday[yrNew$type==LC & yrNew$year==yrNow])){
@@ -138,11 +138,11 @@ for(LC in unique(ndviNew$type)){
     trendFlag <- ifelse(yrNew$YrDerivLwr[rowInd] > Norm$NormDerivUpr & 
                           all(c(yrNew$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Faster than Normal",
                         ifelse(yrNew$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
-                                 all(c(yrNew$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Slower than Normal",
+                                 all(c(yrNew$YrDerivUpr[rowInd], Norm$NormDerivLwr)>0), "Greening Slower than Normal",
                                ifelse(yrNew$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
                                         all(c(yrNew$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Faster than Normal",
                                       ifelse(yrNew$YrDerivUpr[rowInd] > Norm$NormDerivLwr & 
-                                               all(c(yrNew$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Slower than Normal",
+                                               all(c(yrNew$YrDerivLwr[rowInd], Norm$NormDerivUpr)<0), "Browning Slower than Normal",
                                              ifelse(yrNew$YrDerivLwr[rowInd] > 0 & 
                                                       ((Norm$NormDerivUpr>0 & Norm$NormDerivLwr<0) | 
                                                          (Norm$NormDerivUpr<0 & Norm$NormDerivLwr<0)), "Abnormal Greening",
@@ -160,8 +160,8 @@ summary(ndvi.base)
 summary(ndviYrs)
 summary(yrNew)
 
-# add the new obs in here
-ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndviNew, FUN=mean, na.rm=T)
+# add the new obs in here; note because we got rid of the old data in the ndviYrs, we need to add it back here
+ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndvi.base[ndvi.base$year==yrNow,], FUN=mean, na.rm=T)
 summary(ndvi.newAgg)
 dim(ndvi.newAgg)
 

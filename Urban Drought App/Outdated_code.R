@@ -1,6 +1,358 @@
 #Housing for any outdated code incase we decide to use it 
 
 ####################################################################################################################
+#Code for "Percentiles (Broader Context) Tab
+#Reason: A bit confusing at this time (03/2025) & could be better developed later down the line 
+#UI CODE
+menuSubItem("Percentiles (Broader Context)",
+            tabName = "percentile_broad")
+
+tabItem(tabName = "percentile_broad", 
+        tabBox(
+          height = "3000px",
+          width = 12,
+          tabPanel("Crop Percentile & Boxplot",#CROP
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Crop Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   # The checkboxGroupInput with custom CSS
+                   checkboxGroupInput("selected_years_crop", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_crop_broad")),  
+                   plotOutput("crop_boxplot")
+          ),
+          tabPanel("Forest Percentile & Boxplot",#FOREST
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Forest Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   # The checkboxGroupInput with custom CSS
+                   checkboxGroupInput("selected_years_for", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_for_broad")),  
+                   plotOutput("for_boxplot")
+          ),
+          tabPanel("Grass Percentile & Boxplot",#GRASS
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Grass Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   # The checkboxGroupInput with custom CSS
+                   checkboxGroupInput("selected_years_grass", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_grass_broad")),  
+                   plotOutput("grass_boxplot")
+          ),
+          tabPanel("Urban-High Percentile & Boxplot",#URBAN-HIGH
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Urban-high Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   # The checkboxGroupInput with custom CSS
+                   checkboxGroupInput("selected_years_uh", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_uh_broad")),  
+                   plotOutput("uh_boxplot")
+          ),
+          tabPanel("Urban-Medium Percentile & Boxplot",#URBAN-MEDIUM
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Urban-medium Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   # The checkboxGroupInput with custom CSS
+                   checkboxGroupInput("selected_years_um", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_um_broad")),  
+                   plotOutput("um_boxplot")
+          ),
+          tabPanel("Urban-Low Percentile & Boxplot",#URBAN-LOW
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Urban-low Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   checkboxGroupInput("selected_years_ul", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  
+                   h6(htmlOutput("percentile_ul_broad")),  
+                   plotOutput("ul_boxplot")
+          ),
+          tabPanel("Urban-Open Percentile & Boxplot",#URBAN-OPEN
+                   h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
+                   br(),
+                   h6(HTML("<u>Urban-open Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
+                   
+                   checkboxGroupInput("selected_years_uo", "Select Years:", 
+                                      choices = unique(NDVI_data$year), 
+                                      selected = unique(NDVI_data$year)[1:5],
+                                      inline = TRUE),  #
+                   h6(htmlOutput("percentile_uo_broad")),  
+                   plotOutput("uo_boxplot")
+          )
+        )
+) 
+
+
+
+#SERVER CODE
+#Function Code 
+ndvi_percentile_broad <- function(LCtype, NDVI_data, CI_csv, most_recent_data) {
+  # Filter data based on land cover type
+  NDVI_subset <- filter(NDVI_data, type == LCtype)
+  CI_subset <- filter(CI_csv, type == LCtype)
+  most_recent_subset <- filter(most_recent_data, type == LCtype)
+  
+  # Ensure NDVI_subset is a data frame and contains 'ReprojPred' column
+  if (!is.data.frame(NDVI_subset) || !"ReprojPred" %in% colnames(NDVI_subset)) {
+    stop("NDVI_subset is not a data frame or does not have 'ReprojPred' column!")
+  }
+  
+  # Group by year and calculate percentiles
+  percentiles_by_year <- NDVI_subset %>%
+    group_by(year) %>%
+    summarise(percentile = ecdf(ReprojPred)(mean(ReprojPred)) * 100) %>%
+    arrange(desc(year))  # Sorting by most recent year
+  
+  return(percentiles_by_year)
+}
+
+
+#Server Code for Percentiles display
+output$percentile_crop_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_crop)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("crop", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Crop NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Crop Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+
+
+output$percentile_for_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_for)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("forest", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Forest NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Forest Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+output$percentile_grass_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_grass)
+  print(head(NDVI_data_yearly))
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("grassland", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Grass NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Grass Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+output$percentile_uh_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uh)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("urban-high", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Urban-High NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Urban-High Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+output$percentile_um_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_um)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("urban-medium", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Urban-Medium NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Urban-Medium Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+output$percentile_ul_broad <- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_ul)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("urban-low", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Urban-Low NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Urban-Low Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+output$percentile_uo_broad<- renderText({
+  req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
+  
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uo)
+  
+  # Compute percentiles per year
+  percentiles <- ndvi_percentile_broad("urban-open", NDVI_data_yearly, CI_csv, most_recent_data)
+  
+  if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
+    return("Urban-Open NDVI Percentiles: Data Unavailable")
+  } else {
+    percentiles <- percentiles %>% arrange(desc(year))
+    # Format output to display on new lines with HTML <br> tags
+    percentile_text <- paste("Urban-Open Current NDVI Percentiles by Year:",
+                             paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
+                             sep = "<br>")
+    return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
+  }
+})
+
+#BOXPLOTS
+output$crop_boxplot <- renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_crop)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Crop NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+
+output$for_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_for)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Forest NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+output$grass_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_grass)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Grass NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+output$uh_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uh)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Urban-High NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+output$um_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_um)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Urban-Medium NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+output$ul_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_ul)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Urban-Low NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+output$uo_boxplot <-renderPlot({
+  req(NDVI_data)  # Ensure NDVI_data is available
+  NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uo)
+  # Reorder the 'year' variable to have the most recent year on the left
+  NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
+  
+  boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
+          main = "Urban-Open NDVI Distribution by Year",
+          xlab = "Year", 
+          ylab = "NDVI (ReprojPred)",
+          col = "mistyrose2")
+})
+
+####################################################################################################################
 #CI graphs from Shiny App code 
 #Reason it's here: replaced with density plots, might be more insightful than CI's at the moment
 #UI
@@ -98,7 +450,6 @@ selected_LC_CI_graph <- function(LC_types){
     theme(legend.title = element_blank())  # Removes the legend title for better appearance
 }
 
-####################################################################################################################
 ####################################################################################################################
 #Below does the same as the density_plot function, keeping code here in case we need to troubleshoot updates are working correctly 
 
