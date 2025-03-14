@@ -160,8 +160,8 @@ summary(ndvi.base)
 summary(ndviYrs)
 summary(yrNew)
 
-# add the new obs in here
-ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndviNew, FUN=mean, na.rm=T)
+# add the new obs in here; note because we got rid of the old data in the ndviYrs, we need to add it back here
+ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndvi.base[ndvi.base$year==yrNew,], FUN=mean, na.rm=T)
 summary(ndvi.newAgg)
 dim(ndvi.newAgg)
 

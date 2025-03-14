@@ -2,12 +2,12 @@
 ##' @param newdata - the data to be used for predicting the posterior distributions
 ##' @param vars - the spline predictors to be simulated
 ##' @param n - number of simulations to be generated for the posterior distribution; defaults to 1000
-##' @param terms - (logical) only model the spline parameters and make separate predictions for each var (do not include intercepts); defaults to T
+##' @param terms - (logical) only model the spline parameters and make separate predictions for each var (do not include intercepts); defaults to F
 ##' @param lwr - lower bound for confidence interval; default = 0.025 (lower end of 2-tailed 95% CI)
 ##' @param upr - upper bound for confidence interval; default = 0.975 (upper end of 2-tailed 95% CI)
 ##' @param return.sims - (logical) store and return the raw posterior simulations? defaults to F
 
-post.distns <- function(model.gam, newdata, vars, n=100, terms=F, lwr=0.025, upr=0.975, return.sims=F){
+post.distns <- function(model.gam, newdata, vars, n=100, predTerms=F, lwr=0.025, upr=0.975, return.sims=F){
   # Note: this function can be used to generate a 95% CI on the full model.gam OR terms
   
   # -----------
@@ -45,7 +45,7 @@ post.distns <- function(model.gam, newdata, vars, n=100, terms=F, lwr=0.025, upr
   }
   
   # sim.list <- list()
-  if(terms==T){
+  if(predTerms==T){
     for(v in vars){
       sim.tmp <- data.frame(Xp[,cols.list[[v]]] %*% t(Rbeta[,cols.list[[v]]]) )
       
