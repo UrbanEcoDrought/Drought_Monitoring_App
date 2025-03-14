@@ -5,26 +5,11 @@
 
 ####################################################################################################################
 
-library(shiny)
-library(shinydashboard)
-library(leaflet)
-library(leaflet.extras)
-library(sf)
-library(tidyverse)
-library(ggplot2)
-library(DT)
-library(lubridate)
-library(plotly)
-library(ggplot2)
-library(hrbrthemes)
-library(dplyr)
-library(lubridate)
-library(tidyverse)
-library(tidyr)
-library(tidyquant)
-library(scales)
-library(bs4Dash)
-library(shinyalert)
+library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
+library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
+library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr)
+library(tidyquant);library(scales);library(bs4Dash);library(shinyjs)
+
 
 
 #For documentation of this app
@@ -39,19 +24,19 @@ library(shinyalert)
 
 ################################
 #####for testing######
-# path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-# NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
-# NDVI_data$date <- as.Date(NDVI_data$date)
-# CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+ path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+ NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
+ NDVI_data$date <- as.Date(NDVI_data$date)
+ CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ################################
 #####Uncomment after testing ######
 #####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
-mutate(date = as.Date(date, format="%Y-%m-%d"))
-NDVI_data$date <- as.Date(NDVI_data$date)
+#NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
+#mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+#CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################
 #putting NDVI_data in order by date
 NDVI_data <-NDVI_data[order(as.Date(NDVI_data$date, format="%Y-%m-%d"), decreasing = TRUE), ]
@@ -95,25 +80,27 @@ heatmap_data$year <- as.numeric(heatmap_data$year)
 
 ui <- dashboardPage(skin = "black",
                     dashboardHeader(
-                      title = "Urban Drought Dashboard",
-                      titleWidth = 300),
+                      title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
+                      titleWidth = 200),
                     dashboardSidebar(
-                      width = 300,
+                      width = 600,
                       sidebarMenu(
                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                         menuItem("Analysis", tabName = "analysis", icon = icon("gears"),
                                  menuSubItem("NDVI Data Review",
                                              tabName = "NDVI_data_review"),
                                  menuSubItem("Heat Maps for each LC Type",
-                                             tabName = "ndvi_diff"),
-                                 menuSubItem("Percentiles (Broader Context)",
-                                             tabName = "percentile_broad")),
+                                             tabName = "ndvi_diff")),
                         menuItem("About", tabName = "specifics", icon = icon("bookmark"))
                       )
                     ),
                     dashboardBody(
                       useShinyalert(),
-                      # Custom CSS
+                      useShinyjs(), 
+                      tags$head(
+                        tags$script(HTML('$(document).ready(function() { 
+      $(\'[data-toggle="tooltip"]\').tooltip(); 
+    });'))),
                       tags$head(
                         tags$style(HTML("
         .small-box {
@@ -132,26 +119,31 @@ ui <- dashboardPage(skin = "black",
                       ),
                       tabItems(
                         tabItem(tabName = "dashboard",
-                                # Row for drought status for each LC type
+                                # Title for the status boxes
+                                h6(HTML("<b>Drought Status for Each Land Cover Type:</b>"), 
+                                   style = "left-align: center; margin-bottom: 20px;"),
+                                
                                 fluidRow(
-                                  column(width = 12,
-                                         div(
-                                           style = "
+                                  column(
+                                    width = 12,
+                                    div(
+                                      style = "
         display: flex; 
         flex-wrap: wrap;    /* Allows items to wrap to a new line if needed */
-        gap: 5px;           /* Spacing between boxes */
-        justify-content: space-around; /* or space-between/center, etc. */
+        gap: 10px;          /* Adjust spacing between boxes */
+        justify-content: space-around; /* Ensures equal spacing */
+        align-items: center; /* Aligns items vertically */
       ",
-                                           # Let each valueBoxOutput have no fixed Bootstrap column width
-                                           valueBoxOutput("cropBox", width = NULL),
-                                           valueBoxOutput("forBox", width = NULL),
-                                           valueBoxOutput("grassBox", width = NULL),
-                                           valueBoxOutput("uoBox", width = NULL),
-                                           valueBoxOutput("ulBox", width = NULL),
-                                           valueBoxOutput("umBox", width = NULL),
-                                           valueBoxOutput("uhBox", width = NULL),
-                                         )
-                                  )
+                                      # Each valueBoxOutput is treated as a flexible item
+                                      div(style = "display: inline-block;", valueBoxOutput("cropBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("forBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("grassBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("uoBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("ulBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("umBox", width = NULL)),
+                                      div(style = "display: inline-block;", valueBoxOutput("uhBox", width = NULL))
+                                    )
+                                  ),
                                 ),
                                 # Map layout
                                 fluidRow(
@@ -165,7 +157,9 @@ ui <- dashboardPage(skin = "black",
                                       "Latest Data Report",
                                       h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
                                       br(),
-                                      h6(HTML("<u>Percentiles of Current NDVI data compared to recent observed data (past 2 weeks):</u>")),
+                                      h6(HTML("<b>The NDVI percentiles below indicate how current vegetation conditions compare to the past two weeks 
+                                              of observed data. A lower percentile suggests below-average greenness, while a higher
+                                              percentile indicates above-average greenness</b><br>")),
                                       # Proper text output for the percentile value
                                       h6(textOutput("percentile_crop")),  
                                       h6(textOutput("percentile_for")),  
@@ -183,7 +177,7 @@ ui <- dashboardPage(skin = "black",
                                       h6(HTML("<span style='color:olive;'>Olive</span> = Greener than normal")),
                                       h6(HTML("<span style='color:grey;'>Grey</span> = NDVI is within CI")),
                                       h6(HTML("<span style='color:pink;'>Pink</span> = Browner than normal")),
-                                      h6(HTML("<span style='color:maroon;'>Maroon</span> = Significantly browner than normal")),
+                                      h6(HTML("<span style='color:maroon;'>Maroon</span> = Significantly browner than normal"))
                                       #h6(HTML("<br>Status (Most Recent NDVI Value - Mean) is also listed in each Land Cover Status Box<br><br>")),
                                       #HTML("<img src='NDVI_Categories.png' alt='NDVI Categories' style='width:60%;'>")
                                     ),
@@ -218,43 +212,70 @@ ui <- dashboardPage(skin = "black",
                                     width = 12,
                                     tabPanel(
                                       "Crop Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of crop NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("crop_density_plot"),
-                                      textOutput("crop_daily"),
+                                      textOutput("crop_daily")
                                     ),
                                     tabPanel(
                                       "Forest Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of forest NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
                                       "Grassland Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of grassland NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
                                       "Urban-High Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of Urban-High NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Medium Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of Urban-Medium NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Low Density Plot",
-                                      h6(HTML("Note: The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of Urban-Low NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Open Density Plot",
-                                      h6(HTML("Note:The density plot values indicate relative likelihood in the distribution")),
+                                      h6(HTML("<b>This plot shows the distribution of Urban-Open NDVI values
+                                              over the past two weeks. The x-axis represents NDVI 
+                                              (greenness), the y-axis shows frequency, and peaks indicate
+                                              the most common values. The current NDVI (Green Diamond) and 
+                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
@@ -312,7 +333,8 @@ ui <- dashboardPage(skin = "black",
                                   width = 12,
                                   tabPanel("Preliminary Information",
                                            h6(HTML("<b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
-                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>"))
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>")),
+                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
                                   ),
                                   tabPanel("Grant Information",
                                            h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
@@ -332,108 +354,13 @@ ui <- dashboardPage(skin = "black",
     <a href='https://github.com/UrbanEcoDrought/NDVI_drought_monitoring'>NDVI_Drought_Monitoring</a><br>
     <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago'>UrbanDrought_SpatialAnalysis_Chicago Workflow</a><br> 
     <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/NDVI_Automation_Workflow'>NDVI_Automation_Workflow</a><br>
-    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br></p>")),
-                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
+    <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago/tree/main/Urban%20Drought%20App'>Urban Drought App</a><br></p>"))
                                   )
                                   
                                 )
-                        ),
+                        )
                         
-                        tabItem(tabName = "percentile_broad", 
-                                tabBox(
-                                  height = "3000px",
-                                  width = 12,
-                                  tabPanel("Crop Percentile & Boxplot",#CROP
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Crop Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    # The checkboxGroupInput with custom CSS
-                                    checkboxGroupInput("selected_years_crop", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_crop_broad")),  
-                                   plotOutput("crop_boxplot")
-                                  ),
-                                  tabPanel("Forest Percentile & Boxplot",#FOREST
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Forest Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    # The checkboxGroupInput with custom CSS
-                                    checkboxGroupInput("selected_years_for", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_for_broad")),  
-                                    plotOutput("for_boxplot")
-                                  ),
-                                  tabPanel("Grass Percentile & Boxplot",#GRASS
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Grass Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    # The checkboxGroupInput with custom CSS
-                                    checkboxGroupInput("selected_years_grass", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_grass_broad")),  
-                                    plotOutput("grass_boxplot")
-                                  ),
-                                  tabPanel("Urban-High Percentile & Boxplot",#URBAN-HIGH
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Urban-high Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    # The checkboxGroupInput with custom CSS
-                                    checkboxGroupInput("selected_years_uh", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_uh_broad")),  
-                                    plotOutput("uh_boxplot")
-                                  ),
-                                  tabPanel("Urban-Medium Percentile & Boxplot",#URBAN-MEDIUM
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Urban-medium Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    # The checkboxGroupInput with custom CSS
-                                    checkboxGroupInput("selected_years_um", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_um_broad")),  
-                                    plotOutput("um_boxplot")
-                                  ),
-                                  tabPanel("Urban-Low Percentile & Boxplot",#URBAN-LOW
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Urban-low Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                                    
-                                    checkboxGroupInput("selected_years_ul", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  
-                                    h6(htmlOutput("percentile_ul_broad")),  
-                                    plotOutput("ul_boxplot")
-                                  ),
-                                  tabPanel("Urban-Open Percentile & Boxplot",#URBAN-OPEN
-                                    h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                    br(),
-                                    h6(HTML("<u>Urban-open Percentile Current NDVI data compared to past observed data (selected years) & boxplot of data distribution:</u>")),
-                     
-                                    checkboxGroupInput("selected_years_uo", "Select Years:", 
-                                                       choices = unique(NDVI_data$year), 
-                                                       selected = unique(NDVI_data$year)[1:5],
-                                                       inline = TRUE),  #
-                                    h6(htmlOutput("percentile_uo_broad")),  
-                                    plotOutput("uo_boxplot")
-                                  )
-                      )
-                    ) 
+  
 )
 ))
 

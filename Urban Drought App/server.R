@@ -43,10 +43,10 @@ heatmap_colors <- c("Much browner than normal" = "maroon",
 #filepaths to NDVI & CI data
 ####################################################################################################################
 #for testing
-#path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-#NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
-#NDVI_data$date <- as.Date(NDVI_data$date)
-#CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
+path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
+NDVI_data <- read_csv(file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), locale = locale(encoding = "UTF-8"))
+NDVI_data$date <- as.Date(NDVI_data$date)
+CI_csv <- read_csv(file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"))
 ####################################################################################################################
 
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
@@ -55,11 +55,11 @@ heatmap_colors <- c("Much browner than normal" = "maroon",
 ####################################################################################################################
 #####Uncomment after testing 
 ####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
- mutate(date = as.Date(date, format="%Y-%m-%d"))
-NDVI_data$date <- as.Date(NDVI_data$date)
+#NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
+# mutate(date = as.Date(date, format="%Y-%m-%d"))
+#NDVI_data$date <- as.Date(NDVI_data$date)
 #####CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
-CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
+#CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
 ####################################################################################################################
 
 ####################################################################################################################
@@ -449,30 +449,6 @@ ndvi_percentile <- function(LCtype, current_time_period, CI_csv, most_recent_dat
   
   return(current_percentile)
 }
-
-ndvi_percentile_broad <- function(LCtype, NDVI_data, CI_csv, most_recent_data) {
-  # Filter data based on land cover type
-  NDVI_subset <- filter(NDVI_data, type == LCtype)
-  CI_subset <- filter(CI_csv, type == LCtype)
-  most_recent_subset <- filter(most_recent_data, type == LCtype)
-  
-  # Ensure NDVI_subset is a data frame and contains 'ReprojPred' column
-  if (!is.data.frame(NDVI_subset) || !"ReprojPred" %in% colnames(NDVI_subset)) {
-    stop("NDVI_subset is not a data frame or does not have 'ReprojPred' column!")
-  }
-  
-  # Group by year and calculate percentiles
-  percentiles_by_year <- NDVI_subset %>%
-    group_by(year) %>%
-    summarise(percentile = ecdf(ReprojPred)(mean(ReprojPred)) * 100) %>%
-    arrange(desc(year))  # Sorting by most recent year
-  
-  return(percentiles_by_year)
-}
-
-
-
-
 ####################################################################################################################
 #Function to generate change stats for density plot 
 # Doesn't handle if one of the start or end values is NA
@@ -1023,142 +999,6 @@ server <- function(input, output, session) {
     }
   })
   
-  output$percentile_crop_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_crop)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("crop", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Crop NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Crop Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  
-  
-  output$percentile_for_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_for)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("forest", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Forest NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Forest Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  output$percentile_grass_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_grass)
-    print(head(NDVI_data_yearly))
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("grassland", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Grass NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Grass Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  output$percentile_uh_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uh)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("urban-high", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Urban-High NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Urban-High Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  output$percentile_um_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_um)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("urban-medium", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Urban-Medium NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Urban-Medium Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  output$percentile_ul_broad <- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_ul)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("urban-low", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Urban-Low NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Urban-Low Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  output$percentile_uo_broad<- renderText({
-    req(NDVI_data, CI_csv, most_recent_data, input$selected_years)
-    
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uo)
-    
-    # Compute percentiles per year
-    percentiles <- ndvi_percentile_broad("urban-open", NDVI_data_yearly, CI_csv, most_recent_data)
-    
-    if (is.null(percentiles) || nrow(percentiles) == 0 || all(is.na(percentiles$percentile))) {
-      return("Urban-Open NDVI Percentiles: Data Unavailable")
-    } else {
-      percentiles <- percentiles %>% arrange(desc(year))
-      # Format output to display on new lines with HTML <br> tags
-      percentile_text <- paste("Urban-Open Current NDVI Percentiles by Year:",
-                               paste(percentiles$year, round(percentiles$percentile, 1), "%", sep = " ", collapse = "<br>"), 
-                               sep = "<br>")
-      return(HTML(percentile_text))  # Ensure that HTML tags are interpreted
-    }
-  })
-  
   ####################################################################################################################
   #Density Plots
   output$crop_density_plot <- renderPlotly({
@@ -1316,103 +1156,22 @@ server <- function(input, output, session) {
   #Popup message
   shinyalert(
     title = "Welcome to the Urban Drought Dashboard!",
-    text = "<h6>Just some preliminary information before exploring.<br><br>
+    text = "<b>A near real-time portal offering a comprehensive view of current conditions across seven land cover types, with additional tabs for deeper analysis and research.<br><br>
                 <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
-                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>
-                If you ever need to view this information again, check the <b>About Tab</b> under <b>Preliminary Information</b>.</h6>",
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)<br><br>
+                If you need to view this information again, check the <b>About Tab</b> under <b>Preliminary Information</b>.</h6>",
     type = "info",
     html = TRUE,  # This is the key setting!
     showConfirmButton = TRUE,
     confirmButtonText = "Close"
   )
   ####################################################################################################################
-  #BOXPLOTS
-  output$crop_boxplot <- renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_crop)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Crop NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  
-  output$for_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_for)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Forest NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  output$grass_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_grass)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Grass NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  output$uh_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uh)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Urban-High NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  output$um_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_um)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Urban-Medium NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  output$ul_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_ul)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Urban-Low NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  output$uo_boxplot <-renderPlot({
-    req(NDVI_data)  # Ensure NDVI_data is available
-    NDVI_data_yearly <- NDVI_data %>% filter(year %in% input$selected_years_uo)
-    # Reorder the 'year' variable to have the most recent year on the left
-    NDVI_data_yearly$year <- factor(NDVI_data_yearly$year, levels = sort(unique(NDVI_data_yearly$year), decreasing = TRUE))
-    
-    boxplot(ReprojPred ~ year, data = NDVI_data_yearly, 
-            main = "Urban-Open NDVI Distribution by Year",
-            xlab = "Year", 
-            ylab = "NDVI (ReprojPred)",
-            col = "mistyrose2")
-  })
-  
+  bsTooltip("cropBox", "NDVI Crop Status: Measures vegetation health for crops", placement = "top", trigger = "hover")
+  bsTooltip("forBox", "NDVI Forest Status: Indicates greenness of forests", placement = "top", trigger = "hover")
+  bsTooltip("grassBox", "NDVI Grassland Status: Reflects overall grassland health", placement = "top", trigger = "hover")
+  bsTooltip("uoBox", "Urban-Open Status: NDVI for open urban areas", placement = "top", trigger = "hover")
+  bsTooltip("ulBox", "Urban-Low Status: NDVI for low-density urban zones", placement = "top", trigger = "hover")
+  bsTooltip("umBox", "Urban-Medium Status: NDVI for medium-density urban zones", placement = "top", trigger = "hover")
+  bsTooltip("uhBox", "Urban-High Status: NDVI for high-density urban zones", placement = "top", trigger = "hover")
 
-  ####################################################################################################################
 }
