@@ -19,16 +19,16 @@ pathDat <- "../data_all"
 pathMods <- "../gam_models"
 
 source("../Baseline_Data_Models_Norms/0_Calculate_GAMM_Posteriors_Updated_Copy.R")
-# source("~/Documents/GitHub/NDVI_drought_monitoring/0_Calculate_GAMM_Posteriors_Updated_Copy.R")
-# source("~/Documents/GitHub/NDVI_drought_monitoring/0_Calculate_GAMM_Derivs_Copy.R")
+source("../Baseline_Data_Models_Norms/0_Calculate_GAMM_Derivs_Copy.R")
 
 #Reading in old data(fit to spline already) and new NDVI Data (not fit to spline yet)
 ndviLatest <- read.csv("../data_all/NDVIall_latest.csv")
 ndviNew <- read.csv("../data_all/new_NDVI_data.csv")
 
 # previously processed files
-ndvi.base <- read.csv(file.path(pathDat, "NDVIall_baseline_modeled.csv"))
+ndvi.base <- read.csv("../data_all/NDVIall_baseline_modeled.csv")
 ndviYrs <- read.csv("../data_all/NDVIall_years_modeled.csv")
+ndvi.norms <- read.csv("../data_all/NDVIall_normals_modeled.csv")
 
 ndviNew$date <- as.Date(ndviNew$date)
 ndviNew$type <- as.factor(ndviNew$type)
@@ -97,68 +97,85 @@ for(LC in unique(ndviNew$type)){
   YRpost <- post.distns(model.gam = gamYRs, newdata = yrNew[yrNew$type==LC & yrNew$year==yrNow,], vars=c("yday", "year"))
   # summary(YRpost)
   yrNew[yrNew$type==LC & yrNew$year==yrNow, c("YrMean", "YrLwr", "YrUpr")] <- YRpost[,c("mean", "lwr", "upr")]
+  YrPostDeriv <- calc.derivs(model.gam = gamYRs, newdata = yrNew[yrNew$type==LC & yrNew$year==yrNow, ], vars=c("yday"))
+  yrNew[yrNew$type==LC & yrNew$year==yrNow, c("YrDerivMean", "YrDerivLwr", "YrDerivUpr")] <- YrPostDeriv[,c("mean", "lwr", "upr")]
+  
+  # 3.3 add tag on trend
+  yrNew[yrNew$type==LC & yrNew$year==yrNow & yrNew$YrDerivUpr<0, "YrDerivTrend"] <- "Getting Browner"
+  yrNew[yrNew$type==LC & yrNew$year==yrNow & yrNew$YrDerivLwr>0, "YrDerivTrend"] <- "Getting Greener"
+  yrNew[yrNew$type==LC & yrNew$year==yrNow & yrNew$YrDerivLwr<0 & yrNew$YrDerivUpr>0, "YrDerivTrend"] <- "No Change"
+  summary(yrNew)
+  
+  
   saveRDS(gamYRs, file.path(pathMods, LC, paste0("GAM-Years-Baseline_", LC, "_", yrNow, ".RDS")))
   
-  ndviYrs <- rbind(ndviYrs, yrNew[yrNew$type==LC & yrNew$year==yrNow,])
+  # 4. compare years to norms to flag -- could probably do this wihtout a loop, but looping to be safe
+  # NDVI Flags
+  #   Significantly Browner than norm = yr CI < norm CI
+  #   Slightly Browner than norm = yr mean < norm CI, but yr CI overlaps
+  #   Normal = yr mean in norm CI
+  #   Slightly Greener than norm = yr mean > norm CI, but yr CI overlaps
+  #   Significantly Greener than norm = year CI > norm CI
+  # Trend Flag
+  #   Greening faster than normal -- both yr & norm pos; yr > norm
+  #   Greening slower than normal -- both yr & norm pos; abs(yr < norm)
+  #   Browning faster than normal -- both yr & norm neg; yr < norm
+  #   Browning slower than normal -- both yr & norm neg; abs(yr < norm)
+  #   Abnormal greening - yr pos & norm not pos
+  #   Abnormal browning - yr neg & norm not neg
+  for(YDAY in unique(yrNew$yday[yrNew$type==LC & yrNew$year==yrNow])){
+    rowInd <- which(yrNew$type==LC & yrNew$year==yrNow & yrNew$yday==YDAY)
+    Norm <- ndvi.norms[ndvi.norms$type==LC & ndvi.norms$yday==YDAY,]
+    # yrNew[rowInd,]
+    
+    ndviFlag <- ifelse(yrNew$YrLwr[rowInd] > Norm$NormUpr, "Significantly Greener than Normal",
+                       ifelse(yrNew$YrUpr[rowInd] < Norm$NormLwr, "Significantly Browner than Normal",
+                              ifelse(yrNew$YrMean[rowInd] > Norm$NormUpr, "Slightly Greener than Normal",
+                                     ifelse(yrNew$YrMean[rowInd] < Norm$NormLwr, "Slightly Browner than Normal",
+                                            "Normal"))))
+    
+    
+    trendFlag <- ifelse(yrNew$YrDerivLwr[rowInd] > Norm$NormDerivUpr & 
+                          all(c(yrNew$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Faster than Normal",
+                        ifelse(yrNew$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
+                                 all(c(yrNew$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Slower than Normal",
+                               ifelse(yrNew$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
+                                        all(c(yrNew$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Faster than Normal",
+                                      ifelse(yrNew$YrDerivUpr[rowInd] > Norm$NormDerivLwr & 
+                                               all(c(yrNew$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Slower than Normal",
+                                             ifelse(yrNew$YrDerivLwr[rowInd] > 0 & 
+                                                      ((Norm$NormDerivUpr>0 & Norm$NormDerivLwr<0) | 
+                                                         (Norm$NormDerivUpr<0 & Norm$NormDerivLwr<0)), "Abnormal Greening",
+                                                    ifelse(yrNew$YrDerivUpr[rowInd] < 0 & 
+                                                             ((Norm$NormDerivUpr>0 & Norm$NormDerivLwr<0) | 
+                                                                (Norm$NormDerivUpr>0 & Norm$NormDerivLwr>0)), "Abnormal Browning",
+                                                           "Normal"))))))
+    
+    yrNew[rowInd,c("FlagNDVI", "FlagTrend")] <- c(ndviFlag, trendFlag)
+    
+  }# end YDAY loop
+  
 }
 summary(ndvi.base)
 summary(ndviYrs)
+summary(yrNew)
+
+# add the new obs in here
+ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndviNew, FUN=mean, na.rm=T)
+summary(ndvi.newAgg)
+dim(ndvi.newAgg)
+
+dim(yrNew)
+yrNew <- merge(yrNew, ndvi.newAgg[!is.na(ndvi.newAgg$NDVIReprojected),c("type", "year", "yday", "NDVIReprojected")], all.x=T)
+dim(yrNew)
+
+# merge any new points
+dim(ndviYrs)
+ndviYrs <- rbind(ndviYrs, yrNew)
+dim(ndviYrs)
+
 # 1.c. 
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndviYrs, file.path(pathDat, "NDVIall_years_modeled.csv"), row.names=F)
 
 
-
-
-# saveRDS(gamLC, file.path(pathMods, paste0("GAM-Mission_", LC, ".RDS")))
-
-
-
-# ################################################################
-# #Compare NDVI & Derivative for current year spline with norm
-# current_year <- format(Sys.Date(), "%Y")
-# 
-# # Ensure nmonths is defined
-# if (!exists("nmonths") || !is.numeric(nmonths)) {
-#   nmonths <- 12
-# }
-# 
-# # Pull NDVI data for the current year
-# current_year_NDVI <- updated_NDVI_data[updated_NDVI_data$year == current_year,]
-# 
-# # Initialize empty dataframe before the loop
-# df <- data.frame()
-# 
-# for (LC in unique(updated_NDVI_data$type)) {
-#   datLC <- updated_NDVI_data[updated_NDVI_data$type == LC,]
-#   
-#   for (yr in unique(datLC$year)) {
-#     datyr <- datLC[datLC$year == yr,]
-#     
-#     # Ensure the GAM model runs correctly
-#     if (yr == current_year) {
-#       gamyr <- gam(NDVIReprojected ~ s(yday, k=nmonths), data=datyr)
-#     } else {
-#       gamyr <- gam(NDVIReprojected ~ s(yday, k=12), data=datyr)
-#     }
-#     
-#     # Compute derivatives and check output
-#     derivs <- calc.derivs(model.gam=gamyr, newdata=newDF, vars="yday")
-#     
-#     if (!is.data.frame(derivs)) {
-#       stop("❌ `calc.derivs()` is not returning a data frame! Check function output.")
-#     }
-#     
-#     derivs$type <- LC
-#     derivs$year <- yr
-#     
-#     df <- rbind(df, derivs)
-#   }
-# }
-# 
-# # Now filter for the current year (AFTER the loop)
-# df <- df[df$year == current_year,]
-# 
-# # Save CSV
-# write.csv(df, file.path(pathShare, "year_specific_deriv.csv"), row.names = FALSE)
-# ################################################################

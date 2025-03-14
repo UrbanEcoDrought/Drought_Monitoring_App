@@ -21,6 +21,7 @@ if(!dir.exists(pathDat)) dir.create(pathDat, recursive=T)
 if(!dir.exists(pathMods)) dir.create(pathMods, recursive = T)
 
 source("0_Calculate_GAMM_Posteriors_Updated_Copy.R")
+source("0_Calculate_GAMM_Derivs_Copy.R")
 
 
 ######################
@@ -64,9 +65,16 @@ for(LC in unique(ndvi.base$type)){
   # 2. Calculate "normal" for the whole time series we have
   gamNorm <- gam(NDVIReprojected ~ s(yday, k=12), data=ndvi.base[rowsLC,])
   # ndvi.norms$NormMean[ndvi.norms$type==LC] <- predict(gamNorm, newdata=ndvi.norms[ndvi.norms$type==LC,])
+  #2.1 Getting the mean & 95 CI on the predicted norms
   LCpost <- post.distns(model.gam = gamNorm, newdata = ndvi.norms[ndvi.norms$type==LC,], vars="yday")
   ndvi.norms[ndvi.norms$type==LC, c("NormMean", "NormLwr", "NormUpr")] <- LCpost[,c("mean", "lwr", "upr")]
+  
+  #2.2 Getting the mean & 95%CI on the trend
+  LCpostDeriv <- calc.derivs(model.gam = gamNorm, newdata = ndvi.norms[ndvi.norms$type==LC,], vars="yday")
+  ndvi.norms[ndvi.norms$type==LC, c("NormDerivMean", "NormDerivLwr", "NormDerivUpr")] <- LCpostDeriv[,c("mean", "lwr", "upr")]
+  # summary(LCpostDeriv)
   # summary(ndvi.norms)
+  
   saveRDS(gamNorm, file.path(pathMods, paste0("GAM-Normal_", LC, ".RDS")))
   
   # 3. calculate the year-by-year trends 
@@ -74,12 +82,70 @@ for(LC in unique(ndvi.base$type)){
   for(YR in unique(ndvi.base$year[rowsLC])){
     gamYRs <-gam(NDVIReprojected ~ s(yday, k=12)  , data=ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR,])
     # plot(gamYRs)
+    # 3.1 mean & 95%CI on predicted NDVI
     YRpost <- post.distns(model.gam = gamYRs, newdata = ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR,], vars=c("yday", "year"))
     # summary(YRpost)
     ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR, c("YrMean", "YrLwr", "YrUpr")] <- YRpost[,c("mean", "lwr", "upr")]
+    
+    # 3.2 mean & 95%CI on NDVI trend
+    YrPostDeriv <- calc.derivs(model.gam = gamYRs, newdata = ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR, ], vars=c("yday"))
+    ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR, c("YrDerivMean", "YrDerivLwr", "YrDerivUpr")] <- YrPostDeriv[,c("mean", "lwr", "upr")]
+    
+    # 3.3 add tag on trend
+    ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR & ndviyrs$YrDerivUpr<0, "YrDerivTrend"] <- "Getting Browner"
+    ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR & ndviyrs$YrDerivLwr>0, "YrDerivTrend"] <- "Getting Greener"
+    ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR & ndviyrs$YrDerivLwr<0 & ndviyrs$YrDerivUpr>0, "YrDerivTrend"] <- "No Change"
+    summary(ndviyrs)
+    
     saveRDS(gamYRs, file.path(pathMods, LC, paste0("GAM-Years-Baseline_", LC, "_", YR, ".RDS")))
     
-  }
+    # 4. compare years to norms to flag -- could probably do this wihtout a loop, but looping to be safe
+    # NDVI Flags
+    #   Significantly Browner than norm = yr CI < norm CI
+    #   Slightly Browner than norm = yr mean < norm CI, but yr CI overlaps
+    #   Normal = yr mean in norm CI
+    #   Slightly Greener than norm = yr mean > norm CI, but yr CI overlaps
+    #   Significantly Greener than norm = year CI > norm CI
+    # Trend Flag
+    #   Greening faster than normal -- both yr & norm pos; yr > norm
+    #   Greening slower than normal -- both yr & norm pos; abs(yr < norm)
+    #   Browning faster than normal -- both yr & norm neg; yr < norm
+    #   Browning slower than normal -- both yr & norm neg; abs(yr < norm)
+    #   Abnormal greening - yr pos & norm not pos
+    #   Abnormal browning - yr neg & norm not neg
+    for(YDAY in unique(ndviyrs$yday[ndviyrs$type==LC & ndviyrs$year==YR])){
+      rowInd <- which(ndviyrs$type==LC & ndviyrs$year==YR & ndviyrs$yday==YDAY)
+      Norm <- ndvi.norms[ndvi.norms$type==LC & ndvi.norms$yday==YDAY,]
+      # ndviyrs[rowInd,]
+      
+      ndviFlag <- ifelse(ndviyrs$YrLwr[rowInd] > Norm$NormUpr, "Significantly Greener than Normal",
+                         ifelse(ndviyrs$YrUpr[rowInd] < Norm$NormLwr, "Significantly Browner than Normal",
+                                ifelse(ndviyrs$YrMean[rowInd] > Norm$NormUpr, "Slightly Greener than Normal",
+                                       ifelse(ndviyrs$YrMean[rowInd] < Norm$NormLwr, "Slightly Browner than Normal",
+                                              "Normal"))))
+      
+      
+      trendFlag <- ifelse(ndviyrs$YrDerivLwr[rowInd] > Norm$NormDerivUpr & 
+                            all(c(ndviyrs$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Faster than Normal",
+                         ifelse(ndviyrs$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
+                                   all(c(ndviyrs$YrDerivLwr[rowInd], Norm$NormDerivLwr)>0), "Greening Slower than Normal",
+                         ifelse(ndviyrs$YrDerivUpr[rowInd] < Norm$NormDerivLwr & 
+                                  all(c(ndviyrs$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Faster than Normal",
+                                ifelse(ndviyrs$YrDerivUpr[rowInd] > Norm$NormDerivLwr & 
+                                         all(c(ndviyrs$YrDerivUpr[rowInd], Norm$NormDerivUpr)<0), "Browning Slower than Normal",
+                                ifelse(ndviyrs$YrDerivLwr[rowInd] > 0 & 
+                                         ((Norm$NormDerivUpr>0 & Norm$NormDerivLwr<0) | 
+                                            (Norm$NormDerivUpr<0 & Norm$NormDerivLwr<0)), "Abnormal Greening",
+                                       ifelse(ndviyrs$YrDerivUpr[rowInd] < 0 & 
+                                                ((Norm$NormDerivUpr>0 & Norm$NormDerivLwr<0) | 
+                                                   (Norm$NormDerivUpr>0 & Norm$NormDerivLwr>0)), "Abnormal Browning",
+                                              "Normal"))))))
+      
+      ndviyrs[rowInd,c("FlagNDVI", "FlagTrend")] <- c(ndviFlag, trendFlag)
+      
+    }# end YDAY loop
+    
+  } # End Yr loop
 }
 
 summary(ndvi.base)
@@ -87,6 +153,43 @@ summary(ndvi.norms)
 summary(ndviyrs)
 
 ndviyrs <- ndviyrs[ndviyrs$year<max(ndvi.base$year) | (ndviyrs$year==max(ndvi.base$year) & ndviyrs$yday<=lubridate::yday(max(ndvi.base$date))),]
+# ndviyrs$date <- strptime(paste(ndviyrs$year, ndviyrs$yday, sep="-"), format=c("%Y-%j"))
+summary(ndviyrs$date)
+head(ndviyrs[is.na(ndviyrs$date),])
+
+# Merge our actual observations into the ndviyrs file
+ndvi.baseAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndvi.base, FUN=mean, na.rm=T)
+summary(ndvi.baseAgg)
+dim(ndvi.baseAgg)
+
+dim(ndviyrs)
+ndviyrs <- merge(ndviyrs, ndvi.baseAgg[!is.na(ndvi.base$NDVIReprojected),c("type", "year", "yday", "NDVIReprojected")], all.x=T)
+dim(ndviyrs)
+
+summary(as.factor(ndviyrs$YrDerivTrend))
+summary(as.factor(ndviyrs$FlagNDVI))
+summary(as.factor(ndviyrs$FlagTrend))
+# summary(ndviyrs)
+
+# Doing a quick graph to test
+ggplot(data=ndviyrs[ndviyrs$year==2012,]) +
+  ggtitle("Year = 2012") +
+  facet_wrap(~type) +
+  geom_ribbon(data=ndvi.norms, aes(x=yday, ymin=NormLwr, ymax=NormUpr), fill="black", alpha=0.2) +
+  geom_line(data=ndvi.norms, aes(x=yday, y=NormMean), color="black") +
+  geom_ribbon(aes(x=yday, ymin=YrLwr, ymax=YrUpr), fill="blue", alpha=0.2) +
+  geom_line(aes(x=yday, y=YrMean), color="blue") +
+  geom_point(aes(x=yday, y=YrMean, color=FlagNDVI), size=0.2)
+
+ggplot(data=ndviyrs[ndviyrs$year==2024,]) +
+  ggtitle("Year = 2014") +
+  facet_wrap(~type) +
+  geom_ribbon(data=ndvi.norms, aes(x=yday, ymin=NormLwr, ymax=NormUpr), fill="black", alpha=0.2) +
+  geom_line(data=ndvi.norms, aes(x=yday, y=NormMean), color="black") +
+  geom_ribbon(aes(x=yday, ymin=YrLwr, ymax=YrUpr), fill="blue", alpha=0.2) +
+  geom_line(aes(x=yday, y=YrMean), color="blue") +
+  geom_point(aes(x=yday, y=YrMean, color=FlagNDVI), size=0.2)
+
 
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndvi.norms, file.path(pathDat, "NDVIall_normals_modeled.csv"), row.names=F)

@@ -13,12 +13,17 @@ library(shinyWidgets)
 path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
 #NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
+overwrite=F
 
-file.copy(from=file.path(path.UrbDrought, "data/UrbanEcoDrought_NDVI_LocalExtract/allNDVI_data.csv"), 
-          to="Urban Drought App/data/allNDVI_data.csv")
-
-file.copy(from=file.path(path.UrbDrought, "data/NDVI_drought_monitoring/k=12_norms_all_LC_types.csv"), 
-          to="Urban Drought App/data/k=12_norms_all_LC_types.csv")
+# Copy the file with all of the yearly data
+file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_years_modeled.csv", 
+          to="Urban Drought App/data/NDVIall_years_modeled.csv", overwrite=T)
+ 
+# Copy the normals file only if we need to
+if(!file.exists("Urban Drought App/data/NDVIall_normals_modeled.csv") | overwrite){
+  file.copy(from="NDVI_Automation_Workflow/data_all/NDVIall_normals_modeled.csv",
+            to="Urban Drought App/data/NDVIall_normals_modeled.csv", overwrite=T)
+}
 
 
 
