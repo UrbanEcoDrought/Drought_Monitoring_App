@@ -167,8 +167,8 @@ get_dates <- function(image) {
 }
 
 l8dates <- landsat8$map(get_dates)
-l8dates_list <- dates$getInfo()$features
-l8dates_vector <- sapply(dates_list, function(x) x$properties$date)
+l8dates_list <- l8dates$getInfo()$features
+l8dates_vector <- sapply(l8dates_list, function(x) x$properties$date)
 
 if(max(l8dates_vector)>date_needed){
   # Mask NDVI by Landcover & condense to regional means
@@ -205,14 +205,14 @@ landsat9 <- ee$ImageCollection("LANDSAT/LC09/C02/T1_L2")$filterBounds(Chicago)$f
   # img3 = img2$addBands(srcImg=lAdj, overwrite=T)$addBands(srcImg=lst_k, overwrite=T)$set('date',d, 'day',dy, 'month',m, 'year',y)
   return(img$addBands(srcImg=lAdj, overwrite=T)$addBands(srcImg=lst_k, overwrite=T)$set('date',d, 'day',dy, 'month',m, 'year',y))
 })$select(c('SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'ST_B10'),c('blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'LST_K'))$map(addNDVI)
-ee_print(landsat9)
+# ee_print(landsat9)
 
 
-l9dates <- landsat8$map(get_dates)
-l9dates_list <- dates$getInfo()$features
-l9dates_vector <- sapply(dates_list, function(x) x$properties$date)
+l9dates <- landsat9$map(get_dates)
+l9dates_list <- l9dates$getInfo()$features
+l9dates_vector <- sapply(l9dates_list, function(x) x$properties$date)
 
-if(max(l8dates_vector)>date_needed){
+if(max(l9dates_vector)>date_needed){
   # Mask NDVI by Landcover & condense to regional means
   for(LCTYPE in lcnames){
     # print(LCTYPE)
