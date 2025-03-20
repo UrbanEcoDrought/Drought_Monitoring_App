@@ -5,8 +5,8 @@ if(!dir.exists("../figs")) dir.create("../figs")
 
 yrDrought <- c(2005, 2012, 2023)
 
-LClevels <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#68ab5f", "urban-open"="#dec5c5", "urban-low"="#d99282", "urban-medium"="#eb0000", "urban-high"="#ab0000")
-
+LClevels <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-open"="#dec5c5", "urban-low"="#d99282", "urban-medium"="#eb0000", "urban-high"="#ab0000")
+paletteLC <- LClevels
 trendLevels <- c("Getting Browner"="tan3", 
                  "No Change"="gray", 
                  "Getting Greener"="green4")
@@ -36,7 +36,9 @@ datNorms$type <- factor(datNorms$type, levels=names(LClevels))
 summary(datNorms)
 
 yrNow <- max(datYrs$year)
-
+datRaw <- read.csv("../data_all/NDVIall_baseline_modeled.csv")
+datRaw$date <- as.Date(datRaw$date)
+summary(datRaw)
 
 # Doing a test time series graph
 LC="urban-medium"
@@ -192,3 +194,113 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     plot.background = element_rect(fill = "gray99")
   )
 dev.off()
+
+
+# Doing a distribution
+ydayToday <- max(datYrs$yday[datYrs$year==max(datYrs$year)])
+
+
+ggplot(data=datNorms, aes(x = NormMean)) + 
+  facet_wrap(~type) +
+  geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
+  
+  # Add the bounds as dashed lines with legend
+  geom_vline(data=datNorms[datNorms$yday==ydayToday,], aes(xintercept = NormLwr, color="normal"), linetype = "dashed", size = 1) +
+  geom_vline(data=datNorms[datNorms$yday==ydayToday,], aes(xintercept = NormUpr, color="normal"), linetype = "dashed", size = 1) +
+  
+  # Mean point
+  geom_point(data=datNorms[datNorms$yday==ydayToday,], aes(x = NormMean, y = 0, shape = "normal", color="normal"), size = 4) +
+  
+  # Current NDVI point (diamond)
+  # Add the bounds as dashed lines with legend
+  # geom_rect(data=datYrs[datYrs$year==max(datYrs$year) & datYrs$yday==ydayToday,], aes(xmin=YrLwr, xmax=YrUpr, ymin=-Inf, ymax=Inf, fill="current"), alpha=0.2) +
+  geom_vline(data=datYrs[datYrs$year==max(datYrs$year) & datYrs$yday==ydayToday,], aes(xintercept = YrLwr, color="current"), linetype = "dashed", size = 1) +
+  geom_vline(data=datYrs[datYrs$year==max(datYrs$year) & datYrs$yday==ydayToday,], aes(xintercept = YrUpr, color="current"), linetype = "dashed", size = 1) +
+  
+  # Mean point
+  geom_point(data=datYrs[datYrs$year==max(datYrs$year) & datYrs$yday==ydayToday,], aes(x = YrMean, y = 0, shape = "current", color="current"), size = 4) +
+  
+  # Labels
+  labs(
+    x = paste0(" Density Plot"),  # Dynamic x-axis label using the 'naming' parameter
+    y = "Density",
+    linetype = "Bound Type",  # Legend title for the lines
+    shape = "Point Type"      # Legend title for the points
+  ) +
+  
+  # Manual legend adjustments
+  # scale_linetype_manual(values = c("Lower Bound" = "dashed", "Upper Bound" = "dashed")) +
+  scale_shape_manual(values = c("normal" = 16, "current" = 18)) +
+  scale_color_manual(values = c("normal"="#40004b", "current" = "#1b7837")) +
+  scale_fill_manual(values = c("normal"="#40004b", "current" = "#1b7837")) +
+  
+  theme_minimal()
+
+
+datYrs$date <- as.Date(strptime(paste(datYrs$year, datYrs$yday, sep="-"), format=c("%Y-%j")))
+summary(datYrs)
+
+ggplot(datYrs, aes(x = date, y = YrMean, ymin=YrLwr, ymax=YrUpr)) +
+    # geom_point(size = 1) +
+    # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
+  geom_ribbon(aes(fill=type), alpha=0.2) +
+  geom_line(aes(color=type)) +
+  scale_color_manual(values = paletteLC) +
+    scale_fill_manual(values = paletteLC) +
+    labs(
+      x = "Date",
+      y = "NDVI Value",
+      title = "NDVI Trends Over Time for Selected Land Cover Types"
+    ) +
+    scale_x_date(
+      date_breaks = "6 months",
+      date_labels = "%b %Y"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+    )
+
+
+ggplot(datYrs[datYrs$date > max(datYrs$date)-365,]) +
+  geom_point(data=datRaw[datRaw$date > max(datYrs$date)-365 & !is.na(datRaw$NDVIReprojected),], aes(x=date, y=NDVIReprojected, color=type), size = 0.5) +
+  # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
+  geom_ribbon(aes(x=date, ymin = YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
+  geom_line(aes(x=date, y = YrMean, color=type)) +
+  geom_vline(xintercept=as.Date("2025-01-01")) +
+  scale_color_manual(values = paletteLC) +
+  scale_fill_manual(values = paletteLC) +
+  labs(
+    x = "Date",
+    y = "NDVI Value",
+    title = "NDVI Trends Over Time for Selected Land Cover Types"
+  ) +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+  )
+
+
+ggplot(datYrs[datYrs$date > max(datYrs$date)-30,]) +
+  geom_point(data=datRaw[datRaw$date > max(datYrs$date)-30 & !is.na(datRaw$NDVIReprojected),], aes(x=date, y=NDVIReprojected, color=type), size = 0.5) +
+  # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
+  geom_ribbon(aes(x=date, ymin = YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
+  geom_line(aes(x=date, y = YrMean, color=type)) +
+  geom_vline(xintercept=as.Date("2025-01-01")) +
+  scale_color_manual(values = paletteLC) +
+  scale_fill_manual(values = paletteLC) +
+  labs(
+    x = "Date",
+    y = "NDVI Value",
+    title = "NDVI Trends Over Time for Selected Land Cover Types"
+  ) +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+  )
+
