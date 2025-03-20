@@ -212,70 +212,57 @@ ui <- dashboardPage(skin = "black",
                                     width = 12,
                                     tabPanel(
                                       "Crop Density Plot",
-                                      h6(HTML("<b>Distribution of crop NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of crop norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
                                     tabPanel(
                                       "Forest Density Plot",
-                                      h6(HTML("<b>Distribution of forest NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of forest norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
                                       "Grassland Density Plot",
-                                      h6(HTML("<b>Distribution of grassland NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of grassland norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
                                       "Urban-High Density Plot",
-                                      h6(HTML("<b>Distribution of Urban-High NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of urban-high norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Medium Density Plot",
-                                      h6(HTML("<b>Distribution of Urban-Medium NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of urban-medium norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Low Density Plot",
-                                      h6(HTML("<b>Distribution of Urban-Low NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of urban-low norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Open Density Plot",
-                                      h6(HTML("<b>Distribution of Urban-Open NDVI values
-                                              over the past two weeks. The x-axis represents NDVI 
-                                              (greenness), the y-axis shows frequency, and peaks indicate
-                                              the most common values. The current NDVI (Green Diamond) and 
-                                              norm for the Current NDVI yday (Purple Circle) are also displayed.</b><br>")),
+                                      h6(HTML("<b>Distribution of urban-open norm values for ydays 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current yday (Purple Circle) are also displayed
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
@@ -289,22 +276,22 @@ ui <- dashboardPage(skin = "black",
                                 tabBox(
                                   title = "NDVI Data",
                                   id = "tab1",
-                                  height = "300px",
+                                  height = "3000px",
                                   width = 12, 
                                   tabPanel("Full Review",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("all_data_graph", height = "250px")),
+                                           plotOutput("all_data_graph", height = "400px")),
                                   tabPanel("Yearly",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("yearly_graph", height = "250px"),
+                                           plotOutput("yearly_graph", height = "400px"),
                                            dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
                                   tabPanel("Monthly", 
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("monthly_graph", height = "250px"),
+                                           plotOutput("monthly_graph", height = "400px"),
                                            dateInput(inputId = "mstart_date", label = "Enter Start Date", value = Sys.Date() %m-% months(1))),
                                   tabPanel("Weekly",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("weekly_graph",height = "250px"),
+                                           plotOutput("weekly_graph",height = "400px"),
                                            h6(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
                                            dateInput(inputId = "wstart_date", label = "Enter Start Date", value = Sys.Date() - 7))
                                 )
@@ -344,8 +331,13 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types.
                                                    Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration.<br><br>
                                            <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
-                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>")),
-                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>"))
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>The main workflows use include:<br>
+                <b>NDVI_Drought_Monitoring Workflow</b><br>
+                <b>UrbanDrought_SpatialAnalysis_Chicago Workflow</b><br><br>
+                Links can be found under 'Links to Github' and they were created by Juliana Harr & Christy Rollinson<br>")),
+                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>")),
+                                           h6(HTML("USDM Link: <a href='https://droughtmonitor.unl.edu'>USDM</a>"))
+                                           
                                   ),
                                   tabPanel("Grant Information",
                                            h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>

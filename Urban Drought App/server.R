@@ -49,7 +49,6 @@ latest_yday <- max(NDVIall_years_modeled$yday[NDVIall_years_modeled$year == late
 #pulling any rows with matching date 
 most_recent_data<- filter(NDVIall_years_modeled, year == latest_year & yday == latest_yday)
 
-
 ##################################################
 #DENSITY PLOTS & PERCENTILE (gives 2 week period)
 # Setting the period for 2 weeks prior
@@ -214,10 +213,10 @@ weekly_graph <- function(wstart_date) {
 #Notes: we need 7 density plots with the most recent data display (latest day) and upper and lower bound shown and mean and then the lastest day NDVI as a point
 # Distribution plot is of NDVI data, and updates as we get more NDVI data from satellites 
 
-density_plot <- function(LCtype, naming, current_time_period, NDVIall_normals_modeled, most_recent_data) {
-  
-  current_time_period <- filter(current_time_period, type == LCtype)
-  CI_subset <- filter(NDVIall_normals_modeled, type == LCtype)
+density_plot <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data) {
+  #pulling these for the norm CI & NDVI CI
+  norm_subset <- filter(NDVIall_normals_modeled, type == LCtype)
+  ndvi_subset <-filter(NDVIall_years_modeled, type == LCtype)
   most_recent_subset <- filter(most_recent_data, type == LCtype)
   
   most_recent_subset$YrMean <- as.numeric(most_recent_subset$YrMean)
@@ -225,39 +224,44 @@ density_plot <- function(LCtype, naming, current_time_period, NDVIall_normals_mo
   #finding yday
   recent_yday <- most_recent_subset$yday[1]
   
-  CI_final_subset <- filter(CI_subset, yday == recent_yday)
+  norm_final_subset <- filter(norm_subset, yday == recent_yday)
+  ndvi_final_subset <-filter(ndvi_subset, yday == recent_yday)
   
   # Extract values for bounds and mean from the first row of CI_subset (or whichever logic you want to apply)
-  lwr <- CI_final_subset$NormLwr[1]
-  upr <- CI_final_subset$NormUpr[1]
-  mean_value <- CI_final_subset$NormMean[1]
+  NormLwr_current <- norm_final_subset$NormLwr[1]
+  NormUpr_current <- norm_final_subset$NormUpr[1]
+  NormMean_current <- norm_final_subset$NormMean[1]
+  
+  NDVILwr <-filter(ndvi_final_subset, year == latest_year)$YrLwr[1]
+  NDVIUpr <-filter(ndvi_final_subset, year == latest_year)$YrUpr[1]
+  NDVIMean <-filter(ndvi_final_subset, year == latest_year)$YrMean[1]
   
   # Plot
-  plot <- ggplot(current_time_period, aes(x = YrMean)) + 
-    geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5)+
+  plot <- ggplot(norm_subset, aes(x = NormMean)) + 
+    geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5) +
     
-    # Add the bounds as dashed lines with legend
-    geom_vline(aes(xintercept = lwr), linetype = "dashed", color = "#40004b", size = 1) +
-    geom_vline(aes(xintercept = upr), linetype = "dashed", color = "#40004b", size = 1) +
+    # Norm CI & point
+    geom_vline(aes(xintercept = NormLwr_current, color = "normal"), linetype = "dashed", size = 1) +
+    geom_vline(aes(xintercept = NormUpr_current, color = "normal"), linetype = "dashed", size = 1) +
+    geom_point(aes(x = NormMean_current, y = 0, shape = "normal", color = "normal"), size = 4) +
     
-    # Mean point
-    geom_point(aes(x = mean_value, y = 0, shape = "Mean"), color = "#40004b", size = 4) +
-    
-    # Current NDVI point (diamond)
-    geom_point(aes(x = most_recent_subset$YrMean, y = 0, shape = "Current NDVI"), fill = "#1b7837", color = "#1b7837", size = 4) +
+    # NDVI CI & point
+    geom_vline(aes(xintercept = NDVILwr, color = "current"), linetype = "dashed", size = 1) +
+    geom_vline(aes(xintercept = NDVIUpr, color = "current"), linetype = "dashed", size = 1) +
+    geom_point(aes(x = NDVIMean, y = 0, shape = "current", color = "current"), size = 4) +
     
     # Labels
     labs(
-      x = paste0(naming, " Density Plot"),  # Dynamic x-axis label using the 'naming' parameter
+      x = paste0(naming, " Density Plot"),  # Ensure 'naming' is defined
       y = "Density",
-      linetype = "Bound Type",  # Legend title for the lines
-      shape = "Point Type"      # Legend title for the points
+      color = "Legend",
+      shape = "Legend"# Legend title for points
     ) +
     
     # Manual legend adjustments
-    scale_linetype_manual(values = c("Lower Bound" = "dashed", "Upper Bound" = "dashed")) +
-    scale_shape_manual(values = c("Mean" = 16, "Current NDVI" = 23)) +
-    
+    scale_shape_manual(values = c("normal" = 16, "current" = 18)) +
+    scale_color_manual(values = c("normal" = "#40004b", "current" = "#1b7837")) +
+    #scale_fill_manual(values = c("normal" = "#40004b", "current" = "#1b7837")) +
     theme_minimal()
   
   # Return the plot
@@ -297,7 +301,7 @@ LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, m
   CI_final_subset$NormUpr <- as.numeric(CI_final_subset$NormUpr)
   CI_final_subset$NormLwr <- as.numeric(CI_final_subset$NormLwr)
   
-  status <- round((most_recent_subset$YrMean - mean_value), digits = 5)
+  status <- round((most_recent_subset$YrMean - mean_value), digits = 2)
   
   color <- heatmap_colors[most_recent_subset$FlagNDVI]
   
@@ -857,37 +861,37 @@ server <- function(input, output, session) {
   ####################################################################################################################
   #Density Plots
   output$crop_density_plot <- renderPlotly({
-    crop_plot <- density_plot("crop", "Crop", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    crop_plot <- density_plot("crop", "Crop", NDVIall_normals_modeled, NDVIall_years_modeled,most_recent_data)
     print(crop_plot)
   })
   
   output$forest_density_plot <- renderPlotly({
-    forest_plot <- density_plot("forest", "Forest", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    forest_plot <- density_plot("forest", "Forest", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(forest_plot)
   })
   
   output$grassland_density_plot <- renderPlotly({
-    grassland_plot <- density_plot("grassland", "Grassland", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    grassland_plot <- density_plot("grassland", "Grassland", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(grassland_plot)
   })
   
   output$uh_density_plot <- renderPlotly({
-    uh_plot <- density_plot("urban-high", "Urban-High", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    uh_plot <- density_plot("urban-high", "Urban-High", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(uh_plot)
   })
   
   output$um_density_plot <- renderPlotly({
-    um_plot <- density_plot("urban-medium", "Urban-Medium", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    um_plot <- density_plot("urban-medium", "Urban-Medium", NDVIall_normals_modeled, NDVIall_years_modeled,most_recent_data)
     print(um_plot)  
   })
   
   output$ul_density_plot <- renderPlotly({
-    ul_plot <- density_plot("urban-low", "Urban-Low", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    ul_plot <- density_plot("urban-low", "Urban-Low", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(ul_plot)  
   })
   
   output$uo_density_plot <- renderPlotly({
-    uo_plot <- density_plot("urban-open", "Urban-Open", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    uo_plot <- density_plot("urban-open", "Urban-Open", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(uo_plot)
   })
   ####################################################################################################################
