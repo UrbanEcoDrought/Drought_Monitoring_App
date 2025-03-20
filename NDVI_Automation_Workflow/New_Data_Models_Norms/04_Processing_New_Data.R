@@ -4,14 +4,16 @@
 path.google <- "~/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")
 NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract-RAW")
+pathDat <- "../data_all"
 
 # Check if files are being detected
 fNDVI <- dir(file.path(path.google, NDVIsave))
 print(fNDVI)  # Should list all files in that directory
 
 
-ndviLatest <-read_csv(file.path(pathDat, "NDVIall_latest.csv"))%>%
-  mutate(date = as.Date(date, format="%Y-%m-%d"))
+ndviLatest <-read.csv(file.path(pathDat, "NDVIall_latest.csv"))
+ndviLatest$date <- as.Date(ndviLatest$date)
+summary(ndviLatest)
 
 # date_needed <- max(ndviLatest$date)
 # date_today <- as.Date(today())
@@ -47,6 +49,9 @@ for(LCTYPE in lcnames){
   ndviAll <- rbind(ndviAll, landsatAll)
 }
 
+summary(ndviAll)
+head(ndviAll)
+
 ##################### 
 #When running manually, pause here and wait for loop to finish 
 ##################### 
@@ -70,8 +75,8 @@ summary(ndviLatest)
 #steps: take new data and save as csv and run it through spline in next script, read in old data and then join 
 #then run year specific adjustments
 
-if (any(ndviAll$date > max(ndviLatest$date))) {
-  new_NDVI_data <- ndviAll %>% filter(date > max(ndviLatest$date))
+if(any(ndviAll$date > max(ndviLatest$date))) {
+  new_NDVI_data <- ndviAll[ndviAll$date > max(ndviLatest$date),]
   
   ndviLatest <- rbind(ndviLatest, new_NDVI_data)
   write.csv(new_NDVI_data, file.path(pathDat, "new_NDVI_data.csv"), row.names = FALSE)

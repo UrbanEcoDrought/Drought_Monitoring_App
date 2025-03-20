@@ -44,7 +44,7 @@ summary(ndviLatest)
 ndvi.base$date <- as.Date(ndvi.base$date)
 ndvi.base$type <- as.factor(ndvi.base$type)
 ndvi.base$mission <- as.factor(ndvi.base$mission)
-summary(ndviLatest)
+summary(ndvi.base)
 
 ndviYrs$type <- as.factor(ndviYrs$type)
 ndviYrs <- ndviYrs[ndviYrs$year<max(ndviNew$year),] # Getting rid of the data for the year we're updating
