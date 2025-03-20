@@ -214,7 +214,7 @@ ui <- dashboardPage(skin = "black",
                                       "Crop Density Plot",
                                       h6(HTML("<b>Distribution of crop norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
@@ -222,7 +222,7 @@ ui <- dashboardPage(skin = "black",
                                       "Forest Density Plot",
                                       h6(HTML("<b>Distribution of forest norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
@@ -230,7 +230,7 @@ ui <- dashboardPage(skin = "black",
                                       "Grassland Density Plot",
                                       h6(HTML("<b>Distribution of grassland norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
@@ -238,7 +238,7 @@ ui <- dashboardPage(skin = "black",
                                       "Urban-High Density Plot",
                                       h6(HTML("<b>Distribution of urban-high norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
@@ -246,7 +246,7 @@ ui <- dashboardPage(skin = "black",
                                       "Urban-Medium Density Plot",
                                       h6(HTML("<b>Distribution of urban-medium norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
@@ -254,7 +254,7 @@ ui <- dashboardPage(skin = "black",
                                       "Urban-Low Density Plot",
                                       h6(HTML("<b>Distribution of urban-low norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
@@ -262,7 +262,7 @@ ui <- dashboardPage(skin = "black",
                                       "Urban-Open Density Plot",
                                       h6(HTML("<b>Distribution of urban-open norm values for ydays 1-365.The current NDVI (Green Diamond) and
                                               normal for the current yday (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but points of nonoverlap are noteable.</b><br>")),
+                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
