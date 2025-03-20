@@ -16,8 +16,8 @@ library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycs
 ####################################################################################################################
 #for testing
 #Putting in all filepaths like this for now
-NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
-NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
+# NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
+# NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
 ####################################################################################################################
 #Palettes
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
@@ -30,11 +30,15 @@ graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Bro
 ####################################################################################################################
 #####Uncomment after testing 
 ####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
-#NDVIall_years_modeled <- read_csv("data/allNDVIall_years_modeled.csv")%>%
+# NDVIall_years_modeled <- read_csv("data/allNDVIall_years_modeled.csv")%>%
 # mutate(date = as.Date(date, format="%Y-%m-%d"))
 #NDVIall_years_modeled$date <- as.Date(NDVIall_years_modeled$date)
 #####CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
 #NDVIall_normals_modeled <- read_csv("data/k=12_norms_all_LC_types.csv")
+
+NDVIall_normals_modeled <-read_csv("data/NDVIall_normals_modeled.csv")
+NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
+
 ####################################################################################################################
 
 ####################################################################################################################

@@ -16,8 +16,12 @@ library(tidyquant);library(scales);library(bs4Dash);library(shinyjs)
 ####################################################################################################################
 #for testing
 #Putting in all filepaths like this for now
-NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
-NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
+# NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
+# NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
+
+NDVIall_normals_modeled <-read_csv("data/NDVIall_normals_modeled.csv")
+NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
+
 ####################################################################################################################
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
