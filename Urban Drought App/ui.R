@@ -8,7 +8,7 @@
 library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
 library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
 library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
-library(tidyquant);library(scales);library(bs4Dash);library(shinyjs)
+library(tidyquant);library(scales);library(bs4Dash);library(shinyjs);library(shinyGovstyle)
 
 
 #For documentation of this app
@@ -86,26 +86,69 @@ counties <- sf::read_sf("cb_2023_us_county_500k",
 il_counties <- subset(counties, counties$NAME %in% c(
   "Cook","DuPage","Kane","McHenry","Lake","Will","Kendall") &
     STATE_NAME == "Illinois")
+####################################################################################################################
+
+#Needed to move this here to add the banner
+dbHeader <- dashboardHeader(
+  title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
+  titleWidth = 200
+ 
+ # shinyGovstyle::banner(
+  #  inputId = "banner", 
+   # type = "Beta Version:",
+    #HTML('<span style="background-color:#B9D3EE; padding: 2px;"><b>This portal is in beta and still under development. 
+     #   Some features may be incomplete or subject to change.</b></span>')
+  )
+#)
+
+#Needed to move this here to add the logo
+dbSidebar <- dashboardSidebar(
+  style = "position: relative; height: 93vh;",  # Ensures the sidebar takes full height
+  
+  tags$div(
+    style = "position: absolute; bottom: 10px; left: 60px;",  # Adjust position as needed
+    tags$a(
+      href = 'https://mortonarb.org', 
+      tags$img(src = 'mortonarb.png', height = '60', width = '150')
+    )
+  ),
+  tags$div(
+    style = "position: absolute; bottom: 15px; left: 5px;",  # Adjust position as needed
+    tags$a(
+      href = 'https://www.drought.gov', 
+      tags$img(src = 'NIDIS.png', height = '48', width = '55')
+    )
+  ),
+  sidebarMenu(
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+    menuItem("Analysis", tabName = "analysis", icon = icon("gears"),
+             menuSubItem("NDVI Data Review",
+                         tabName = "NDVI_data_review"),
+             menuSubItem("Heat Maps for each LC Type",
+                         tabName = "ndvi_diff")),
+    menuItem("About", tabName = "specifics", icon = icon("bookmark"))
+  )
+)
 
 ####################################################################################################################
 
 ui <- dashboardPage(skin = "black",
-                    dashboardHeader(
-                      title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
-                      titleWidth = 200),
-                    dashboardSidebar(
-                      width = 600,
-                      sidebarMenu(
-                        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-                        menuItem("Analysis", tabName = "analysis", icon = icon("gears"),
-                                 menuSubItem("NDVI Data Review",
-                                             tabName = "NDVI_data_review"),
-                                 menuSubItem("Heat Maps for each LC Type",
-                                             tabName = "ndvi_diff")),
-                        menuItem("About", tabName = "specifics", icon = icon("bookmark"))
-                      )
-                    ),
+                    dbHeader,
+                    dbSidebar,
                     dashboardBody(
+                      div(
+                        style = "
+    height: 25px; 
+    background-color: #1A85FF; 
+    width: 100%; 
+    position: relative; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;",
+                        h6(HTML("<b style='color: white;'> ------------------------------------  This portal is in beta & still under development, some features 
+          may be incomplete or subject to change  ------------------------------------ </b>"))
+                      ),
+                      br(),
                       useShinyalert(),
                       tags$head(
                         tags$script(HTML('
@@ -286,7 +329,9 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                            plotOutput("all_data_graph", height = "400px")),
                                   tabPanel("Yearly",
-                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
+                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load. <br><br>
+                                           NOTE: At the start of the new year there is a jump in the data marked by a vertical line, this is from how
+                                                   the data was processed using GAMs.</b><br>")),
                                            plotOutput("yearly_graph", height = "400px"),
                                            dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
                                   tabPanel("Monthly", 
@@ -337,7 +382,7 @@ ui <- dashboardPage(skin = "black",
                                            <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
                 <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>The main workflows use include:<br>
                 <b>NDVI_Drought_Monitoring Workflow</b><br>
-                <b>UrbanDrought_SpatialAnalysis_Chicago Workflow</b><br><br>
+                <b>UrbanDrought_SpatialAnalysis_Chicago Workflow</b><br>
                 Links can be found under 'Links to Github' and they were created by Juliana Harr & Christy Rollinson<br>")),
                                            h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>")),
                                            h6(HTML("USDM Link: <a href='https://droughtmonitor.unl.edu'>USDM</a>"))
@@ -351,7 +396,10 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("Jocelyn Garcia, The Morton Arboretum (jgarcia@mortonarb.org)<br><br>
                                                     Juliana Harr, The Morton Arboretum (jharr@mortonarb.org)<br><br>
                                                     Ayo Andra J. Deas, The City University of New York (adeas@gc.cuny.edu)<br><br>
-                                                    Christine R. Rollinson, The Morton Arboretum (crollinson@mortonarb.org)"))
+                                                    Lindsay Darling, The Morton Arboretum (ldarling@mortonarb.org) <br><br>
+                                                    Christine R. Rollinson, The Morton Arboretum (crollinson@mortonarb.org)<br><br>
+                                                   M. Ross Alexander, Consortium for Advanced Science and Engineering, University of Chicago<br><br>
+                                                   Trent Ford, Illinois State Water Survey, University of Illinois, Urbana-Champaign (twford@illinois.edu)<br><br>"))
                                   ),
                                   tabPanel("Links to Github",
                                            h6(HTML("Github Links: <br>

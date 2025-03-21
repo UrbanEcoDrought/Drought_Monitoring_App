@@ -8,7 +8,7 @@
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
 library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
-library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders)
+library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle)
 
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
@@ -110,7 +110,7 @@ all_data_graph <- function() {
     labs(
       x = "Date",
       y = "NDVI Value",
-      title = "NDVI Trends Over Time for Selected Land Cover Types"
+      title = "NDVI Trends Over Time for All Land Cover Types"
     ) +
     scale_x_date(
       date_breaks = "6 months",
@@ -141,6 +141,7 @@ twelve_month_graph <- function(start_date) {
   ggplot(year_data, aes(x = date, y = YrMean, color = type, fill=type)) +
     geom_point(size = 1) +
     geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12)) +
+    geom_vline(xintercept=as.Date("2025-01-01")) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -242,34 +243,65 @@ density_plot <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_
   
   # Plot
   plot <- ggplot(norm_subset, aes(x = NormMean)) + 
-    geom_density(aes(y = after_stat(density) / max(after_stat(density))), fill = "#c2a5cf", alpha = 0.5) +
+    geom_density(aes(y = after_stat(density) / max(after_stat(density)), 
+                     text = paste("Density:", after_stat(density), "\nNDVI:", round(x , 3))), 
+                 fill = "#c2a5cf", alpha = 0.5) +
     
-    # Norm CI & point
-    geom_vline(aes(xintercept = NormLwr_current, color = "normal"), linetype = "dashed", size = 1) +
-    geom_vline(aes(xintercept = NormUpr_current, color = "normal"), linetype = "dashed", size = 1) +
-    geom_point(aes(x = NormMean_current, y = 0, shape = "normal", color = "normal"), size = 4) +
+    geom_vline(aes(xintercept = NormLwr_current, color = "95% CI Norm"), 
+               linetype = "dashed", size = 1) +
     
-    # NDVI CI & point
-    geom_vline(aes(xintercept = NDVILwr, color = "current"), linetype = "dashed", size = 1) +
-    geom_vline(aes(xintercept = NDVIUpr, color = "current"), linetype = "dashed", size = 1) +
-    geom_point(aes(x = NDVIMean, y = 0, shape = "current", color = "current"), size = 4) +
+    geom_point(aes(x = NormLwr_current, y = 0, 
+                   text = paste("Norm Lwr Bound:", round(NormLwr_current, 3))),
+               alpha = 0)+
     
-    # Labels
+    geom_vline(aes(xintercept = NormUpr_current, color = "95% CI Norm"), linetype = "dashed", size = 1,
+               text = paste("Norm Upr Bound:", round(NormUpr_current, 3))) +
+    
+    geom_point(aes(x = NormUpr_current, y = 0, 
+                   text = paste("Norm Upr Bound:", round(NormUpr_current, 3))),
+               alpha = 0)+
+    
+    geom_point(aes(x = NormMean_current, y = 0, shape = "Normal", color = "Normal", 
+                   text = paste("NormMean:", round(NormMean_current, 3))), size = 4) +
+                  
+    
+    geom_vline(aes(xintercept = NDVILwr, color = "95% CI NDVI"), linetype = "dashed", size = 1) +
+    geom_point(aes(x = NDVILwr, y = 0, 
+                   text = paste("NDVI Lwr Bound:", round(NDVILwr, 3))),
+               alpha = 0)+
+    geom_vline(aes(xintercept = NDVIUpr, color = "95% CI NDVI"), linetype = "dashed", size = 1) +
+    geom_point(aes(x = NDVIUpr, y = 0, 
+                   text = paste("NDVI Upr Bound:", round(NDVIUpr, 3))),
+               alpha = 0)+
+    geom_point(aes(x = NDVIMean, y = 0, shape = "Current NDVI", color = "Current NDVI", 
+                   text = paste("NDVI Mean:", round(NDVIMean, 3))), size = 4) +
+    
     labs(
-      x = paste0(naming, " Density Plot"),  # Ensure 'naming' is defined
+      x = paste0(naming, " Density Plot"),
       y = "Density",
-      color = "Legend",
-      shape = "Legend"# Legend title for points
+      color = "Dashed 95% CI Boundaries,",
+      shape = "Normal, & NDVI"
+    ) +
+
+    # Fix legend labels
+    
+    scale_color_manual(
+      name = "Normal, & NDVI",
+      values = c("95% CI Norm" = "#40004b", "95% CI NDVI" = "#1b7837", 
+                 "Normal" = "#40004b", "Current NDVI" = "#1b7837")
     ) +
     
-    # Manual legend adjustments
-    scale_shape_manual(values = c("normal" = 16, "current" = 18)) +
-    scale_color_manual(values = c("normal" = "#40004b", "current" = "#1b7837")) +
-    #scale_fill_manual(values = c("normal" = "#40004b", "current" = "#1b7837")) +
+    scale_shape_manual(
+      name = "Dashed 95% CI Boundaries,",
+      values = c("Normal" = 16, "Current NDVI" = 18)
+    ) +
+
     theme_minimal()
   
-  # Return the plot
-  return(plot)
+  # Convert to interactive plot
+  interactive_plot <- ggplotly(plot, tooltip = "text")
+  
+  return(interactive_plot)
 }
 ####################################################################################################################
 #STATUS BOXES FUNCTION
@@ -476,7 +508,7 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
   filtered_data <- NDVIall_years_modeled %>%
     filter(year %in% selected_years, type == LC_type)
   
-  
+  filtered_data$FlagNDVI <- factor(filtered_data$FlagNDVI, levels = names(graphing_colors))
   
   # Generate the heatmap
   ggplot(filtered_data, aes(x = yday, y = factor(year))) +
