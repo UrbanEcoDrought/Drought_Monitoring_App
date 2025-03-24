@@ -14,7 +14,7 @@
 # Initialize the Earth Engine API
 #ee$Initialize(project = "urbanecodrought")
 #assetHome <- "projects/urbanecodrought/assets/UHI-analysis"
-
+if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
 library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
 ee_check() # For some reason, it's important to run this before initializing right now
@@ -26,14 +26,15 @@ path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 assetHome <- ee_get_assethome()
 NDVIsave <- ("UrbanEcoDrought_NDVI_LocalExtract-RAW")
-pathDat <- "../data_all"
+# pathDat <- "../data_all"
+pathDat <- "NDVI_Automation_Workflow/data_all"
 
 
 ##################### 
 # 0. Read in helper functions ----
 ##################### 
-source("../Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
-
+# source("../Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
+source("NDVI_Automation_Workflow/Baseline_Data_Models_Norms/00_EarthEngine_HelperFunctions copy.R")
 
 ####################################################################################################################
 #Reading in previous data to get latest date, will need later
@@ -44,8 +45,11 @@ if(!file.exists(file.path(pathDat, "NDVIall_latest.csv"))) file.copy(from=file.p
 ndviLatest <-read_csv(file.path(pathDat, "NDVIall_latest.csv"))%>%
   mutate(date = as.Date(date, format="%Y-%m-%d"))
 
-date_needed <- max(ndviLatest$date)
+dateLastL8 <- max(ndviLatest$date[ndviLatest$mission=="landsat 8"])
+dateLastL9 <- max(ndviLatest$date[ndviLatest$mission=="landsat 9"])
 date_today <- as.Date(today())
+
+filesCheck <- list(landsat8 = NA, landsat9 = NA)
 ####################################################################################################################
 
 
@@ -123,7 +127,7 @@ urbHMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2024_Urban-High'))
 # Load MODIS NDVI data; attach month & year
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
 # Filtering by date so we can only pull a bit of data if we need it
-landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$filterDate(as.character(date_needed), as.character(date_today))$map(function(image){
+landsat8 <- ee$ImageCollection("LANDSAT/LC08/C02/T1_L2")$filterBounds(Chicago)$filterDate(as.character(dateLastL8), as.character(date_today))$map(function(image){
   return(image$clip(Chicago))
 })$map(function(img){
   d= ee$Date(img$get('system:time_start'));
@@ -170,14 +174,18 @@ l8dates <- landsat8$map(get_dates)
 l8dates_list <- l8dates$getInfo()$features
 l8dates_vector <- sapply(l8dates_list, function(x) x$properties$date)
 
-if(max(l8dates_vector)>date_needed){
+if(max(l8dates_vector)>dateLastL8){
   # Mask NDVI by Landcover & condense to regional means
   for(LCTYPE in lcnames){
     # print(LCTYPE)
     extractByLC(imcol=landsat8, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
   }
+  filesCheck$landsat8 <- c(filesCheck$landsat8, LCTYPE)
   
-} else {print("No New Landsat 8 Data")}
+} else {
+  print("No New Landsat 8 Data")
+  filesCheck$landsat8 <- "none"
+}
 
 ##################### 
 
@@ -187,7 +195,7 @@ if(max(l8dates_vector)>date_needed){
 # "LANDSAT/LC09/C02/T1_L2"
 # Load MODIS NDVI data; attach month & year
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC09_C02_T1_L2
-landsat9 <- ee$ImageCollection("LANDSAT/LC09/C02/T1_L2")$filterBounds(Chicago)$filterDate(as.character(date_needed), as.character(date_today))$map(function(image){
+landsat9 <- ee$ImageCollection("LANDSAT/LC09/C02/T1_L2")$filterBounds(Chicago)$filterDate(as.character(dateLastL9), as.character(date_today))$map(function(image){
   return(image$clip(Chicago))
 })$map(function(img){
   d= ee$Date(img$get('system:time_start'));
@@ -212,14 +220,20 @@ l9dates <- landsat9$map(get_dates)
 l9dates_list <- l9dates$getInfo()$features
 l9dates_vector <- sapply(l9dates_list, function(x) x$properties$date)
 
-if(max(l9dates_vector)>date_needed){
+if(max(l9dates_vector)>dateLastL9){
   # Mask NDVI by Landcover & condense to regional means
   for(LCTYPE in lcnames){
     # print(LCTYPE)
     extractByLC(imcol=landsat9, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat9_", LCTYPE))
   }
   
-} else {print("No New Landsat 9 Data")}
+  filesCheck$landsat9 <- c(filesCheck$landsat9, LCTYPE)
+  
+  
+} else {
+  print("No New Landsat 9 Data")
+  filesCheck$landsat8 <- "none"
+}
 
 
 

@@ -1,7 +1,11 @@
 # Checking patterns with some static versions of figures that will be on the app
 library(ggplot2)
+if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
-if(!dir.exists("../figs")) dir.create("../figs")
+pathDat <- "NDVI_Automation_Workflow/data_all"
+pathFigs <- "NDVI_Automation_Workflow/figs"
+
+if(!dir.exists(pathFigs)) dir.create(pathFigs)
 
 yrDrought <- c(2005, 2012, 2023)
 
@@ -24,19 +28,19 @@ trendFlagLevels <- c("Abnormal Browning"="tan3",
                      "Abnormal Greening"="turquoise3")
 
 # Read in the data
-datYrs <- read.csv("../data_all/NDVIall_years_modeled.csv")
+datYrs <- read.csv(file.path(pathDat, "NDVIall_years_modeled.csv"))
 datYrs$type <- factor(datYrs$type, levels=names(LClevels))
 datYrs$YrDerivTrend <- factor(datYrs$YrDerivTrend, levels=names(trendLevels))
 datYrs$FlagNDVI <- factor(datYrs$FlagNDVI, levels=names(ndviFlagLevels))
 datYrs$FlagTrend <- factor(datYrs$FlagTrend, levels=names(trendFlagLevels))
 summary(datYrs)
 
-datNorms <- read.csv("../data_all/NDVIall_normals_modeled.csv")
+datNorms <- read.csv(file.path(pathDat, "NDVIall_normals_modeled.csv"))
 datNorms$type <- factor(datNorms$type, levels=names(LClevels))
 summary(datNorms)
 
 yrNow <- max(datYrs$year)
-datRaw <- read.csv("../data_all/NDVIall_baseline_modeled.csv")
+datRaw <- read.csv(file.path(pathDat, "NDVIall_baseline_modeled.csv"))
 datRaw$date <- as.Date(datRaw$date)
 summary(datRaw)
 
@@ -44,7 +48,7 @@ summary(datRaw)
 LC="urban-medium"
 yrColors <- c("2025"="dodgerblue2", "2024"="cadetblue3", "2023"="orange2", "2012"="red3", "2005"="goldenrod2")
 
-png("../figs/TimeSeries.png", height=8, width=12, units = "in", res=320)
+png(file.path(pathFigs, "TimeSeries.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
   facet_wrap(~type) +
   geom_ribbon(data=datNorms[, ], aes(x=yday, ymin=NormLwr, ymax=NormUpr, fill="normal"), alpha=0.2) +
@@ -67,7 +71,7 @@ dev.off()
   
 # Doing a test heatmap
 
-png("../figs/HeatMap-NDVI.png", height=8, width=12, units = "in", res=320)
+png(file.path(pathFigs, "HeatMap-NDVI.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrMean), width = 1, height = 1) +  
@@ -99,7 +103,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
 dev.off()
 
 
-png("../figs/HeatMap-NDVI-Anom.png", height=8, width=12, units = "in", res=320)
+png(file.path(pathFigs, "HeatMap-NDVI-Anom.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +  
@@ -131,7 +135,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
   )
 dev.off()
 
-png("../figs/HeatMap-Derivs-Anom.png", height=8, width=12, units = "in", res=320)
+png(file.path(pathFigs, "HeatMap-Derivs-Anom.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagTrend), width = 1, height = 1) +  
@@ -163,7 +167,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
   )
 dev.off()
 
-png("../figs/HeatMap-Derivs.png", height=8, width=12, units = "in", res=320)
+png(file.path(pathFigs, "HeatMap-Derivs.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrDerivTrend), width = 1, height = 1) +  

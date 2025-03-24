@@ -2,6 +2,8 @@
 #Purpose of Script: Readjust year specific spline using models & norms from Baseline_Data_Models_Norms Workflow
 # Original scripts written by Christy Rollinson and Juliana Harr, workflow put together by Jocelyn Garcia
 ####################################################################################################################
+if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
+pushData <- F
 
 library(mgcv) #load packages
 library(ggplot2)
@@ -10,25 +12,23 @@ library(dplyr)
 library(MASS)
 
 #file paths
-Sys.setenv(GOOGLE_DRIVE = "~/Google Drive/Shared drives/Urban Ecological Drought")
-google.drive <- Sys.getenv("GOOGLE_DRIVE")
-# path.google <- ("/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org")
+# Sys.setenv(GOOGLE_DRIVE = "~/Google Drive/Shared drives/Urban Ecological Drought")
 path.google <- "~/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring")
-pathDat <- "../data_all"
-pathMods <- "../gam_models"
+pathDat <- "NDVI_Automation_Workflow/data_all"
+pathMods <- "NDVI_Automation_Workflow/gam_models"
 
-source("../Baseline_Data_Models_Norms/0_Calculate_GAMM_Posteriors_Updated_Copy.R")
-source("../Baseline_Data_Models_Norms/0_Calculate_GAMM_Derivs_Copy.R")
+source("NDVI_Automation_Workflow/Baseline_Data_Models_Norms/0_Calculate_GAMM_Posteriors_Updated_Copy.R")
+source("NDVI_Automation_Workflow/Baseline_Data_Models_Norms/0_Calculate_GAMM_Derivs_Copy.R")
 
 #Reading in old data(fit to spline already) and new NDVI Data (not fit to spline yet)
-ndviLatest <- read.csv("../data_all/NDVIall_latest.csv")
-ndviNew <- read.csv("../data_all/new_NDVI_data.csv")
+ndviLatest <- read.csv(file.path(pathDat, "NDVIall_latest.csv"))
+ndviNew <- read.csv(file.path(pathDat, "new_NDVI_data.csv"))
 
 # previously processed files
-ndvi.base <- read.csv("../data_all/NDVIall_baseline_modeled.csv")
-ndviYrs <- read.csv("../data_all/NDVIall_years_modeled.csv")
-ndvi.norms <- read.csv("../data_all/NDVIall_normals_modeled.csv")
+ndvi.base <- read.csv(file.path(pathDat, "NDVIall_baseline_modeled.csv"))
+ndviYrs <- read.csv(file.path(pathDat, "NDVIall_years_modeled.csv"))
+ndvi.norms <- read.csv(file.path(pathDat, "NDVIall_normals_modeled.csv"))
 
 ndviNew$date <- as.Date(ndviNew$date)
 ndviNew$type <- as.factor(ndviNew$type)
@@ -178,4 +178,6 @@ dim(ndviYrs)
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndviYrs, file.path(pathDat, "NDVIall_years_modeled.csv"), row.names=F)
 
+
+print("Data Adjusted & saved!")
 

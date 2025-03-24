@@ -1,14 +1,17 @@
 ##################### 
-#End of Christy's second script 
+# Get data saved from Earth Engine and pull it together for analysis
 ##################### 
+if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
+
 path.google <- "~/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")
 NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract-RAW")
-pathDat <- "../data_all"
+pathDat <- "NDVI_Automation_Workflow/data_all"
+
 
 # Check if files are being detected
 fNDVI <- dir(file.path(path.google, NDVIsave))
-print(fNDVI)  # Should list all files in that directory
+tail(fNDVI)  # Should list all files in that directory
 
 
 ndviLatest <-read.csv(file.path(pathDat, "NDVIall_latest.csv"))
