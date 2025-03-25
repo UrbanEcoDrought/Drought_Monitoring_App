@@ -5,3 +5,4 @@ Urban Drought App/rsconnect/shinyapps.io/mortonarb-forestecology/urban_drought_a
 *.csv
 *.RDS
 Urban Drought App/www/.DS_Store
+/NDVI_Automation_Workflow/figs
