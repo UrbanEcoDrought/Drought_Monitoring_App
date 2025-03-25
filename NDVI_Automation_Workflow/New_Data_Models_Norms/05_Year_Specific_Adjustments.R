@@ -3,7 +3,6 @@
 # Original scripts written by Christy Rollinson and Juliana Harr, workflow put together by Jocelyn Garcia
 ####################################################################################################################
 if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
-pushData <- F
 
 library(mgcv) #load packages
 library(ggplot2)
@@ -178,6 +177,6 @@ dim(ndviYrs)
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
 write.csv(ndviYrs, file.path(pathDat, "NDVIall_years_modeled.csv"), row.names=F)
 
-
+pushData=T
 print("Data Adjusted & saved!")
 

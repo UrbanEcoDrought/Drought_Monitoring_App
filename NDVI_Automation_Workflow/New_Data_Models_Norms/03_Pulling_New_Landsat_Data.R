@@ -17,7 +17,7 @@
 if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
 library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
-ee_check() # For some reason, it's important to run this before initializing right now
+# ee_check() # For some reason, it's important to run this before initializing right now
 # user.ee <- "jgarcia@mortonarb.org"
 user.ee <- "crollinson@mortonarb.org"
 
@@ -232,7 +232,7 @@ if(max(l9dates_vector)>dateLastL9){
   
 } else {
   print("No New Landsat 9 Data")
-  filesCheck$landsat8 <- "none"
+  filesCheck$landsat9 <- "none"
 }
 
 

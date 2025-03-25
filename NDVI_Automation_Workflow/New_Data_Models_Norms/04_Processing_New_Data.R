@@ -18,6 +18,10 @@ ndviLatest <-read.csv(file.path(pathDat, "NDVIall_latest.csv"))
 ndviLatest$date <- as.Date(ndviLatest$date)
 summary(ndviLatest)
 
+
+dateLastL8 <- max(ndviLatest$date[ndviLatest$mission=="landsat 8"])
+dateLastL9 <- max(ndviLatest$date[ndviLatest$mission=="landsat 9"])
+
 # date_needed <- max(ndviLatest$date)
 # date_today <- as.Date(today())
 
@@ -78,8 +82,9 @@ summary(ndviLatest)
 #steps: take new data and save as csv and run it through spline in next script, read in old data and then join 
 #then run year specific adjustments
 
-if(any(ndviAll$date > max(ndviLatest$date))) {
-  new_NDVI_data <- ndviAll[ndviAll$date > max(ndviLatest$date),]
+if(any(ndviAll$date[ndviAll$mission=="landsat 8"] > dateLastL8) | any(ndviAll$date[ndviAll$mission=="landsat 9"] > dateLastL9)) {
+  new_NDVI_data <- ndviAll[(ndviAll$mission=="landsat 8" & ndviAll$date > dateLastL8) | 
+                             (ndviAll$mission=="landsat 9" & ndviAll$date > dateLastL9),]
   
   ndviLatest <- rbind(ndviLatest, new_NDVI_data)
   write.csv(new_NDVI_data, file.path(pathDat, "new_NDVI_data.csv"), row.names = FALSE)

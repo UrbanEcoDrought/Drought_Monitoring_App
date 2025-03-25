@@ -1,5 +1,13 @@
 # source("NDVI_Automation_Workflow/Baseline_Data_Models_Norms/0_Calculate_GAMM_Derivs_Copy.R")
 # source("NDVI_Automation_Workflow/Baseline_Data_Models_Norms/0_Calculate_GAMM_Posteriors_Updated_Copy.R")
+# library(rgee);
+# # ee_check() # For some reason, it's important to run this before initializing right now
+# # user.ee <- "jgarcia@mortonarb.org"
+# user.ee <- "crollinson@mortonarb.org"
+# 
+# rgee::ee_Initialize(user =user.ee, drive=T, project = "urbanecodrought")
+pushData <- F # Put these here so we don't push data if we don't have anything new
+
 
 path.google <- "~/Google Drive/My Drive/"
 # path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
@@ -18,6 +26,8 @@ timeEnd <- Sys.time() + 60*30 # Give things 30 minutes to finish
 
 while(!all(flook == "none") |  length(grep(strToday, dir(file.path(path.google, NDVIsave)))) < length(flook[!flook=="none"]) | Sys.time()<timeEnd){
   Sys.sleep(60) # Wait 60 seconds before checking again
+  flook <- unlist(filesCheck)
+  
 }
 
 if(all(flook)=="none"){
