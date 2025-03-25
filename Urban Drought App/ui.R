@@ -47,27 +47,6 @@ latest_yday <- max(NDVIall_years_modeled$yday[NDVIall_years_modeled$year == late
 most_recent_data<- filter(NDVIall_years_modeled, year == latest_year & yday == latest_yday)
 
 ##################################################
-#DENSITY PLOTS & PERCENTILE (gives 2 week period)
-# Setting the period for 2 weeks prior
-two_week_ago_year <- if (latest_yday > 14){
-  latest_year
-}else {
-  latest_year - 1
-}
-
-two_week_prior_yday <- if (latest_yday > 14) {
-  latest_yday - 14
-} else {
-  365 + (latest_yday - 14)
-}
-
-# Filtering the data between two_week_prior_date and last_day_date
-current_time_period <- NDVIall_years_modeled %>%
-  filter(
-    year >= two_week_ago_year & year <= latest_year,
-    yday >= two_week_prior_yday & yday <= latest_yday
-  )
-
 NDVIall_years_modeled <- NDVIall_years_modeled %>%
   mutate(date = as.Date(yday - 1, origin = paste0(year, "-01-01")))
 
@@ -214,8 +193,8 @@ ui <- dashboardPage(skin = "black",
                                     tabPanel(
                                       "Latest Data Report",
                                       h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
-                                      h6(HTML("<b>The NDVI percentiles below indicate how current vegetation conditions compare to the past two weeks 
-                                              of observed data.</b><br><br>")),
+                                      h6(HTML("<b>The NDVI percentiles below show how current vegetation conditions compare
+                                              to those on the same calendar day in previous years for their respective land cover type.</b><br>")),
                                       # Proper text output for the percentile value
                                       h6(textOutput("percentile_crop")),  
                                       h6(textOutput("percentile_for")),  
@@ -260,55 +239,55 @@ ui <- dashboardPage(skin = "black",
                                     tabPanel(
                                       "Crop Density Plot",
                                       h6(HTML("<b>Distribution of crop norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
                                     tabPanel(
                                       "Forest Density Plot",
-                                      h6(HTML("<b>Distribution of forest norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of forest norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
                                       "Grassland Density Plot",
-                                      h6(HTML("<b>Distribution of grassland norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of grassland norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
                                       "Urban-High Density Plot",
-                                      h6(HTML("<b>Distribution of urban-high norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of urban-high norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Medium Density Plot",
-                                      h6(HTML("<b>Distribution of urban-medium norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of urban-medium norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Low Density Plot",
-                                      h6(HTML("<b>Distribution of urban-low norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of urban-low norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Open Density Plot",
-                                      h6(HTML("<b>Distribution of urban-open norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current yday (Purple Circle) are also displayed
+                                      h6(HTML("<b>Distribution of urban-open norm values for days of the year 1-365.The current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) are also displayed
                                               with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
@@ -321,10 +300,30 @@ ui <- dashboardPage(skin = "black",
                         tabItem(tabName = "NDVI_data_review",
                                 # NDVI Data Tab Box
                                 tabBox(
-                                  title = "NDVI Data",
                                   id = "tab1",
                                   height = "3000px",
                                   width = 12, 
+                                  tabPanel("Overview of Feature",
+                                           h6(HTML("<b>Feature</b>: <u>Trends in NDVI Data Visuals</u><br><br>")),
+                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the NDVI data across Land Cover Types (ie Was there a Land Cover Type that dipped or peaked
+                                                   when other Land Cover Types didn't?)")),
+                                           h6(HTML("<b>Description</b>: Plotted NDVI values with 4 time frame options.<br><br>
+                                           <li><u>Full Review tab</u> - overview with all data for all years in dataset</li>
+                                           <li><u>Yearly tab</u> - 12 month overview, where user can determine which years are shown with slider</li>
+                                           <li><u>Monthly tab</u> - view where year and month are inputted by the user</li>
+                                          <li><u>Weekly tab</u> - where start date is inputted by the user and the following 7 days of data are shown</li><br>
+                                           Default start dates are set to the most current pull of data<br>")),
+                                           h6(HTML("<b>Condsiderdations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
+                                                   Caution should be exercised to prevent over interpretation of November - March greenness values.</li>
+                                                   <li>At the start of the new year there is a jump in the data marked by a vertical line. The jump is due to how the data was processed by the GAMs.</li><br><br>")),
+                                           div(
+                                             style = "text-align: center;",
+                                             tags$img(src = 'LC_info_table.png', height = '400', width = '700')
+                                           ),
+                                           div(
+                                             style = "text-align: center;",
+                                             h6(HTML("<br><b>Landcover designations are from the U.S. National Landcover Database (NLCD)</b>"))),
+                                  ),
                                   tabPanel("Full Review",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                            plotOutput("all_data_graph", height = "400px")),
@@ -332,22 +331,50 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load. <br><br>
                                            NOTE: At the start of the new year there is a jump in the data marked by a vertical line, this is from how
                                                    the data was processed using GAMs.</b><br>")),
-                                           plotOutput("yearly_graph", height = "400px"),
-                                           dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
+                                           sliderInput("yearRange", "Select Year Range:",
+                                                       min = min(NDVIall_years_modeled$year),
+                                                       max = max(NDVIall_years_modeled$year),
+                                                       value = c(min(NDVIall_years_modeled$year), max(NDVIall_years_modeled$year)),
+                                                       sep = ""
+                                                       ),
+                                           plotOutput("yearly_graph", height = "400px")),
+                                           #dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
                                   tabPanel("Monthly", 
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                            plotOutput("monthly_graph", height = "400px"),
-                                           dateInput(inputId = "mstart_date", label = "Enter Start Date", value = Sys.Date() %m-% months(1))),
+                                           dateInput(inputId = "mstart_date", label = "Enter Start Date", value = date_needed %m-% months(1))),
                                   tabPanel("Weekly",
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                            plotOutput("weekly_graph",height = "400px"),
                                            h6(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
-                                           dateInput(inputId = "wstart_date", label = "Enter Start Date", value = Sys.Date() - 7))
+                                           dateInput(inputId = "wstart_date", label = "Enter Start Date", value = date_needed - 7))
                                 )
                         ),
                         tabItem(tabName = "ndvi_diff",
-                                h6(HTML("<b>The graphs display NDVI (Normalized Difference Vegetation Index) trends over time. 
-                                        Each color represents a different status. Years can be toggled on an off for convience & comparison.</b>")),
+                                tabBox(
+                                  id = "tab2",
+                                  height = "3000px",
+                                  width = 12, 
+                                  tabPanel("Overview of Feature",
+                                           h6(HTML("<b>Feature</b>: <u>Heatmaps</u><br><br>")),
+                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the data for NDVI status across an extended period of time(ie Was there a period 
+                                                   of the year that was consistently below the normal? In what months was this deficiency the strongest?)")),
+                                           h6(HTML("<b>Description</b>: Heat map of the NDVI status across all the years available in the data (<u>see visual below for status categories</u>). Current year
+                                           will update as more data is available. Years can be toggled on & off for comparisons.<br>")),
+                                           h6(HTML("<b>Condsiderdations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
+                                                   Caution should be exercised to prevent over interpretation of November - March greenness values.</li><br><br>")),
+                                           div(
+                                             style = "text-align: center;",
+                                             tags$img(src = 'status_info_table.png', height = '400', width = '700')
+                                           ),
+                                           div(
+                                             style = "text-align: center;",
+                                           h6(HTML("<br><b>Insert information on how categories were determined</b>"))),
+                                           
+                                  ),
+                                  tabPanel("Heatmap Graphs",
+                                h6(HTML("<b>The graphs display NDVI trends over time. 
+                                        Each color represents a different status. Years can be toggled on an off for convenience & comparison.</b>")),
                                 # Adjust checkbox size and styling using tags$style
                                 tags$style(HTML("
   #selected_years label {
@@ -370,8 +397,8 @@ ui <- dashboardPage(skin = "black",
                                 plotOutput("ndvi_heatmap_uh"),
                                 plotOutput("ndvi_heatmap_um"),
                                 plotOutput("ndvi_heatmap_ul"),
-                                plotOutput("ndvi_heatmap_uo")
-                        ),
+                                plotOutput("ndvi_heatmap_uo"))
+                        )),
                         tabItem(tabName = "specifics",
                                 tabBox(
                                   height = "3000px",
@@ -380,7 +407,7 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types.
                                                    Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration.<br><br>
                                            <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
-                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>The main workflows use include:<br>
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>Data Visualized comes from two main workflows:<br>
                 <b>NDVI_Drought_Monitoring Workflow</b><br>
                 <b>UrbanDrought_SpatialAnalysis_Chicago Workflow</b><br>
                 Links can be found under 'Links to Github' and they were created by Juliana Harr & Christy Rollinson<br>")),
