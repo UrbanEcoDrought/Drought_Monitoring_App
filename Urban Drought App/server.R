@@ -8,7 +8,7 @@
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
 library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
-library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle)
+library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle);library(forcats)
 
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
@@ -54,35 +54,12 @@ latest_yday <- max(NDVIall_years_modeled$yday[NDVIall_years_modeled$year == late
 most_recent_data<- filter(NDVIall_years_modeled, year == latest_year & yday == latest_yday)
 
 ##################################################
-#DENSITY PLOTS & PERCENTILE (gives 2 week period)
-# Setting the period for 2 weeks prior
-two_week_ago_year <- if (latest_yday > 14){
-  latest_year
-}else {
-  latest_year - 1
-}
-
-two_week_prior_yday <- if (latest_yday > 14) {
-  latest_yday - 14
-} else {
-  365 + (latest_yday - 14)
-}
-
-# Filtering the data between two_week_prior_date and last_day_date
-current_time_period <- NDVIall_years_modeled %>%
-  filter(
-    year >= two_week_ago_year & year <= latest_year,
-    yday >= two_week_prior_yday & yday <= latest_yday
-  )
-
 NDVIall_years_modeled <- NDVIall_years_modeled %>%
   mutate(date = as.Date(yday - 1, origin = paste0(year, "-01-01")))
 
 date_needed <- NDVIall_years_modeled %>%
   slice_max(date, n = 1, with_ties = FALSE) %>%
   pull(date)
-
-
 ##################################################
 
 #Need to run this code before app
@@ -122,37 +99,34 @@ all_data_graph <- function() {
 }
 
 #!2 month overview graph 
-twelve_month_graph <- function(start_date) {
+twelve_month_graph <- function(start_year,end_year) {
   
-  # Calculate end date (1 year after start date)
-  end_date <- as.Date(start_date) %m+% years(1)
+  start_year <- as.numeric(start_year)
+  end_year <- as.numeric(end_year)
   
-  # Filter the full data frame, not just the date column
-  year_data <- NDVIall_years_modeled %>%
-    filter(date >= start_date & date <= end_date)
+  # Filter data for the selected range
+  yearly_filtered_data <- NDVIall_years_modeled %>%
+    filter(lubridate::year(date) >= start_year & lubridate::year(date) <= end_year)
   
-  # Check if year_data has rows
-  if (nrow(year_data) == 0) {
-    print("No data available for this date range.")
-    return(NULL)
-  }
+  jan_1_dates <- unique(yearly_filtered_data$date[lubridate::month(yearly_filtered_data$date) == 1 & 
+                                                    lubridate::day(yearly_filtered_data$date) == 1])
+  
   
   # Generate the plot
-  ggplot(year_data, aes(x = date, y = YrMean, color = type, fill=type)) +
-    geom_point(size = 1) +
-    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12)) +
-    geom_vline(xintercept=as.Date("2025-01-01")) +
+  ggplot(yearly_filtered_data, aes(x = date, y = YrMean)) +
+    geom_ribbon(aes(ymin=YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
+    geom_line(aes(color=type)) +
+    # geom_ribbon(method = "gam", formula = y ~ s(x, bs = "cs", k = 12)) +
+    geom_vline(xintercept = jan_1_dates, linetype = "dashed") + 
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
       y = "NDVI Value",
-      title = "NDVI Trends for Year Following Selected Start Date"
+      title = paste("NDVI Trends for Year", start_year)
     ) +
-    scale_x_date(
-      breaks = seq(start_date, end_date, by = "months"),  
-      date_labels = "%b %Y"
-    )
+    scale_x_date(date_labels = "%b %Y")
 }
+
 
 #Monthly overview graph
 monthly_graph <- function(mstart_date) {
@@ -241,65 +215,60 @@ density_plot <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_
   NDVIUpr <-filter(ndvi_final_subset, year == latest_year)$YrUpr[1]
   NDVIMean <-filter(ndvi_final_subset, year == latest_year)$YrMean[1]
   
+  ci_rects <- data.frame(
+    xmin = c(min(norm_subset$NormLwr_current), min(norm_subset$NDVILwr)),
+    xmax = c(max(norm_subset$NormUpr_current), max(norm_subset$NDVIUpr)),
+    fill = c("Normal 95% CI", "NDVI 95% CI"),
+    text = c("Normal 95% CI", "NDVI 95% CI") # Tooltip text
+  )
+  
   # Plot
   plot <- ggplot(norm_subset, aes(x = NormMean)) + 
+    
+    # Confidence Interval as a Shaded Region
+    geom_rect(aes(xmin = NormLwr_current, xmax = NormUpr_current, ymin = 0, ymax = 1), 
+              text = paste("Normal 95% CI"),
+              fill = "#a50026", alpha = 0.2) + 
+    geom_rect(aes(xmin = NDVILwr, xmax = NDVIUpr, ymin = 0, ymax = 1), 
+              text = paste("NDVI 95% CI"),
+              fill = "#313695", alpha = 0.2) + 
+    
+    # Density Curve (Placed After so It's on Top)
     geom_density(aes(y = after_stat(density) / max(after_stat(density)), 
-                     text = paste("Density:", after_stat(density), "\nNDVI:", round(x , 3))), 
-                 fill = "#c2a5cf", alpha = 0.5) +
+                     text = paste("NDVI:", round(..x.., 3))), 
+                 fill = "grey", alpha = 0.5) +
     
-    geom_vline(aes(xintercept = NormLwr_current, color = "95% CI Norm"), 
-               linetype = "dashed", size = 1) +
-    
-    geom_point(aes(x = NormLwr_current, y = 0, 
-                   text = paste("Norm Lwr Bound:", round(NormLwr_current, 3))),
-               alpha = 0)+
-    
-    geom_vline(aes(xintercept = NormUpr_current, color = "95% CI Norm"), linetype = "dashed", size = 1,
-               text = paste("Norm Upr Bound:", round(NormUpr_current, 3))) +
-    
-    geom_point(aes(x = NormUpr_current, y = 0, 
-                   text = paste("Norm Upr Bound:", round(NormUpr_current, 3))),
-               alpha = 0)+
-    
+    # Normal & NDVI Mean Points
     geom_point(aes(x = NormMean_current, y = 0, shape = "Normal", color = "Normal", 
                    text = paste("NormMean:", round(NormMean_current, 3))), size = 4) +
-                  
-    
-    geom_vline(aes(xintercept = NDVILwr, color = "95% CI NDVI"), linetype = "dashed", size = 1) +
-    geom_point(aes(x = NDVILwr, y = 0, 
-                   text = paste("NDVI Lwr Bound:", round(NDVILwr, 3))),
-               alpha = 0)+
-    geom_vline(aes(xintercept = NDVIUpr, color = "95% CI NDVI"), linetype = "dashed", size = 1) +
-    geom_point(aes(x = NDVIUpr, y = 0, 
-                   text = paste("NDVI Upr Bound:", round(NDVIUpr, 3))),
-               alpha = 0)+
     geom_point(aes(x = NDVIMean, y = 0, shape = "Current NDVI", color = "Current NDVI", 
                    text = paste("NDVI Mean:", round(NDVIMean, 3))), size = 4) +
+
     
+    # Labels and Legends
     labs(
       x = paste0(naming, " Density Plot"),
       y = "Density",
       color = "Dashed 95% CI Boundaries,",
       shape = "Normal, & NDVI"
     ) +
-
-    # Fix legend labels
     
     scale_color_manual(
-      name = "Normal, & NDVI",
-      values = c("95% CI Norm" = "#40004b", "95% CI NDVI" = "#1b7837", 
-                 "Normal" = "#40004b", "Current NDVI" = "#1b7837")
+      name = "Dashed 95% CI Boundaries,",
+      values = c("95% CI Norm" = "#a50026", "95% CI NDVI" = "#313695", 
+                 "Normal" = "#f46d43", "Current NDVI" = "#74add1")
     ) +
     
     scale_shape_manual(
-      name = "Dashed 95% CI Boundaries,",
+      name = "Normal, & NDVI",
       values = c("Normal" = 16, "Current NDVI" = 18)
     ) +
-
+    
     theme_minimal()
   
   # Convert to interactive plot
-  interactive_plot <- ggplotly(plot, tooltip = "text")
+  interactive_plot <- ggplotly(plot, tooltip = c("x"))
+  
   
   return(interactive_plot)
 }
@@ -347,15 +316,15 @@ LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, m
 
 ####################################################################################################################
 #PERCENTILE FUNCTIONS
-ndvi_percentile <- function(LCtype, current_time_period, NDVIall_normals_modeled, most_recent_data){
+
+ndvi_percentile <- function(LCtype, NDVIall_years_modeled, most_recent_data, latest_yday){
   
-  NDVI_subset <- filter(current_time_period, type == LCtype)
-  CI_subset <- filter(NDVIall_normals_modeled, type == LCtype)
+  YrMean_distr_yday <- filter(NDVIall_years_modeled, yday == latest_yday & type == LCtype) #all YrMean for most current yday
   most_recent_subset <- filter(most_recent_data, type == LCtype)
   
   # Compute the percentile of the current NDVI value
   current_NDVI <- most_recent_subset$YrMean[1]  # Extract current NDVI value
-  ecdf_function <- ecdf(NDVI_subset$YrMean)  # Create empirical cumulative distribution function
+  ecdf_function <- ecdf(YrMean_distr_yday$YrMean)  # Create empirical cumulative distribution function
   current_percentile <- ecdf_function(current_NDVI) * 100  # Convert to percentage
   
   return(current_percentile)
@@ -547,6 +516,11 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
 
 # Define server logic
 server <- function(input, output, session) {
+  
+  yearly_filtered_data <- reactive({
+    NDVIall_years_modeled %>%
+      filter(year >= input$yearRange[1] & year <= input$yearRange[2])
+  })
   
   # Render the map
   output$il_county_map <- renderLeaflet({
@@ -750,11 +724,17 @@ server <- function(input, output, session) {
   output$all_data_graph <- renderPlot({
     all_data_graph()  
   })
-  #Yearly Data
+  
   output$yearly_graph <- renderPlot({
-    req(input$start_date) 
-    print(paste("Start date selected:", input$start_date))
-    plot <- twelve_month_graph(input$start_date)
+    req(input$yearRange)  # Ensure input is available
+    
+    # Select start year from slider
+    start_year <- input$yearRange[1]
+    end_year <- input$yearRange[2]
+    
+    # Generate the plot
+    plot <- twelve_month_graph(start_year, end_year)
+    
     if (!is.null(plot)) {
       print("Plot generated successfully")
       return(plot)
@@ -790,11 +770,8 @@ server <- function(input, output, session) {
   ####################################################################################################################
   #For Current NDVI value percentile
   output$percentile_crop <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
     # Calculate percentile
-    percentile <- ndvi_percentile("crop", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    percentile <- ndvi_percentile("crop", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -805,11 +782,8 @@ server <- function(input, output, session) {
   })
 
   output$percentile_for <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
     # Calculate percentile
-    percentile <- ndvi_percentile("forest", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    percentile <- ndvi_percentile("forest", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -820,11 +794,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_grass <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
     # Calculate percentile
-    percentile <- ndvi_percentile("grassland", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    percentile <- ndvi_percentile("grassland", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -835,11 +806,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_uh <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
-    # Calculate percentile
-    percentile <- ndvi_percentile("urban-high", current_time_period, NDVIall_normals_modeled, most_recent_data)
+      # Calculate percentile
+    percentile <- ndvi_percentile("urban-high", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -850,11 +818,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_um <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
-    # Calculate percentile
-    percentile <- ndvi_percentile("urban-medium", current_time_period, NDVIall_normals_modeled, most_recent_data)
+   # Calculate percentile
+    percentile <- ndvi_percentile("urban-medium", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -865,11 +830,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_ul <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
-    # Calculate percentile
-    percentile <- ndvi_percentile("urban-low", current_time_period, NDVIall_normals_modeled, most_recent_data)
+   # Calculate percentile
+    percentile <- ndvi_percentile("urban-low", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -880,11 +842,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_uo <- renderText({
-    # Ensure necessary inputs exist
-    req(NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
-    
     # Calculate percentile
-    percentile <- ndvi_percentile("urban-open", current_time_period, NDVIall_normals_modeled, most_recent_data)
+    percentile <- ndvi_percentile("urban-open", NDVIall_years_modeled, most_recent_data, latest_yday)
     
     # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
@@ -893,7 +852,6 @@ server <- function(input, output, session) {
       return(paste0("Urban-Open NDVI Percentile: ", round(percentile, 1), "%"))
     }
   })
-  
   ####################################################################################################################
   #Density Plots
   output$crop_density_plot <- renderPlotly({
@@ -1120,7 +1078,7 @@ server <- function(input, output, session) {
   shinyalert(
     title = "Welcome to the Urban Drought Dashboard!",
     text = "<b>A near real-time portal offering a comprehensive view of current conditions across seven land cover types, with additional tabs for deeper analysis and research.<br><br>
-                <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
+                <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br><br>
                 <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)<br><br>
                 If you need to view this information again, check the <b>About Tab</b> under <b>Preliminary Information</b>.</h6>",
     type = "info",
