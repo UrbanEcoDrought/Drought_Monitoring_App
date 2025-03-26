@@ -156,8 +156,8 @@ ui <- dashboardPage(skin = "black",
                       tabItems(
                         tabItem(tabName = "dashboard",
                                 # Title for the status boxes
-                                h6(HTML("<b>Status for Land Cover Types - (Status Categories: <span style='color:green;'>Much Greener than Normal</span>, <span style='color:olive;'>Greener than Normal</span>
-                                        , <span style='color:#7C7779;'>Normal</span>, <span style='color:#E1278D;'>Browner than Normal</span>, <span style='color:#D8085C;'>Much Browner than Normal</span>)</b>"), 
+                                h6(HTML("<b>Status for Land Cover Types - (Status Categories: <span style='color:#4DAC26;'>Much Greener than Normal</span>, <span style='color:#B8E186;'>Greener than Normal</span>
+                                        , <span style='color:#7C7779;'>Normal</span>, <span style='color:#F1B6DA;'>Browner than Normal</span>, <span style='color:#D01C8B;'>Much Browner than Normal</span>)</b>"), 
                                    style = "center-align: center; margin-bottom: 20px;"),
                                 fluidRow(
                                   column(
@@ -238,57 +238,50 @@ ui <- dashboardPage(skin = "black",
                                     width = 12,
                                     tabPanel(
                                       "Crop Density Plot",
-                                      h6(HTML("<b>Distribution of crop norm values for ydays 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal crop NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
                                     tabPanel(
                                       "Forest Density Plot",
-                                      h6(HTML("<b>Distribution of forest norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal forest NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
                                       "Grassland Density Plot",
-                                      h6(HTML("<b>Distribution of grassland norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal grassland NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
                                       "Urban-High Density Plot",
-                                      h6(HTML("<b>Distribution of urban-high norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal high intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Medium Density Plot",
-                                      h6(HTML("<b>Distribution of urban-medium norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Low Density Plot",
-                                      h6(HTML("<b>Distribution of urban-low norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal low intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
                                       "Urban-Open Density Plot",
-                                      h6(HTML("<b>Distribution of urban-open norm values for days of the year 1-365.The current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.</b><br>")),
+                                      h6(HTML("<b>Distribution of normal open urban NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
                                       plotlyOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )

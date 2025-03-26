@@ -21,9 +21,11 @@ library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycs
 ####################################################################################################################
 #Palettes
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
-heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="sucess")
-graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "#3d9970","Significantly Greener than Normal"="#28a745")
+# heatmap_colors <-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
+graphing_colors<-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 
+heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="sucess")
+# graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "#3d9970","Significantly Greener than Normal"="#28a745")
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
@@ -572,7 +574,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
        "Crop ",
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("tractor"),
       color = result$color,  
       width = 11
@@ -595,7 +597,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
       "Forest", 
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("tree"),
       color = result$color,  
       width = 11
@@ -618,7 +620,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
      "Grass", 
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("seedling"),
       color = result$color,  
       width = 11
@@ -641,7 +643,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
       "Urban-High", 
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("city"),
       color = result$color,  
       width = 11
@@ -664,7 +666,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
      "Urban-Medium", 
-      subtitle = paste(" is ", result$status, "from the norm"),
+      subtitle = paste(" is ", result$status, "from normal"),
       icon = icon("building-columns"),
       color = result$color,  
       width = 11
@@ -687,7 +689,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
       "Urban-Low", 
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("house"),
       color = result$color,  
       width = 11
@@ -710,7 +712,7 @@ server <- function(input, output, session) {
     # If data is available, display the result
     valueBox(
       "Urban-Open", 
-      subtitle = paste("is", result$status, "from the norm"),
+      subtitle = paste("is", result$status, "from normal"),
       icon = icon("shop"),
       color = result$color,  
       width = 11
