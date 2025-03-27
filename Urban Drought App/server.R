@@ -8,8 +8,10 @@
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
 library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
-library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle);library(forcats)
+library(plotly);library(dplyr);library(shinycssloaders);library(shinyGovstyle);library(forcats)
 
+# library(bs4Dash);
+# library(shinyBS);
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
 
@@ -24,7 +26,9 @@ paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urb
 # heatmap_colors <-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 graphing_colors<-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 
-heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="sucess")
+status_codes <-c("Significantly Browner than Normal"= "danger" , "Slightly Browner than Normal"= "warning", "Normal"="info", "Slightly Greener than Normal"= "primary","Significantly Greener than Normal"="sucess")
+
+
 # graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "#3d9970","Significantly Greener than Normal"="#28a745")
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
@@ -333,6 +337,72 @@ plot_timeseries_now <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall
 ####################################################################################################################
 #STATUS BOXES FUNCTION -----
 #Needs color to be separate function for value boxes to work 
+tagsDrought <-     tags$style(HTML("
+                      .box.box-solid.box-success>.box-header {
+                        # color:#fff;
+                        background:#4DAC26
+                        }
+
+                      .box.box-solid.box-success {
+                        background:#4DAC26;
+                        border-bottom-color:#4DAC26;
+                        border-left-color:#4DAC26;
+                        border-right-color:#4DAC26;
+                        border-top-color:#4DAC26;
+                        }
+
+                      .box.box-solid.box-primary>.box-header {
+                        # color:#fff;
+                        background:#B8E186
+                        }
+
+                      .box.box-solid.box-primary {
+                        background:#B8E186;
+                        border-bottom-color:#B8E186;
+                        border-left-color:#B8E186;
+                        border-right-color:#B8E186;
+                        border-top-color:#B8E186;
+                        }
+                        
+                      .box.box-solid.box-info>.box-header {
+                        # color:#fff;
+                        background:#BEBEBE
+                        }
+                      .box.box-solid.box-info {
+                          background:#BEBEBE;
+                          border-bottom-color:#BEBEBE;
+                          border-left-color:#BEBEBE;
+                          border-right-color:#BEBEBE;
+                          border-top-color:#BEBEBE;
+                      }
+                      
+                      .box.box-solid.box-warning>.box-header {
+                        # color:#fff;
+                        background:#F1B6DA
+                        }
+                      .box.box-solid.box-warning {
+                          background:#F1B6DA;
+                          border-bottom-color:#F1B6DA;
+                          border-left-color:#F1B6DA;
+                          border-right-color:#F1B6DA;
+                          border-top-color:#F1B6DA;
+                      }
+                      
+                      .box.box-solid.box-danger>.box-header {
+                        # color:#fff;
+                        background:#D01C8B
+                        }
+                      .box.box-solid.box-danger {
+                          background:#D01C8B;
+                          border-bottom-color:#D01C8B;
+                          border-left-color:#D01C8B;
+                          border-right-color:#D01C8B;
+                          border-top-color:#D01C8B;
+                      }
+                      
+                                                
+
+                        "))
 
 # Main function calling both functions
 LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data) {
@@ -366,7 +436,7 @@ LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, m
   
   status <- round((most_recent_subset$YrMean - mean_value), digits = 2)
   
-  color <- heatmap_colors[most_recent_subset$FlagNDVI]
+  color <- status_codes[most_recent_subset$FlagNDVI]
   
   
   return(list(status = status, color = color))
@@ -625,13 +695,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-       "Crop ",
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("tractor"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "cropBox",
+             box(width = 11, title =span(icon("tractor"), "Crop"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #    "Crop ",
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("tractor"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$forBox <- renderUI({
@@ -648,13 +722,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-      "Forest", 
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("tree"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "forBox",
+             box(width = 11, title = span(icon("tree"), "Forest"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #   "Forest", 
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("tree"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$grassBox <- renderValueBox({
@@ -671,13 +749,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-     "Grass", 
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("seedling"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "grassBox",
+             box(width = 11, title = span(icon("seedling"), "Grassland"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #  "Grass", 
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("seedling"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$uhBox <- renderValueBox({
@@ -694,13 +776,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-      "Urban-High", 
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("city"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "uhBox",
+             box(width = 11, title = span(icon("city"), "Urban-High"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #   "Urban-High", 
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("city"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$umBox <- renderValueBox({
@@ -717,13 +803,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-     "Urban-Medium", 
-      subtitle = paste(" is ", result$status, "from normal"),
-      icon = icon("building-columns"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "umBox",
+             box(width = 11, title = span(icon("building-columns"), "Urban-Medium"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #  "Urban-Medium", 
+    #   subtitle = paste(" is ", result$status, "from normal"),
+    #   icon = icon("building-columns"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$ulBox <- renderValueBox({
@@ -740,13 +830,17 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-      "Urban-Low", 
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("house"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "ulBox",
+             box(width = 11, title = span(icon("house"), "Urban-Low"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    # valueBox(
+    #   "Urban-Low", 
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("house"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   output$uoBox <- renderValueBox({
@@ -763,13 +857,18 @@ server <- function(input, output, session) {
     }
     
     # If data is available, display the result
-    valueBox(
-      "Urban-Open", 
-      subtitle = paste("is", result$status, "from normal"),
-      icon = icon("shop"),
-      color = result$color,  
-      width = 11
-    )
+    tags$div(class = "another-box", id = "uoBox",
+             box(width = 11, title = span(icon("shop"), "Urban-Open"), status = result$color, solidHeader = TRUE,
+                 paste("is", result$status, "from normal")
+             ), tagsDrought)
+    
+    # valueBox(
+    #   "Urban-Open", 
+    #   subtitle = paste("is", result$status, "from normal"),
+    #   icon = icon("shop"),
+    #   color = result$color,  
+    #   width = 11
+    # )
   })
   
   ####################################################################################################################

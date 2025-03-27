@@ -5,11 +5,20 @@
 
 ####################################################################################################################
 # Libraries ----
-library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
-library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
-library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
-library(tidyquant);library(scales);library(bs4Dash);library(shinyjs);library(shinyGovstyle)
+# library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
+# library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);
+# library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
+# #library(hrbrthemes)
+# # library(plotly);library(dplyr);library(shinyBS);library(shinycssloaders);library(shinyGovstyle);library(forcats)
+# # ;library(bs4Dash)
 
+library(shiny);library(shinydashboard);library(shinyalert);library(DT);library(lubridate)
+library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
+library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr);
+library(shinycssloaders)
+library(tidyquant);library(scales);#library(shinyjs);library(shinyGovstyle)
+# library(bs4Dash);
+# library(shinyBS)
 
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
@@ -136,7 +145,7 @@ ui <- dashboardPage(skin = "black",
           may be incomplete or subject to change  ------------------------------------ </b>"))
                       ),
                       br(),
-                      useShinyalert(),
+                      # useShinyalert(),
                       tags$head(
                         tags$script(HTML('
   $(document).ready(function() {
@@ -179,13 +188,20 @@ ui <- dashboardPage(skin = "black",
         align-items: center; /* Aligns items vertically */
       ",
                                       # Each valueBoxOutput is treated as a flexible item
-                                      div(style = "display: inline-block;", valueBoxOutput("cropBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("forBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("grassBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("uoBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("ulBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("umBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("uhBox", width = NULL))
+                                      # div(style = "display: inline-block;", valueBoxOutput("cropBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("forBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("grassBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("uoBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("ulBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("umBox", width = NULL)),
+                                      # div(style = "display: inline-block;", valueBoxOutput("uhBox", width = NULL))
+                                      div(style = "display: inline-block;", uiOutput("cropBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("forBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("grassBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("uoBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("ulBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("umBox", width = NULL)),
+                                      div(style = "display: inline-block;", uiOutput("uhBox", width = NULL))
                                       
                                     )
                                   ),
