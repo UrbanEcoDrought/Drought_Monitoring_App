@@ -388,8 +388,8 @@ ui <- dashboardPage(skin = "black",
                                   height = "3000px",
                                   width = 12, 
                                   tabPanel("Overview of Feature",
-                                           h6(HTML("<b>Feature</b>: <u>Heatmaps</u><br><br>")),
-                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the data for NDVI status across an extended period of time(ie Was there a period 
+                                           h6(HTML("<b>Feature</b>: <u>Anomaly Comparison</u><br><br>")),
+                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the data for NDVI status across an extended period of time (i.e, Was there a period 
                                                    of the year that was consistently below the normal? In what months was this deficiency the strongest?)")),
                                            h6(HTML("<b>Description</b>: Heat map of the NDVI status across all the years available in the data (<u>see visual below for status categories</u>). Current year
                                            will update as more data is available. Years can be toggled on & off for comparisons.<br>")),
@@ -404,7 +404,7 @@ ui <- dashboardPage(skin = "black",
                                            h6(HTML("<br><b>Insert information on how categories were determined</b>"))),
                                            
                                   ),
-                                  tabPanel("Heatmap Graphs",
+                                  tabPanel("NDVI Anomaly Heatmap Graphs",
                                 h6(HTML("<b>The graphs display NDVI trends over time. 
                                         Each color represents a different status. Years can be toggled on an off for convenience & comparison.</b>")),
                                 # Adjust checkbox size and styling using tags$style
