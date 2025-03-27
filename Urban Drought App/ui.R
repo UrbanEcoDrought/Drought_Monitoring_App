@@ -4,7 +4,7 @@
 #Pulls from NDVI_drought_monitoring workflow & UrbanDrought_SpatialAnalysis_Chicago workflow
 
 ####################################################################################################################
-
+# Libraries ----
 library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
 library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
 library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
@@ -14,6 +14,7 @@ library(tidyquant);library(scales);library(bs4Dash);library(shinyjs);library(shi
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
 ####################################################################################################################
+# Read in Data ----
 #for testing
 #Putting in all filepaths like this for now
 # NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
@@ -37,7 +38,7 @@ NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
 ####################
 #Subsetting all data here for reference (anything used for the functions)
 ####################################################################################################################
-#DENSITY PLOTS & STATUS BOXES & PERCENTILE
+#DENSITY PLOTS & STATUS BOXES & PERCENTILE -----
 NDVIall_years_modeled$year <- as.numeric(NDVIall_years_modeled$year)
 latest_year <- max(NDVIall_years_modeled$year, na.rm = TRUE)
 
@@ -57,6 +58,13 @@ date_needed <- NDVIall_years_modeled %>%
 #Need to run this code before app
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
+yrNow <- lubridate::year(Sys.Date())
+day.labels <- data.frame(Date=seq.Date(as.Date(paste0(yrNow, "-01-01")), as.Date(paste0(yrNow, "-12-01")), by="month"))
+day.labels$yday <- lubridate::yday(day.labels$Date)
+day.labels$Text <- paste(lubridate::month(day.labels$Date, label=T), lubridate::day(day.labels$Date))
+day.labels
+summary(day.labels)
+
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 counties <- sf::read_sf("cb_2023_us_county_500k",
                         layer = "cb_2023_us_county_500k")%>% 
@@ -67,7 +75,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
     STATE_NAME == "Illinois")
 ####################################################################################################################
 
-#Needed to move this here to add the banner
+#Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
   title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
   titleWidth = 200
@@ -80,7 +88,7 @@ dbHeader <- dashboardHeader(
   )
 #)
 
-#Needed to move this here to add the logo
+#Needed to move this here to add the logo ----
 dbSidebar <- dashboardSidebar(
   style = "position: relative; height: 93vh;",  # Ensures the sidebar takes full height
   
@@ -110,7 +118,7 @@ dbSidebar <- dashboardSidebar(
 )
 
 ####################################################################################################################
-
+# UI ----
 ui <- dashboardPage(skin = "black",
                     dbHeader,
                     dbSidebar,
@@ -237,52 +245,67 @@ ui <- dashboardPage(skin = "black",
                                   tabBox(
                                     width = 12,
                                     tabPanel(
-                                      "Crop Density Plot",
-                                      h6(HTML("<b>Distribution of normal crop NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("crop_density_plot"),
+                                      "Crop Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("crop_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal crop NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
                                     tabPanel(
-                                      "Forest Density Plot",
-                                      h6(HTML("<b>Distribution of normal forest NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("forest_density_plot"),
+                                      "Forest Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("forest_currentTS_plot"),
+                                      
+                                      h6(HTML("<br><br>Distribution of normal forest NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
-                                      "Grassland Density Plot",
-                                      h6(HTML("<b>Distribution of normal grassland NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("grassland_density_plot"),
+                                      "Grassland Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("grass_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal grassland NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-High Density Plot",
-                                      h6(HTML("<b>Distribution of normal high intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("uh_density_plot"),
+                                      "Urban-High Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("uh_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal high intensity urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Medium Density Plot",
-                                      h6(HTML("<b>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("um_density_plot"),
+                                      "Urban-Medium Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("um_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (orange circle) and
+                                              normal for the current day of the year (blue diamond) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Low Density Plot",
-                                      h6(HTML("<b>Distribution of normal low intensity urban NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("ul_density_plot"),
+                                      "Urban-Low Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("ul_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal low intensity urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Open Density Plot",
-                                      h6(HTML("<b>Distribution of normal open urban NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.</b><br>")),
-                                      plotlyOutput("uo_density_plot"),
+                                      "Urban-Open Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("uo_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal open urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
                                   )

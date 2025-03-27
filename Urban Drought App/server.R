@@ -4,7 +4,7 @@
 #Pulls from NDVI_drought_monitoring workflow & UrbanDrought_SpatialAnalysis_Chicago workflow
 
 ####################################################################################################################
-
+# Packages ----
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
 library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
@@ -19,7 +19,7 @@ library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycs
 # NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
 # NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
 ####################################################################################################################
-#Palettes
+#Palettes -----
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 # heatmap_colors <-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 graphing_colors<-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
@@ -29,7 +29,15 @@ heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Bro
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 
+yrNow <- lubridate::year(Sys.Date())
+day.labels <- data.frame(Date=seq.Date(as.Date(paste0(yrNow, "-01-01")), as.Date(paste0(yrNow, "-12-01")), by="month"))
+day.labels$yday <- lubridate::yday(day.labels$Date)
+day.labels$Text <- paste(lubridate::month(day.labels$Date, label=T), lubridate::day(day.labels$Date))
+day.labels
+summary(day.labels)
+
 ####################################################################################################################
+# Read in data -----
 #####Uncomment after testing 
 ####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 # NDVIall_years_modeled <- read_csv("data/allNDVIall_years_modeled.csv")%>%
@@ -76,14 +84,15 @@ il_counties <- subset(counties, counties$NAME %in% c(
     STATE_NAME == "Illinois")
 
 ####################################################################################################################
-#Functions
+#Functions ------
 ####################################################################################################################
 
-# All data overview graph
+# All data overview graph ----
 all_data_graph <- function() {
-  ggplot(NDVIall_years_modeled, aes(x = date , y = YrMean, color = type, fill=type)) +
-    geom_point(size = 1) +
-    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
+  ggplot(NDVIall_years_modeled, aes(x = date, y = YrMean)) +
+    geom_ribbon(aes(ymin=YrLwr, yrmax=YrUpr, fill=type), alpha=0.2)
+    geom_line(aes(color = type), size = 1) +
+    # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -100,7 +109,7 @@ all_data_graph <- function() {
     )
 }
 
-#!2 month overview graph 
+#12 month overview graph  ----
 twelve_month_graph <- function(start_year,end_year) {
   
   start_year <- as.numeric(start_year)
@@ -130,7 +139,7 @@ twelve_month_graph <- function(start_year,end_year) {
 }
 
 
-#Monthly overview graph
+#Monthly overview graph ----
 monthly_graph <- function(mstart_date) {
   
   mstart_date <- as.Date(mstart_date)
@@ -144,9 +153,10 @@ monthly_graph <- function(mstart_date) {
   
   
   # Generate the plot
-  ggplot(month_data, aes(x = date, y = YrMean, color = type, fill=type)) +
-    geom_point(size = 1) +
-    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=3)) +
+  ggplot(month_data, aes(x = date, y = YrMean)) +
+    geom_ribbon(aes(ymin=YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
+    geom_line(aes(color=type)) +
+    # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=3)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -160,7 +170,7 @@ monthly_graph <- function(mstart_date) {
     )
 }
 
-#Weekly Overview graph
+#Weekly Overview graph ----
 weekly_graph <- function(wstart_date) {
   wstart_date <- as.Date(wstart_date)
   
@@ -173,9 +183,9 @@ weekly_graph <- function(wstart_date) {
     filter(date >= wstart_date & date <= wend_date)
   
   
-  ggplot(week_data, aes(x = date, y = YrMean, color = type, fill=type)) +
-    geom_point(size = 1) +
-    geom_smooth(method="lm") +
+  ggplot(week_data, aes(x = date, y = YrMean)) +
+    geom_ribbon(aes(ymin=YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
+    geom_line(aes(color=type)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -190,7 +200,7 @@ weekly_graph <- function(wstart_date) {
 }
 
 ####################################################################################################################
-#DENSITY PLOT FUNCTIONS
+#DENSITY PLOT FUNCTIONS ----
 #Notes: we need 7 density plots with the most recent data display (latest day) and upper and lower bound shown and mean and then the lastest day NDVI as a point
 # Distribution plot is of NDVI data, and updates as we get more NDVI data from satellites 
 
@@ -206,76 +216,122 @@ density_plot <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_
   recent_yday <- most_recent_subset$yday[1]
   
   norm_final_subset <- filter(norm_subset, yday == recent_yday)
-  ndvi_final_subset <-filter(ndvi_subset, yday == recent_yday)
+  ndvi_final_subset <-filter(ndvi_subset, yday == recent_yday, year == latest_year)
   
   # Extract values for bounds and mean from the first row of CI_subset (or whichever logic you want to apply)
-  NormLwr_current <- norm_final_subset$NormLwr[1]
-  NormUpr_current <- norm_final_subset$NormUpr[1]
-  NormMean_current <- norm_final_subset$NormMean[1]
+  # NormLwr_current <- norm_final_subset$NormLwr[1]
+  # NormUpr_current <- norm_final_subset$NormUpr[1]
+  # NormMean_current <- norm_final_subset$NormMean[1]
   
-  NDVILwr <-filter(ndvi_final_subset, year == latest_year)$YrLwr[1]
-  NDVIUpr <-filter(ndvi_final_subset, year == latest_year)$YrUpr[1]
-  NDVIMean <-filter(ndvi_final_subset, year == latest_year)$YrMean[1]
+  # NDVILwr <-filter(ndvi_final_subset, year == latest_year)$YrLwr[1]
+  # NDVIUpr <-filter(ndvi_final_subset, year == latest_year)$YrUpr[1]
+  # NDVIMean <-filter(ndvi_final_subset, year == latest_year)$YrMean[1]
   
-  ci_rects <- data.frame(
-    xmin = c(min(norm_subset$NormLwr_current), min(norm_subset$NDVILwr)),
-    xmax = c(max(norm_subset$NormUpr_current), max(norm_subset$NDVIUpr)),
-    fill = c("Normal 95% CI", "NDVI 95% CI"),
-    text = c("Normal 95% CI", "NDVI 95% CI") # Tooltip text
-  )
+  # ci_rects <- data.frame(
+  #   xmin = c(min(norm_subset$NormLwr_current), min(norm_subset$NDVILwr)),
+  #   xmax = c(max(norm_subset$NormUpr_current), max(norm_subset$NDVIUpr)),
+  #   fill = c("Normal 95% CI", "NDVI 95% CI"),
+  #   text = c("Normal 95% CI", "NDVI 95% CI") # Tooltip text
+  # )
   
   # Plot
-  plot <- ggplot(norm_subset, aes(x = NormMean)) + 
+  plotNow <- ggplot(norm_subset) + 
     
     # Confidence Interval as a Shaded Region
-    geom_rect(aes(xmin = NormLwr_current, xmax = NormUpr_current, ymin = 0, ymax = 1), 
-              text = paste("Normal 95% CI"),
-              fill = "#a50026", alpha = 0.2) + 
-    geom_rect(aes(xmin = NDVILwr, xmax = NDVIUpr, ymin = 0, ymax = 1), 
-              text = paste("NDVI 95% CI"),
-              fill = "#313695", alpha = 0.2) + 
+    geom_rect(data=norm_final_subset, aes(xmin = NormLwr, xmax = NormUpr, ymin = 0, ymax = 1, fill="Normal NDVI 95% CI"), 
+              # text = paste("Normal 95% CI"), 
+              alpha = 0.2) + 
+    geom_rect(data=ndvi_final_subset, aes(xmin = YrLwr, xmax = YrUpr, ymin = 0, ymax = 1, fill="Current NDVI 95% CI"), 
+              # text = paste("NDVI 95% CI"), 
+              alpha = 0.2) + 
     
     # Density Curve (Placed After so It's on Top)
-    geom_density(aes(y = after_stat(density) / max(after_stat(density)), 
-                     text = paste("NDVI:", round(..x.., 3))), 
+    geom_density(aes(x=NormMean, y = after_stat(density) / max(after_stat(density))), 
                  fill = "grey", alpha = 0.5) +
     
     # Normal & NDVI Mean Points
-    geom_point(aes(x = NormMean_current, y = 0, shape = "Normal", color = "Normal", 
-                   text = paste("NormMean:", round(NormMean_current, 3))), size = 4) +
-    geom_point(aes(x = NDVIMean, y = 0, shape = "Current NDVI", color = "Current NDVI", 
-                   text = paste("NDVI Mean:", round(NDVIMean, 3))), size = 4) +
+    geom_point(data=norm_final_subset, aes(x = NormMean, y = 0, shape = "Normal NDVI", color = "Normal NDVI"), size = 4) +
+    geom_point(data=ndvi_final_subset, aes(x = YrMean, y = 0, shape = "Current NDVI", color = "Current NDVI"), size = 4) +
+    # geom_point(aes(x = NormMean_current, y = 0, shape = "Normal", color = "Normal",
+    #                text = paste("NormMean:", round(NormMean_current, 3))), size = 4) +
+    # geom_point(aes(x = NDVIMean, y = 0, shape = "Current NDVI", color = "Current NDVI",
+    #                text = paste("NDVI Mean:", round(NDVIMean, 3))), size = 4) +
 
     
     # Labels and Legends
     labs(
       x = paste0(naming, " Density Plot"),
-      y = "Density",
-      color = "Dashed 95% CI Boundaries,",
-      shape = "Normal, & NDVI"
+      y = "Density"#,
+      # color = "Dashed 95% CI Boundaries,",
+      # shape = "Normal, & NDVI"
     ) +
     
     scale_color_manual(
-      name = "Dashed 95% CI Boundaries,",
-      values = c("95% CI Norm" = "#a50026", "95% CI NDVI" = "#313695", 
-                 "Normal" = "#f46d43", "Current NDVI" = "#74add1")
+      name = "",
+      values = c("Normal NDVI 95% CI" = "#f46d43", "Current NDVI 95% CI" = "#74add1", 
+                 "Normal NDVI" = "#f46d43", "Current NDVI" = "#74add1")
+    ) +
+    scale_fill_manual(
+      name = "",
+      values = c("Normal NDVI 95% CI" = "#f46d43", "Current NDVI 95% CI" = "#74add1", 
+                 "Normal NDVI" = "#f46d43", "Current NDVI" = "#74add1")
     ) +
     
     scale_shape_manual(
-      name = "Normal, & NDVI",
-      values = c("Normal" = 16, "Current NDVI" = 18)
+      name = "",
+      values = c("Normal NDVI" = 16, "Current NDVI" = 18)
     ) +
     
     theme_minimal()
   
   # Convert to interactive plot
-  interactive_plot <- ggplotly(plot, tooltip = c("x"))
+  # interactive_plot <- ggplotly(plot, tooltip = c("x"))
   
   
-  return(interactive_plot)
+  return(plotNow)
+}
+
+####################################################################################################################
+# Figure to show the time series  -----
+plot_timeseries_now <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_modeled, ...) {
+  #pulling these for the norm CI & NDVI CI
+  norm_subset <- filter(NDVIall_normals_modeled, type == LCtype)
+  ndvi_subset <-filter(NDVIall_years_modeled, type == LCtype, year == latest_year)
+  colorLC = as.character(paletteLC[LCtype])
+
+  # Plot
+  plotNow <- ggplot(norm_subset, aes(x = yday)) + 
+    geom_ribbon(aes(ymin=NormLwr, ymax=NormUpr, fill="Normal NDVI"), alpha=0.2) +
+    geom_line(aes(y=NormMean, color="Normal NDVI")) +
+    geom_ribbon(data=ndvi_subset, aes(ymin=YrLwr, ymax=YrUpr, fill="Current NDVI"), alpha=0.2) +
+    geom_line(data=ndvi_subset, aes(y=YrMean, color="Current NDVI")) +
+    scale_color_manual(name="", values=c("Normal NDVI" = "black", "Current NDVI" = "#74add1")) +
+    scale_fill_manual(name="", values=c("Normal NDVI" = "black", "Current NDVI" = "#74add1")) +
+    scale_x_continuous(name="Date", breaks=day.labels$yday, labels=day.labels$Text) +
+    scale_y_continuous(name="NDVI", limits=c(0,max(NDVIall_years_modeled$YrUpr)), expand=c(0,0)) +
+    theme_minimal(base_size = 10) +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      axis.title.x = element_text(face = "bold", size = 10),
+      axis.title.y = element_text(face = "bold", size = 10),
+      plot.title = element_text(face = "bold", size = 12),
+      legend.key.height = unit(1, "cm"),
+      legend.position = "bottom",
+      legend.text = element_text(size = 8),
+      legend.title = element_text(size = 10),
+      panel.background = element_rect(fill = "gray99"),
+      plot.background = element_rect(fill = "gray99")
+    )
+  
+  # Convert to interactive plot
+  # interactive_plot <- ggplotly(plot, tooltip = c("x"))
+  
+  
+  return(plotNow)
 }
 ####################################################################################################################
-#STATUS BOXES FUNCTION
+#STATUS BOXES FUNCTION -----
 #Needs color to be separate function for value boxes to work 
 
 # Main function calling both functions
@@ -317,7 +373,7 @@ LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, m
 }
 
 ####################################################################################################################
-#PERCENTILE FUNCTIONS
+#PERCENTILE FUNCTIONS ----
 
 ndvi_percentile <- function(LCtype, NDVIall_years_modeled, most_recent_data, latest_yday){
   
@@ -332,7 +388,7 @@ ndvi_percentile <- function(LCtype, NDVIall_years_modeled, most_recent_data, lat
   return(current_percentile)
 }
 ####################################################################################################################
-#Function to generate change stats for density plot 
+#Function to generate change stats for density plot  ----
 # Doesn't handle if one of the start or end values is NA
 
 daily_change <- function(LC_type, date_needed, NDVIall_years_modeled) {
@@ -469,7 +525,7 @@ yearly_change <- function(LC_type, date_needed, NDVIall_years_modeled) {
   return(paste("Yearly Change: ", difference))
 }
 ####################################################################################################################
-#Heat Map
+#Heat Map ----
 plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, naming) {
   if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))  
   
@@ -489,13 +545,10 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
       name = "NDVI Category",
       drop = FALSE  
     ) +
-    scale_x_continuous(
-      expand = c(0, 0),
-      breaks = seq(1, 366, by = 31),
-      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-    ) +
+    scale_x_continuous(name="date", breaks=day.labels$yday, labels=day.labels$Text) +
+ +
     scale_y_discrete(expand = c(0, 0)) +
-    labs(x = "Month of Year", y = "Year", title = paste0(naming, " Heat Map")) +
+    labs(x = "Date", y = "Year", title = paste0(naming, " Heat Map")) +
     theme_minimal(base_size = 10) +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
@@ -513,10 +566,10 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
 }
 
 ####################################################################################################################
-#END OF FUNCTIONS
+#END OF FUNCTIONS ----
 ####################################################################################################################
 
-# Define server logic
+# Define server logic ----
 server <- function(input, output, session) {
   
   yearly_filtered_data <- reactive({
@@ -524,7 +577,7 @@ server <- function(input, output, session) {
       filter(year >= input$yearRange[1] & year <= input$yearRange[2])
   })
   
-  # Render the map
+  # Render the map ----
   output$il_county_map <- renderLeaflet({
     # Initialize the map
     map <- leaflet() %>%
@@ -557,7 +610,7 @@ server <- function(input, output, session) {
   })
   
   ####################################################################################################################
-  # Status KPI Boxes for each LC Type
+  # Status KPI Boxes for each LC Type ----
   output$cropBox <- renderUI({
     result <- LC_status("crop", NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
     
@@ -720,7 +773,7 @@ server <- function(input, output, session) {
   })
   
   ####################################################################################################################
-  #NDVI graphs
+  #NDVI graphs ----
   #All Data
   
   output$all_data_graph <- renderPlot({
@@ -770,7 +823,7 @@ server <- function(input, output, session) {
   
   
   ####################################################################################################################
-  #For Current NDVI value percentile
+  #For Current NDVI value percentile ----
   output$percentile_crop <- renderText({
     # Calculate percentile
     percentile <- ndvi_percentile("crop", NDVIall_years_modeled, most_recent_data, latest_yday)
@@ -855,43 +908,79 @@ server <- function(input, output, session) {
     }
   })
   ####################################################################################################################
-  #Density Plots
-  output$crop_density_plot <- renderPlotly({
+  #Density Plots ----
+  output$crop_density_plot <- renderPlot({
     crop_plot <- density_plot("crop", "Crop", NDVIall_normals_modeled, NDVIall_years_modeled,most_recent_data)
     print(crop_plot)
   })
   
-  output$forest_density_plot <- renderPlotly({
+  output$forest_density_plot <- renderPlot({
     forest_plot <- density_plot("forest", "Forest", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(forest_plot)
   })
   
-  output$grassland_density_plot <- renderPlotly({
+  output$grassland_density_plot <- renderPlot({
     grassland_plot <- density_plot("grassland", "Grassland", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(grassland_plot)
   })
   
-  output$uh_density_plot <- renderPlotly({
+  output$uh_density_plot <- renderPlot({
     uh_plot <- density_plot("urban-high", "Urban-High", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(uh_plot)
   })
   
-  output$um_density_plot <- renderPlotly({
+  output$um_density_plot <- renderPlot({
     um_plot <- density_plot("urban-medium", "Urban-Medium", NDVIall_normals_modeled, NDVIall_years_modeled,most_recent_data)
     print(um_plot)  
   })
   
-  output$ul_density_plot <- renderPlotly({
+  output$ul_density_plot <- renderPlot({
     ul_plot <- density_plot("urban-low", "Urban-Low", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(ul_plot)  
   })
   
-  output$uo_density_plot <- renderPlotly({
+  output$uo_density_plot <- renderPlot({
     uo_plot <- density_plot("urban-open", "Urban-Open", NDVIall_normals_modeled, NDVIall_years_modeled, most_recent_data)
     print(uo_plot)
   })
+  
   ####################################################################################################################
-  #Change Stats
+  #Current Time series Plots ----
+  output$crop_currentTS_plot <- renderPlot({
+    crop_plotNorm <- plot_timeseries_now("crop", "Crop", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(crop_plotNorm)
+  })
+
+  output$forest_currentTS_plot <- renderPlot({
+    forest_plotNorm <- plot_timeseries_now("forest", "Forest", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(forest_plotNorm)
+  })
+
+  output$grass_currentTS_plot <- renderPlot({
+    grass_plotNorm <- plot_timeseries_now("grassland", "Grassland", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(grass_plotNorm)
+  })
+  
+  output$uh_currentTS_plot <- renderPlot({
+    uh_plotNorm <- plot_timeseries_now("urban-high", "Urban-High", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(uh_plotNorm)
+  })
+  output$um_currentTS_plot <- renderPlot({
+    um_plotNorm <- plot_timeseries_now("urban-medium", "Urban-Medium", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(um_plotNorm)
+  })
+  output$ul_currentTS_plot <- renderPlot({
+    ul_plotNorm <- plot_timeseries_now("urban-low", "Urban-Low", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(ul_plotNorm)
+  })
+  output$uo_currentTS_plot <- renderPlot({
+    uo_plotNorm <- plot_timeseries_now("urban-open", "Urban-Open", NDVIall_normals_modeled, NDVIall_years_modeled)
+    print(uo_plotNorm)
+  })
+  
+  
+  ####################################################################################################################
+  #Change Stats ----
   output$crop_daily <- renderText({
     daily_diff <- daily_change("crop", date_needed, NDVIall_years_modeled)
     weekly_diff <- weekly_change("crop", date_needed, NDVIall_years_modeled)
@@ -958,6 +1047,7 @@ server <- function(input, output, session) {
     paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   ####################################################################################################################
+  # Render Heat Maps ----
   output$ndvi_heatmap_crop <- renderPlot({
     req(input$selected_years)
   
@@ -1076,12 +1166,12 @@ server <- function(input, output, session) {
 # })
 
   ####################################################################################################################
-  #Popup messages
+  #Popup messages ----
   shinyalert(
     title = "Welcome to the Urban Drought Dashboard!",
-    text = "<b>A near real-time portal offering a comprehensive view of current conditions across seven land cover types, with additional tabs for deeper analysis and research.<br><br>
-                <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br><br>
-                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)<br><br>
+    text = "<b>A near real-time portal offering a comprehensive view of current conditions across seven land cover types in the Chicago Region, with additional tabs for deeper analysis and research.<br><br>
+                <b>LC Types</b> = NLCD Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br><br>
+                <b>NDVI</b> = Normalized Difference Vegetation Index (greenness)<br><br>
                 If you need to view this information again, check the <b>About Tab</b> under <b>Preliminary Information</b>.</h6>",
     type = "info",
     html = TRUE,  # This is the key setting!
