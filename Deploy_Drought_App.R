@@ -41,17 +41,17 @@ if(!file.exists("Urban Drought App/data/NDVIall_normals_modeled.csv") | overwrit
 
 #This is to run the app LOCALLY
 #If you open this script and are in it's directory, all you have to do is runApp.
-setwd("../")  #This is kept here for when I am bouncing between online and local runs
-runApp("Urban Drought App")
+# setwd("../")  #This is kept here for when I am bouncing between online and local runs
+# runApp("Urban Drought App")
 
 
 #This section is to run the app ONLINE
 #Must change the directory to the app itself to run it online
-# setwd("Urban Drought App")
-# 
-# rsconnect::deployApp(forceUpdate = T, launch.browser = F)
-# 
-# setwd("../")
+setwd("Urban Drought App")
+
+rsconnect::deployApp(forceUpdate = T, launch.browser = F)
+
+setwd("../")
 
 print("Drought Portal Updated!")
 
