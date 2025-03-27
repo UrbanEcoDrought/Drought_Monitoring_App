@@ -546,7 +546,6 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
       drop = FALSE  
     ) +
     scale_x_continuous(name="date", breaks=day.labels$yday, labels=day.labels$Text) +
- +
     scale_y_discrete(expand = c(0, 0)) +
     labs(x = "Date", y = "Year", title = paste0(naming, " Heat Map")) +
     theme_minimal(base_size = 10) +
