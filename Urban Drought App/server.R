@@ -24,7 +24,7 @@ library(plotly);library(dplyr);library(shinycssloaders);library(shinyGovstyle);l
 #Palettes -----
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 # heatmap_colors <-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
-graphing_colors<-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
+graphing_colors<-c("Significantly Browner than Normal"= "#c51b7d" , "Slightly Browner than Normal"= "#fde0ef", "Normal"="gray", "Slightly Greener than Normal"= "#e6f5d0","Significantly Greener than Normal"="#4d9221")
 
 status_codes <-c("Significantly Browner than Normal"= "danger" , "Slightly Browner than Normal"= "warning", "Normal"="info", "Slightly Greener than Normal"= "primary","Significantly Greener than Normal"="sucess")
 
@@ -339,33 +339,33 @@ plot_timeseries_now <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall
 #Needs color to be separate function for value boxes to work 
 tagsDrought <-     tags$style(HTML("
                       .box.box-solid.box-success>.box-header {
-                        # color:#fff;
-                        background:#4DAC26
+                        color:#FFFFFF;
+                        background:#4d9221
                         }
 
                       .box.box-solid.box-success {
-                        background:#4DAC26;
-                        border-bottom-color:#4DAC26;
-                        border-left-color:#4DAC26;
-                        border-right-color:#4DAC26;
-                        border-top-color:#4DAC26;
+                        background:#4d9221;
+                        border-bottom-color:#4d9221;
+                        border-left-color:#4d9221;
+                        border-right-color:#4d9221;
+                        border-top-color:#4d9221;
                         }
 
                       .box.box-solid.box-primary>.box-header {
-                        # color:#fff;
-                        background:#B8E186
+                        color:#000000;
+                        background:#e6f5d0
                         }
 
                       .box.box-solid.box-primary {
-                        background:#B8E186;
-                        border-bottom-color:#B8E186;
-                        border-left-color:#B8E186;
-                        border-right-color:#B8E186;
-                        border-top-color:#B8E186;
+                        background:#e6f5d0;
+                        border-bottom-color:#e6f5d0;
+                        border-left-color:#e6f5d0;
+                        border-right-color:#e6f5d0;
+                        border-top-color:#e6f5d0;
                         }
                         
                       .box.box-solid.box-info>.box-header {
-                        # color:#fff;
+                        color:#000000;
                         background:#BEBEBE
                         }
                       .box.box-solid.box-info {
@@ -377,27 +377,27 @@ tagsDrought <-     tags$style(HTML("
                       }
                       
                       .box.box-solid.box-warning>.box-header {
-                        # color:#fff;
-                        background:#F1B6DA
+                        color:#000000;
+                        background:#fde0ef
                         }
                       .box.box-solid.box-warning {
-                          background:#F1B6DA;
-                          border-bottom-color:#F1B6DA;
-                          border-left-color:#F1B6DA;
-                          border-right-color:#F1B6DA;
-                          border-top-color:#F1B6DA;
+                          background:#fde0ef;
+                          border-bottom-color:#fde0ef;
+                          border-left-color:#fde0ef;
+                          border-right-color:#fde0ef;
+                          border-top-color:#fde0ef;
                       }
                       
                       .box.box-solid.box-danger>.box-header {
-                        # color:#fff;
-                        background:#D01C8B
+                        color:#FFFFFF;
+                        background:#c51b7d
                         }
                       .box.box-solid.box-danger {
-                          background:#D01C8B;
-                          border-bottom-color:#D01C8B;
-                          border-left-color:#D01C8B;
-                          border-right-color:#D01C8B;
-                          border-top-color:#D01C8B;
+                          background:#c51b7d;
+                          border-bottom-color:#c51b7d;
+                          border-left-color:#c51b7d;
+                          border-right-color:#c51b7d;
+                          border-top-color:#c51b7d;
                       }
                       
                                                 
@@ -616,7 +616,6 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
       drop = FALSE  
     ) +
     scale_x_continuous(name="date", breaks=day.labels$yday, labels=day.labels$Text) +
- +
     scale_y_discrete(expand = c(0, 0)) +
     labs(x = "Date", y = "Year", title = paste0(naming, " Heat Map")) +
     theme_minimal(base_size = 10) +
