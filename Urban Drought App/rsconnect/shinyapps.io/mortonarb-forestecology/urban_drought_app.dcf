@@ -5,6 +5,6 @@ account: mortonarb-forestecology
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14170040
-bundleId: 10002302
+bundleId: 10014113
 url: https://mortonarb-forestecology.shinyapps.io/urban_drought_app/
 version: 1

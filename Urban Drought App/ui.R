@@ -4,22 +4,30 @@
 #Pulls from NDVI_drought_monitoring workflow & UrbanDrought_SpatialAnalysis_Chicago workflow
 
 ####################################################################################################################
-
+# Libraries ----
 library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
-library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly)
-library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
+library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
+library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
 library(tidyquant);library(scales);library(bs4Dash);library(shinyjs);library(shinyGovstyle)
 
 
 #For documentation of this app
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
 ####################################################################################################################
+# Read in Data ----
+#for testing
+#Putting in all filepaths like this for now
+# NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
+# NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
+
 NDVIall_normals_modeled <-read_csv("data/NDVIall_normals_modeled.csv")
 NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
+
 ####################################################################################################################
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
 ################################
+#####Uncomment after testing ######
 #####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 #NDVI_data <- read_csv("data/allNDVI_data.csv")%>%
 #mutate(date = as.Date(date, format="%Y-%m-%d"))
@@ -27,15 +35,16 @@ NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
 
 #CSV file path (Using CSV data from NDVI Drought Monitoring Workflow )
 #CI_csv <- read_csv("data/k=12_norms_all_LC_types.csv")
-####################################################################################################################
+####################
 #Subsetting all data here for reference (anything used for the functions)
-  #FOR DENSITY PLOTS & STATUS BOXES & PERCENTILE
+####################################################################################################################
+#DENSITY PLOTS & STATUS BOXES & PERCENTILE -----
 NDVIall_years_modeled$year <- as.numeric(NDVIall_years_modeled$year)
 latest_year <- max(NDVIall_years_modeled$year, na.rm = TRUE)
 
 latest_yday <- max(NDVIall_years_modeled$yday[NDVIall_years_modeled$year == latest_year], na.rm = TRUE)
 
-  #pulling any rows with matching date 
+#pulling any rows with matching date 
 most_recent_data<- filter(NDVIall_years_modeled, year == latest_year & yday == latest_yday)
 
 ##################################################
@@ -46,11 +55,15 @@ date_needed <- NDVIall_years_modeled %>%
   slice_max(date, n = 1, with_ties = FALSE) %>%
   pull(date)
 
-#End of subsetting
-####################################################################################################################
 #Need to run this code before app
-#For map
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+
+yrNow <- lubridate::year(Sys.Date())
+day.labels <- data.frame(Date=seq.Date(as.Date(paste0(yrNow, "-01-01")), as.Date(paste0(yrNow, "-12-01")), by="month"))
+day.labels$yday <- lubridate::yday(day.labels$Date)
+day.labels$Text <- paste(lubridate::month(day.labels$Date, label=T), lubridate::day(day.labels$Date))
+day.labels
+summary(day.labels)
 
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 counties <- sf::read_sf("cb_2023_us_county_500k",
@@ -62,28 +75,35 @@ il_counties <- subset(counties, counties$NAME %in% c(
     STATE_NAME == "Illinois")
 ####################################################################################################################
 
-#Needed to move this here to add the banner
+#Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
   title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
   titleWidth = 200
+ 
+ # shinyGovstyle::banner(
+  #  inputId = "banner", 
+   # type = "Beta Version:",
+    #HTML('<span style="background-color:#B9D3EE; padding: 2px;"><b>This portal is in beta and still under development. 
+     #   Some features may be incomplete or subject to change.</b></span>')
   )
+#)
 
-#Needed to move this here to add the logo
+#Needed to move this here to add the logo ----
 dbSidebar <- dashboardSidebar(
   style = "position: relative; height: 93vh;",  # Ensures the sidebar takes full height
   
   tags$div(
-    style = "position: absolute; bottom: 15px; left: 30px;",  # Adjust position as needed
+    style = "position: absolute; bottom: 10px; left: 60px;",  # Adjust position as needed
     tags$a(
       href = 'https://mortonarb.org', 
-      tags$img(src = 'mortonarb.png', height = '70', width = '160')
+      tags$img(src = 'mortonarb.png', height = '60', width = '150')
     )
   ),
   tags$div(
-    style = "position: absolute; bottom: 85px; left: 85px;",  # Adjust position as needed
+    style = "position: absolute; bottom: 15px; left: 5px;",  # Adjust position as needed
     tags$a(
       href = 'https://www.drought.gov', 
-      tags$img(src = 'NIDIS.png', height = '50', width = '60')
+      tags$img(src = 'NIDIS.png', height = '48', width = '55')
     )
   ),
   sidebarMenu(
@@ -98,6 +118,7 @@ dbSidebar <- dashboardSidebar(
 )
 
 ####################################################################################################################
+# UI ----
 ui <- dashboardPage(skin = "black",
                     dbHeader,
                     dbSidebar,
@@ -143,8 +164,8 @@ ui <- dashboardPage(skin = "black",
                       tabItems(
                         tabItem(tabName = "dashboard",
                                 # Title for the status boxes
-                                h6(HTML("<b>Status for Land Cover Types - (Status Categories: <span style='color:green;'>Much Greener than Normal</span>, <span style='color:olive;'>Greener than Normal</span>
-                                        , <span style='color:#7C7779;'>Normal</span>, <span style='color:#E1278D;'>Browner than Normal</span>, <span style='color:#D8085C;'>Much Browner than Normal</span>)</b>"), 
+                                h6(HTML("<b>Status for Land Cover Types - (Status Categories: <span style='color:#4DAC26;'>Much Greener than Normal</span>, <span style='color:#B8E186;'>Greener than Normal</span>
+                                        , <span style='color:#7C7779;'>Normal</span>, <span style='color:#F1B6DA;'>Browner than Normal</span>, <span style='color:#D01C8B;'>Much Browner than Normal</span>)</b>"), 
                                    style = "center-align: center; margin-bottom: 20px;"),
                                 fluidRow(
                                   column(
@@ -157,8 +178,7 @@ ui <- dashboardPage(skin = "black",
         justify-content: space-around; /* Ensures equal spacing */
         align-items: center; /* Aligns items vertically */
       ",
- ##########################################################################################################################################################
- #STATUS BOXES
+                                      # Each valueBoxOutput is treated as a flexible item
                                       div(style = "display: inline-block;", valueBoxOutput("cropBox", width = NULL)),
                                       div(style = "display: inline-block;", valueBoxOutput("forBox", width = NULL)),
                                       div(style = "display: inline-block;", valueBoxOutput("grassBox", width = NULL)),
@@ -170,13 +190,11 @@ ui <- dashboardPage(skin = "black",
                                     )
                                   ),
                                 ),
- ##########################################################################################################################################################
- #MAP
-                                 fluidRow(
+                                # Map layout
+                                fluidRow(
                                   column(width = 5, 
                                          leafletOutput("il_county_map", height = "350px")),
- ##########################################################################################################################################################
- #GENERAL INFORMATION TABBOX (PERCENTILES, LATEST DATA REPORT, ETC.)
+                                  #Density plot graphs, put here for formatting
                                   tabBox(
                                     title = tagList(shiny::icon("bars"), "General Information"),
                                     width = 7,
@@ -185,7 +203,7 @@ ui <- dashboardPage(skin = "black",
                                       h6(tags$b(paste("Most Recent Data is from", format(date_needed, "%B %d, %Y")))),
                                       h6(HTML("<b>The NDVI percentiles below show how current vegetation conditions compare
                                               to those on the same calendar day in previous years for their respective land cover type.</b><br>")),
-                                      # Percentiles
+                                      # Proper text output for the percentile value
                                       h6(textOutput("percentile_crop")),  
                                       h6(textOutput("percentile_for")),  
                                       h6(textOutput("percentile_grass")),  
@@ -223,78 +241,71 @@ ui <- dashboardPage(skin = "black",
                                     )
                                   )),
                                 fluidRow(
- ##########################################################################################################################################################
- #DENSITY PLOTS
+                                  #Density plot graphs, put here for formatting
                                   tabBox(
                                     width = 12,
                                     tabPanel(
-                                      "Crop Density Plot",
-                                      h6(HTML("<b>Distribution of crop norm values for ydays 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                             with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                             <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("crop_density_plot"),
+                                      "Crop Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("crop_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal crop NDVI for an entire year with the current NDVI (Green Diamond) and
+                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
                                     tabPanel(
-                                      "Forest Density Plot",
-                                      h6(HTML("<b>Distribution of forest norm values for days of the year 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                              <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("forest_density_plot"),
+                                      "Forest Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("forest_currentTS_plot"),
+                                      
+                                      h6(HTML("<br><br>Distribution of normal forest NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("forest_density_plot"),
                                       textOutput("for_daily")
                                     ),
                                     tabPanel(
-                                      "Grassland Density Plot",
-                                      h6(HTML("<b>Distribution of grassland norm values for days of the year 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                             <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("grassland_density_plot"),
+                                      "Grassland Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("grass_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal grassland NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("grassland_density_plot"),
                                       textOutput("grass_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-High Density Plot",
-                                      h6(HTML("<b>Distribution of urban-high norm values for days of the year 1-365. The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                              <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("uh_density_plot"),
+                                      "Urban-High Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("uh_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal high intensity urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("uh_density_plot"),
                                       textOutput("uh_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Medium Density Plot",
-                                      h6(HTML("<b>Distribution of urban-medium norm values for days of the year 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                             with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                              <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("um_density_plot"),
+                                      "Urban-Medium Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("um_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (orange circle) and
+                                              normal for the current day of the year (blue diamond) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Low Density Plot",
-                                      h6(HTML("<b>Distribution of urban-low norm values for days of the year 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                              <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("ul_density_plot"),
+                                      "Urban-Low Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("ul_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal low intensity urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("ul_density_plot"),
                                       textOutput("ul_daily")
                                     ),
                                     tabPanel(
-                                      "Urban-Open Density Plot",
-                                      h6(HTML("<b>Distribution of urban-open norm values for days of the year 1-365.The current NDVI (Blue Diamond) and
-                                              normal for the current day of the year (Orange Circle) are also displayed
-                                              with 95% CI surrounding them. Overlap in the CI is expected, but areas of nonoverlap are noteable.<br><br>
-                                              <span style='color:#FF8247;'>Orange Shaded Area</span> = Normal 95% CI<br>
-                                              <span style='color:#7EC0EE;'>Blue Shaded Area</span> = NDVI 95% CI</b>")),
-                                      plotlyOutput("uo_density_plot"),
+                                      "Urban-Open Plots",
+                                      h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
+                                      plotOutput("uo_currentTS_plot"),
+                                      h6(HTML("<br><br>Distribution of normal open urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      plotOutput("uo_density_plot"),
                                       textOutput("uo_daily")
                                     )
                                   )
@@ -302,9 +313,8 @@ ui <- dashboardPage(skin = "black",
                                 )
                                 
                         ),
- ##########################################################################################################################################################
- #NDVI DATA REVIEW 
                         tabItem(tabName = "NDVI_data_review",
+                                # NDVI Data Tab Box
                                 tabBox(
                                   id = "tab1",
                                   height = "3000px",
@@ -344,6 +354,7 @@ ui <- dashboardPage(skin = "black",
                                                        sep = ""
                                                        ),
                                            plotOutput("yearly_graph", height = "400px")),
+                                           #dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
                                   tabPanel("Monthly", 
                                            h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                            plotOutput("monthly_graph", height = "400px"),
@@ -355,8 +366,6 @@ ui <- dashboardPage(skin = "black",
                                            dateInput(inputId = "wstart_date", label = "Enter Start Date", value = date_needed - 7))
                                 )
                         ),
-  ##########################################################################################################################################################
-  #HEATMAPS 
                         tabItem(tabName = "ndvi_diff",
                                 tabBox(
                                   id = "tab2",
@@ -374,10 +383,15 @@ ui <- dashboardPage(skin = "black",
                                              style = "text-align: center;",
                                              tags$img(src = 'status_info_table.png', height = '400', width = '700')
                                            ),
+                                           div(
+                                             style = "text-align: center;",
+                                           h6(HTML("<br><b>Insert information on how categories were determined</b>"))),
+                                           
                                   ),
                                   tabPanel("Heatmap Graphs",
                                 h6(HTML("<b>The graphs display NDVI trends over time. 
                                         Each color represents a different status. Years can be toggled on an off for convenience & comparison.</b>")),
+                                # Adjust checkbox size and styling using tags$style
                                 tags$style(HTML("
   #selected_years label {
     font-size: 13px;  /* Adjust label text size */
@@ -387,6 +401,7 @@ ui <- dashboardPage(skin = "black",
     transform: scale(0.8);  /* Resize the checkboxes */
   }
 ")),
+                                # The checkboxGroupInput with custom CSS
                                 checkboxGroupInput("selected_years", "Select Years:", 
                                                    choices = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)), 
                                                    selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE))[1:5],
@@ -400,28 +415,21 @@ ui <- dashboardPage(skin = "black",
                                 plotOutput("ndvi_heatmap_ul"),
                                 plotOutput("ndvi_heatmap_uo"))
                         )),
-  ##########################################################################################################################################################
-  #ABOUT TAB
                         tabItem(tabName = "specifics",
                                 tabBox(
                                   height = "3000px",
                                   width = 12,
                                   tabPanel("Preliminary Information",
-                                           h6(HTML("<b> The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types.
-                                                   Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration.</b><br><br>"), 
-                                              style = "text-align: center;"),
-                                              h6(HTML("<u>Terms to Know</u>:<br>
-                                                   <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
-                                                   <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>")),
-                                           h6(HTML("<u>More Information on Portal Creation</u>:<br>
-                                           *Possibly insert background infromaiton about the papers being done with this research 
-                                           - might be good primer before talking about the differnet workflows that go into this portal*<br><br>
-                                        <u>Main Workflows Used</u>:<br>
-                                          NDVI_Drought_Monitoring Workflow<br>
-                                          UrbanDrought_SpatialAnalysis_Chicago Workflow<br><br>
-                                          Links to the code for these workflows can be found under 'Links to Github' and they were created by Juliana Harr & Christy Rollinson<br><br><br>")),
-                                           h6(HTML("<b>Documentation is avaiable for this portal with feature descriptions, visuals, and consideration for possible extensions!<br>(<a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a></b>)")),
-                                           h6(HTML("<b>For additional information check out the USDM!<br>(<a href='https://droughtmonitor.unl.edu'>USDM</a></b>)"))
+                                           h6(HTML("The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types.
+                                                   Additional tabs are included to facilitate further analysis and research, broadening the scope of exploration.<br><br>
+                                           <b>LC Types</b> = Landcover types (crop, forest, grass/grassland, urban-high, urban-medium, urban-low, urban-open)<br>
+                <b>NDVI</b> = Normalized Difference Vegetation Index (used as a measure of green)</b><br><br>Data Visualized comes from two main workflows:<br>
+                <b>NDVI_Drought_Monitoring Workflow</b><br>
+                <b>UrbanDrought_SpatialAnalysis_Chicago Workflow</b><br>
+                Links can be found under 'Links to Github' and they were created by Juliana Harr & Christy Rollinson<br>")),
+                                           h6(HTML("Documentation Link: <a href='https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing'>Urban Drought Portal Documentation</a>")),
+                                           h6(HTML("USDM Link: <a href='https://droughtmonitor.unl.edu'>USDM</a>"))
+                                           
                                   ),
                                   tabPanel("Grant Information",
                                            h6(HTML("This research was supported by NIDIS through the FY 2022 Coping with Drought Competition - Ecological Drought (Award NA22OAR4310233).<br><br>
@@ -437,7 +445,7 @@ ui <- dashboardPage(skin = "black",
                                                    Trent Ford, Illinois State Water Survey, University of Illinois, Urbana-Champaign (twford@illinois.edu)<br><br>"))
                                   ),
                                   tabPanel("Links to Github",
-                                           h6(HTML("<b>Github Links</b>: <br>
+                                           h6(HTML("Github Links: <br>
 <p> <a href='https://github.com/UrbanEcoDrought'>UrbanEcoDrought Repository</a><br>
     <a href='https://github.com/UrbanEcoDrought/NDVI_drought_monitoring'>NDVI_Drought_Monitoring</a><br>
     <a href='https://github.com/UrbanEcoDrought/UrbanDrought_SpatialAnalysis_Chicago'>UrbanDrought_SpatialAnalysis_Chicago Workflow</a><br> 
@@ -447,6 +455,8 @@ ui <- dashboardPage(skin = "black",
                                   
                                 )
                         )
+                        
+  
 )
 ))
 
