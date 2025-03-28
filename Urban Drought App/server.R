@@ -14,21 +14,12 @@ library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycs
 #https://docs.google.com/document/d/1I8WkmUjuPLf0SS_IF0F6P97xyH3aQhth8m9iYUQM4hs/edit?usp=sharing
 
 ####################################################################################################################
-#for testing
-#Putting in all filepaths like this for now
-# NDVIall_normals_modeled <-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_normals_modeled.csv")
-# NDVIall_years_modeled<-read_csv("/Users/jocelyngarcia/Documents/GitHub/Drought_Monitoring_App/Urban Drought App/data/NDVIall_years_modeled.csv")
-####################################################################################################################
 #Palettes
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="sucess")
 graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "#3d9970","Significantly Greener than Normal"="#28a745")
 
-# path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
-# path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
-
 ####################################################################################################################
-#####Uncomment after testing 
 ####NDVI file path (Using NDVI data from NDVI Drought Monitoring Workflow so they are fit to the spline)
 # NDVIall_years_modeled <- read_csv("data/allNDVIall_years_modeled.csv")%>%
 # mutate(date = as.Date(date, format="%Y-%m-%d"))
@@ -40,17 +31,15 @@ NDVIall_normals_modeled <-read_csv("data/NDVIall_normals_modeled.csv")
 NDVIall_years_modeled<-read_csv("data/NDVIall_years_modeled.csv")
 
 ####################################################################################################################
-
-####################################################################################################################
 #Subsetting all data here for reference (anything used for the functions)
 ####################################################################################################################
-#DENSITY PLOTS & STATUS BOXES & PERCENTILE
+# FOR DENSITY PLOTS & STATUS BOXES & PERCENTILE
 NDVIall_years_modeled$year <- as.numeric(NDVIall_years_modeled$year)
 latest_year <- max(NDVIall_years_modeled$year, na.rm = TRUE)
 
 latest_yday <- max(NDVIall_years_modeled$yday[NDVIall_years_modeled$year == latest_year], na.rm = TRUE)
 
-#pulling any rows with matching date 
+  #pulling any rows with matching date 
 most_recent_data<- filter(NDVIall_years_modeled, year == latest_year & yday == latest_yday)
 
 ##################################################
@@ -61,8 +50,9 @@ date_needed <- NDVIall_years_modeled %>%
   slice_max(date, n = 1, with_ties = FALSE) %>%
   pull(date)
 ##################################################
-
-#Need to run this code before app
+#End Subesetting 
+####################################################################################################################
+#Need to run this code before app for map
 lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 #from https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 counties <- sf::read_sf("cb_2023_us_county_500k",
@@ -81,7 +71,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
 all_data_graph <- function() {
   ggplot(NDVIall_years_modeled, aes(x = date , y = YrMean, color = type, fill=type)) +
     geom_point(size = 1) +
-    geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
+    #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
     scale_color_manual(values = paletteLC) +
     scale_fill_manual(values = paletteLC) +
     labs(
@@ -330,9 +320,7 @@ ndvi_percentile <- function(LCtype, NDVIall_years_modeled, most_recent_data, lat
   return(current_percentile)
 }
 ####################################################################################################################
-#Function to generate change stats for density plot 
-# Doesn't handle if one of the start or end values is NA
-
+#CHANGE STATS FUNCTION (at bottom of density plots)
 daily_change <- function(LC_type, date_needed, NDVIall_years_modeled) {
   prev_day <- date_needed - 1
   
@@ -533,7 +521,6 @@ server <- function(input, output, session) {
     for (county_name in unique(il_counties$NAME)) {
       county_data <- il_counties[il_counties$NAME == county_name, ]
       
-      # Add individual county polygons
       map <- map %>%
         addPolygons(
           data = county_data,
@@ -546,7 +533,7 @@ server <- function(input, output, session) {
           group = county_name
         )
     }
-    # Add layer control for individual counties
+    
     map %>%
       addLayersControl(
         overlayGroups = unique(il_counties$NAME),
@@ -569,7 +556,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
        "Crop ",
       subtitle = paste("is", result$status, "from the norm"),
@@ -592,7 +578,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
       "Forest", 
       subtitle = paste("is", result$status, "from the norm"),
@@ -615,7 +600,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
      "Grass", 
       subtitle = paste("is", result$status, "from the norm"),
@@ -638,7 +622,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
       "Urban-High", 
       subtitle = paste("is", result$status, "from the norm"),
@@ -661,7 +644,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
      "Urban-Medium", 
       subtitle = paste(" is ", result$status, "from the norm"),
@@ -684,7 +666,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
       "Urban-Low", 
       subtitle = paste("is", result$status, "from the norm"),
@@ -707,7 +688,6 @@ server <- function(input, output, session) {
       ))
     }
     
-    # If data is available, display the result
     valueBox(
       "Urban-Open", 
       subtitle = paste("is", result$status, "from the norm"),
@@ -719,24 +699,21 @@ server <- function(input, output, session) {
   
   ####################################################################################################################
   #NDVI graphs
-  #All Data
   
+  #All Data
   output$all_data_graph <- renderPlot({
     all_data_graph()  
   })
   
   output$yearly_graph <- renderPlot({
-    req(input$yearRange)  # Ensure input is available
+    req(input$yearRange)  
     
-    # Select start year from slider
     start_year <- input$yearRange[1]
     end_year <- input$yearRange[2]
     
-    # Generate the plot
     plot <- twelve_month_graph(start_year, end_year)
     
     if (!is.null(plot)) {
-      print("Plot generated successfully")
       return(plot)
     } else {
       print("No data available for this date range.")
@@ -768,12 +745,11 @@ server <- function(input, output, session) {
   
   
   ####################################################################################################################
-  #For Current NDVI value percentile
+  #PERCENTILES
+  
   output$percentile_crop <- renderText({
-    # Calculate percentile
     percentile <- ndvi_percentile("crop", NDVIall_years_modeled, most_recent_data, latest_yday)
     
-    # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
       return("Crop NDVI Percentile: Data Unavailable")
     } else {
@@ -782,10 +758,8 @@ server <- function(input, output, session) {
   })
 
   output$percentile_for <- renderText({
-    # Calculate percentile
     percentile <- ndvi_percentile("forest", NDVIall_years_modeled, most_recent_data, latest_yday)
     
-    # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
       return("Forest NDVI Percentile: Data Unavailable")
     } else {
@@ -794,10 +768,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_grass <- renderText({
-    # Calculate percentile
     percentile <- ndvi_percentile("grassland", NDVIall_years_modeled, most_recent_data, latest_yday)
-    
-    # Ensure it returns a valid value
+
     if (is.null(percentile) || is.na(percentile)) {
       return("Grassland NDVI Percentile: Data Unavailable")
     } else {
@@ -806,10 +778,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_uh <- renderText({
-      # Calculate percentile
     percentile <- ndvi_percentile("urban-high", NDVIall_years_modeled, most_recent_data, latest_yday)
     
-    # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
       return("Urban-High NDVI Percentile: Data Unavailable")
     } else {
@@ -818,10 +788,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_um <- renderText({
-   # Calculate percentile
     percentile <- ndvi_percentile("urban-medium", NDVIall_years_modeled, most_recent_data, latest_yday)
     
-    # Ensure it returns a valid value
     if (is.null(percentile) || is.na(percentile)) {
       return("Urban-Medium NDVI Percentile: Data Unavailable")
     } else {
@@ -830,10 +798,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_ul <- renderText({
-   # Calculate percentile
     percentile <- ndvi_percentile("urban-low", NDVIall_years_modeled, most_recent_data, latest_yday)
-    
-    # Ensure it returns a valid value
+
     if (is.null(percentile) || is.na(percentile)) {
       return("Urban-Low NDVI Percentile: Data Unavailable")
     } else {
@@ -842,10 +808,8 @@ server <- function(input, output, session) {
   })
   
   output$percentile_uo <- renderText({
-    # Calculate percentile
     percentile <- ndvi_percentile("urban-open", NDVIall_years_modeled, most_recent_data, latest_yday)
-    
-    # Ensure it returns a valid value
+
     if (is.null(percentile) || is.na(percentile)) {
       return("Urban-Open NDVI Percentile: Data Unavailable")
     } else {
@@ -956,6 +920,7 @@ server <- function(input, output, session) {
     paste(daily_diff, " | ", weekly_diff," | ", monthly_diff," | ",yearly_diff)
   })
   ####################################################################################################################
+  #Heatmaps
   output$ndvi_heatmap_crop <- renderPlot({
     req(input$selected_years)
   
@@ -1000,80 +965,6 @@ server <- function(input, output, session) {
     plot_ndvi_heatmap(NDVIall_years_modeled, input$selected_years,"urban-open", "Urban-Open")  # Pass the filtered data
   })
   ####################################################################################################################
-  # Observe when Heatmap tab is selected
-# observe({
-#   if (input$tabs == "Heatmap") {  # Replace "Heatmap" with the actual tab ID
-#     shinyalert(
-#       title = "Loading NDVI Heatmaps...",
-#       text = "Please wait while the data is processed.",
-#       type = "info",
-#       showConfirmButton = FALSE,
-#       closeOnClickOutside = FALSE
-#     )
-#   }
-# })
-# 
-# # Reactive tracker to count when all plots are ready
-# plots_ready <- reactiveVal(0)
-# 
-# plot_complete <- function() {
-#   plots_ready(plots_ready() + 1)
-#   if (plots_ready() == 7) {  # Total number of NDVI plots
-#     closeAlert()  # Close the popup when all plots finish loading
-#   }
-# }
-# 
-# # Render NDVI Heatmaps
-# output$ndvi_heatmap_crop <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "crop", "Crop")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_forest <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "forest", "Forest")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_grass <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "grassland", "Grassland")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_uh <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-high", "Urban-High")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_um <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-medium", "Urban-Medium")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_ul <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-low", "Urban-Low")
-#   plot_complete()
-# })
-# 
-# output$ndvi_heatmap_uo <- renderPlot({
-#   req(input$selected_years)
-#   filtered_data <- heatmap_data %>% filter(year %in% input$selected_years)
-#   plot_ndvi_heatmap(filtered_data, input$selected_years, "urban-open", "Urban-Open")
-#   plot_complete()
-# })
-
-  ####################################################################################################################
   #Popup messages
   shinyalert(
     title = "Welcome to the Urban Drought Dashboard!",
@@ -1086,6 +977,5 @@ server <- function(input, output, session) {
     showConfirmButton = TRUE,
     confirmButtonText = "Close"
   )
-
   ####################################################################################################################
 }
