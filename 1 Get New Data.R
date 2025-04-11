@@ -24,15 +24,18 @@ flook <- unlist(filesCheck)
 strToday <- gsub("-", "_", Sys.Date())
 timeEnd <- Sys.time() + 60*30 # Give things 30 minutes to finish
 
-while(!all(flook == "none") |  length(grep(strToday, dir(file.path(path.google, NDVIsave)))) < length(flook[!flook=="none"]) | Sys.time()<timeEnd){
-  Sys.sleep(60) # Wait 60 seconds before checking again
-  flook <- unlist(filesCheck)
-  
-}
+if(!all(flook == "none")){
+  while(length(grep(strToday, dir(file.path(path.google, NDVIsave)))) < length(flook[!flook=="none"]) & Sys.time()<timeEnd){
+    print("waiting 60 sec")
+    Sys.sleep(60) # Wait 60 seconds before checking again
+    # flook <- unlist(filesCheck)
+    
+  }
+} 
 
-if(all(flook)=="none"){
+if(all(flook=="none")){
   print("No new data")
-  stop()
+  
 } else {
   # Execute next steps
   source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")

@@ -225,9 +225,9 @@ if(max(l9dates_vector)>dateLastL9){
   for(LCTYPE in lcnames){
     # print(LCTYPE)
     extractByLC(imcol=landsat9, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat9_", LCTYPE))
+  filesCheck$landsat9 <- c(filesCheck$landsat9, LCTYPE)
   }
   
-  filesCheck$landsat9 <- c(filesCheck$landsat9, LCTYPE)
   
   
 } else {
