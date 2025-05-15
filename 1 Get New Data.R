@@ -24,8 +24,26 @@ flook <- unlist(filesCheck)
 strToday <- gsub("-", "_", Sys.Date())
 timeEnd <- Sys.time() + 60*30 # Give things 30 minutes to finish
 
+dir(file.path(path.google, NDVIsave, ".."), NDVIsave)
+
 if(!all(flook == "none")){
   while(length(grep(strToday, dir(file.path(path.google, NDVIsave)))) < length(flook[!flook=="none"]) & Sys.time()<timeEnd){
+    if (length(dir(file.path(path.google, NDVIsave, ".."), NDVIsave))>1){
+      dirsDupe <- dir(file.path(path.google, NDVIsave, ".."), NDVIsave)
+      dirsDupe <- dirsDupe[dirsDupe!=NDVIsave]
+      
+      for(i in 1:length(dirsDupe)){
+        fCP <- dir(file.path(path.google, NDVIsave, "..", dirsDupe[i]))
+
+        for(j in seq_along(fCP)){
+          file.copy(from=file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]), to=file.path(path.google, NDVIsave, fCP[j]), overwrite=T, copy.mode=T)
+          file.remove(file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]))
+        }
+        file.remove(file.path(file.path(path.google, NDVIsave, ".."), dirsDupe[i]))
+      }
+      # file.copy(from=file.path(path.google, NDVIsave, fileL8), to=file.path(pathShare, fileL8), overwrite=T, copy.mode=T)
+    }
+    
     print("waiting 60 sec")
     Sys.sleep(60) # Wait 60 seconds before checking again
     # flook <- unlist(filesCheck)

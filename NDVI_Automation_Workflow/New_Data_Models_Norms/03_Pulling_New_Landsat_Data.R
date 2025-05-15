@@ -49,7 +49,7 @@ dateLastL8 <- max(ndviLatest$date[ndviLatest$mission=="landsat 8"])
 dateLastL9 <- max(ndviLatest$date[ndviLatest$mission=="landsat 9"])
 date_today <- as.Date(today())
 
-filesCheck <- list(landsat8 = NA, landsat9 = NA)
+filesCheck <- list(landsat8 = vector(), landsat9 = vector())
 ####################################################################################################################
 
 
@@ -179,8 +179,8 @@ if(max(l8dates_vector)>dateLastL8){
   for(LCTYPE in lcnames){
     # print(LCTYPE)
     extractByLC(imcol=landsat8, landcover=LCTYPE, outfolder=NDVIsave, fileNamePrefix=paste0("Landsat8_", LCTYPE))
-  }
   filesCheck$landsat8 <- c(filesCheck$landsat8, LCTYPE)
+  }
   
 } else {
   print("No New Landsat 8 Data")
