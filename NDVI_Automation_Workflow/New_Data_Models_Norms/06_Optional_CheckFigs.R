@@ -2,6 +2,8 @@
 library(ggplot2)
 if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
+path.google <- "~/Google Drive/"
+pathShare <- file.path(path.google, "Shared drives/Urban Ecological Drought/Monitoring App")
 pathDat <- "NDVI_Automation_Workflow/data_all"
 pathFigs <- "NDVI_Automation_Workflow/figs"
 
@@ -48,7 +50,7 @@ summary(datRaw)
 LC="urban-medium"
 yrColors <- c("2025"="dodgerblue2", "2024"="cadetblue3", "2023"="orange2", "2012"="red3", "2005"="goldenrod2")
 
-png(file.path(pathFigs, "TimeSeries.png"), height=8, width=12, units = "in", res=320)
+png(file.path(pathShare, "TimeSeries.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
   facet_wrap(~type) +
   geom_ribbon(data=datNorms[, ], aes(x=yday, ymin=NormLwr, ymax=NormUpr, fill="normal"), alpha=0.2) +
@@ -71,7 +73,7 @@ dev.off()
   
 # Doing a test heatmap
 
-png(file.path(pathFigs, "HeatMap-NDVI.png"), height=8, width=12, units = "in", res=320)
+png(file.path(pathShare, "HeatMap-NDVI.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrMean), width = 1, height = 1) +  
@@ -103,7 +105,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
 dev.off()
 
 
-png(file.path(pathFigs, "HeatMap-NDVI-Anom.png"), height=8, width=12, units = "in", res=320)
+png(file.path(pathShare, "HeatMap-NDVI-Anom.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +  
@@ -135,7 +137,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
   )
 dev.off()
 
-png(file.path(pathFigs, "HeatMap-Derivs-Anom.png"), height=8, width=12, units = "in", res=320)
+png(file.path(pathShare, "HeatMap-Derivs-Anom.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagTrend), width = 1, height = 1) +  
@@ -167,7 +169,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
   )
 dev.off()
 
-png(file.path(pathFigs, "HeatMap-Derivs.png"), height=8, width=12, units = "in", res=320)
+png(file.path(pathShare, "HeatMap-Derivs.png"), height=8, width=12, units = "in", res=320)
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrDerivTrend), width = 1, height = 1) +  
