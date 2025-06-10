@@ -3,7 +3,7 @@ library(rgee); library(raster); library(terra)
 # user.ee <- "jgarcia@mortonarb.org"
 user.ee <- "crollinson@mortonarb.org"
 
-ee_check() # For some reason, it's important to run this before initializing right now
+# ee_check() # For some reason, it's important to run this before initializing right now
 rgee::ee_Initialize(user = user.ee, drive=T, project = "urbanecodrought")
 path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"

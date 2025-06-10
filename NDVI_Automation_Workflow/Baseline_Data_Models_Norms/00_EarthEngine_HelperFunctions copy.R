@@ -121,11 +121,12 @@ regionNDVIMean <- function(img){
 # Function to extract things by landcover type; note: there are some not soft-coded options here, 
 #   so you'll need to make sure that landcover and mask names match what Christy is using in this repo
 extractByLC <- function(imcol, landcover, outfolder, fileNamePrefix, ...){
-  lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+  lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open", "forest-wet")
   if(!landcover %in% lcnames){
     stop(paste("Invalid landcover type.  Must match one of the following:", paste(lcnames, collapse = ", ")))
   }
   if(landcover=="forest") lcMask = forMask
+  if(landcover=="forest-wet") lcMask = forWetMask # Forest with wet forests
   if(landcover=="crop") lcMask = cropMask
   if(landcover=="grassland") lcMask = grassMask
   if(landcover=="urban-high") lcMask = urbHMask
