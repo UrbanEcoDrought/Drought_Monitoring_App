@@ -37,8 +37,8 @@ lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban
 
 ndviAll <- data.frame()
 for(LCTYPE in lcnames){
-  fileL8 <- dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE)))]
-  fileL9 <- dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE)))]
+  fileL8 <- dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE, "_"))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE, "_")))]
+  fileL9 <- dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE, "_"))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE, "_")))]
   
   if(!file.exists(file.path(pathShare, fileL8))) file.copy(from=file.path(path.google, NDVIsave, fileL8), to=file.path(pathShare, fileL8), overwrite=T, copy.mode=T)
   if(!file.exists(file.path(pathShare, fileL9))) file.copy(from=file.path(path.google, NDVIsave, fileL9), to=file.path(pathShare, fileL9), overwrite=T, copy.mode=T)
