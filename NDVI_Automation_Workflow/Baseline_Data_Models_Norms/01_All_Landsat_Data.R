@@ -85,8 +85,8 @@ ndviVis = list(
 ##################### 
 
 # Landcover names and mask ----
-# lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
-lcnames <- "forest-wet"
+lcnames <- c("forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+# lcnames <- "forest-wet"
 
 # forMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Forest')
 # grassMask <- ee$Image('users/jgarcia/NLCD-Chicago_2000-2024_Grass')

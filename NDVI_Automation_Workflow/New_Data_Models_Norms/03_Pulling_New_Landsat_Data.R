@@ -17,8 +17,6 @@
 if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
 library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
-# ee_check() # For some reason, it's important to run this before initializing right now
-# user.ee <- "jgarcia@mortonarb.org"
 user.ee <- "crollinson@mortonarb.org"
 
 rgee::ee_Initialize(user =user.ee, drive=T, project = "urbanecodrought")
@@ -97,7 +95,7 @@ nlcdvis = list(
 # Access a feature collection
 # Chicago <- ee$FeatureCollection("projects/ee-jgarcia/assets/SevenCntyChiReg")
 Chicago = ee$FeatureCollection("projects/breidyee/assets/SevenCntyChiReg") 
-print(Chicago$getInfo())
+# print(Chicago$getInfo())
 
 chiBounds <- Chicago$geometry()$bounds()
 chiBBox <- ee$Geometry$BBox(-88.70738, 41.20155, -87.52453, 42.49575)
@@ -107,12 +105,13 @@ chiBBox <- ee$Geometry$BBox(-88.70738, 41.20155, -87.52453, 42.49575)
 ##################### 
 
 # Landcover names and mask ----
-lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+lcnames <- c("forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
 
 ######################For updating data, START HERE##################### 
 
 forMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Forest'))
+forWetMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Forest-with-Wet'))
 grassMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Grass'))
 cropMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Crop'))
 urbOMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Urban-Open'))

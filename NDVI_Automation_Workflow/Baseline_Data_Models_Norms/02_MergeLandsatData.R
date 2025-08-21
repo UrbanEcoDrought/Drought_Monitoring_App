@@ -17,7 +17,7 @@ day.labels
 summary(day.labels)
 
 # Clunky code, but should pull the latest file
-lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+lcnames <- c("forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
 ndviAll <- data.frame()
 for(LCTYPE in lcnames){
@@ -53,7 +53,7 @@ unique(ndviAll$mission)
 ndviAll$date <- as.Date(ndviAll$date)
 ndviAll$year <- lubridate::year(ndviAll$date)
 ndviAll$yday <- lubridate::yday(ndviAll$date)
-ndviAll$type <- factor(ndviAll$type, levels=rev(c("forest", "grassland", "crop", "urban-open", "urban-low", "urban-medium", "urban-high")))
+ndviAll$type <- factor(ndviAll$type, levels=rev(c("forest-wet", "grassland", "crop", "urban-open", "urban-low", "urban-medium", "urban-high")))
 head(ndviAll)
 summary(ndviAll)
 unique(ndviAll$type)

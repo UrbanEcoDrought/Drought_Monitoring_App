@@ -62,8 +62,8 @@ for(LC in unique(ndvi.base$type)){
   ndvi.base[rowsLC, "ReprojPred"] <- predict(gamLC, newdata=ndviLCDupe)
   ndvi.base[rowsLC, "NDVIReprojected"] <- ndvi.base$MissionResid[rowsLC] + ndvi.base$ReprojPred[rowsLC]
   
-  # 2. Calculate "normal" for the whole time series we have
-  gamNorm <- gam(NDVIReprojected ~ s(yday, k=12), data=ndvi.base[rowsLC,])
+  # 2. Calculate "normal" for the whole time series we have --> using a cyclic spline so start & end match
+  gamNorm <- gam(NDVIReprojected ~ s(yday, k=12, bs="cc"), data=ndvi.base[rowsLC,])
   # ndvi.norms$NormMean[ndvi.norms$type==LC] <- predict(gamNorm, newdata=ndvi.norms[ndvi.norms$type==LC,])
   #2.1 Getting the mean & 95 CI on the predicted norms
   LCpost <- post.distns(model.gam = gamNorm, newdata = ndvi.norms[ndvi.norms$type==LC,], vars="yday")
@@ -80,7 +80,27 @@ for(LC in unique(ndvi.base$type)){
   # 3. calculate the year-by-year trends 
   if(!dir.exists(file.path(pathMods, LC))) dir.create(file.path(pathMods, LC))
   for(YR in unique(ndvi.base$year[rowsLC])){
-    gamYRs <-gam(NDVIReprojected ~ s(yday, k=12)  , data=ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR,])
+    datTmp <- ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR,]
+    kYr=12
+    
+    # If not our first year, add in the previous Dec
+    if(YR>min(ndvi.base$year[rowsLC])){
+      datTmpDec <- ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR-1 & ndvi.base$yday>=365-31,]
+      datTmpDec$yday <- datTmpDec$yday-365
+      
+      datTmp <- rbind(datTmp, datTmpDec)
+      kYr=kYr+1
+    }
+    if(YR<max(ndvi.base$year[rowsLC])){
+      datTmpJan <- ndvi.base[ndvi.base$type==LC & ndvi.base$year==YR+1 & ndvi.base$yday<=31,]
+      datTmpJan$yday <- datTmpJan$yday+365
+      
+      datTmp <- rbind(datTmp, datTmpJan)
+      kYr=kYr+1
+      
+    }
+    
+    gamYRs <-gam(NDVIReprojected ~ s(yday, k=kYr), data=datTmp)
     # plot(gamYRs)
     # 3.1 mean & 95%CI on predicted NDVI
     YRpost <- post.distns(model.gam = gamYRs, newdata = ndviyrs[ndviyrs$type==LC & ndviyrs$year==YR,], vars=c("yday", "year"))
@@ -151,6 +171,10 @@ for(LC in unique(ndvi.base$type)){
 summary(ndvi.base)
 summary(ndvi.norms)
 summary(ndviyrs)
+
+ndvi.base$type <- car::recode(ndvi.base$type, "'forest-wet'='forest'")
+ndvi.norms$type <- car::recode(ndvi.norms$type, "'forest-wet'='forest'")
+ndviyrs$type <- car::recode(ndviyrs$type, "'forest-wet'='forest'")
 
 ndviyrs <- ndviyrs[ndviyrs$year<max(ndvi.base$year) | (ndviyrs$year==max(ndvi.base$year) & ndviyrs$yday<=lubridate::yday(max(ndvi.base$date))),]
 # ndviyrs$date <- strptime(paste(ndviyrs$year, ndviyrs$yday, sep="-"), format=c("%Y-%j"))

@@ -33,7 +33,7 @@ day.labels
 summary(day.labels)
 
 # Clunky code, but should pull the latest file
-lcnames <- c("forest", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+lcnames <- c("forest", "forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
 
 ndviAll <- data.frame()
 for(LCTYPE in lcnames){
@@ -58,13 +58,20 @@ for(LCTYPE in lcnames){
 
 summary(ndviAll)
 head(ndviAll)
+(ndviAll[ndviAll$type=="forest",])
+(ndviAll[ndviAll$type=="forest-wet",])
 
+ndviAll$type <- car::recode(ndviAll$type, "'forest-wet'='forest'")
+
+summary(ndviAll)
+unique(ndviAll$type)
 ##################### 
 #When running manually, pause here and wait for loop to finish 
 ##################### 
 
 summary(ndviAll)
 unique(ndviAll$mission)
+unique(ndviAll$type)
 
 ndviAll$date <- as.Date(ndviAll$date)
 ndviAll$year <- lubridate::year(ndviAll$date)
@@ -74,8 +81,13 @@ head(ndviAll)
 summary(ndviAll)
 unique(ndviAll$type)
 
+summary(ndviAll[ndviAll$type=="forest",])
+
+
 ndviAll <-ndviAll[order(as.Date(ndviAll$date, format="%Y-%m-%d"), decreasing = F), ]
 tail(ndviAll)
+summary(ndviAll[ndviAll$type=="forest",])
+summary(ndviAll[ndviAll$type=="urban-medium",])
 
 summary(ndviLatest)
 # Makes more sense to join old nvdi data and new ndvi data after new data is fit to spline since old data is already fit to spline
@@ -87,6 +99,11 @@ if(any(ndviAll$date[ndviAll$mission=="landsat 8"] > dateLastL8) | any(ndviAll$da
                              (ndviAll$mission=="landsat 9" & ndviAll$date > dateLastL9),]
   
   ndviLatest <- rbind(ndviLatest, new_NDVI_data)
+  
+  ndviLatest$type <- car::recode(ndviLatest$type, "'forest-wet'='forest'")
+  new_NDVI_data$type <- car::recode(new_NDVI_data$type, "'forest-wet'='forest'")
+  
+  
   write.csv(new_NDVI_data, file.path(pathDat, "new_NDVI_data.csv"), row.names = FALSE)
   write.csv(ndviLatest, file.path(pathShare, "NDVIall_latest.csv"), row.names = FALSE)
   write.csv(ndviLatest, file.path(pathDat, "NDVIall_latest.csv"), row.names = FALSE)
@@ -97,5 +114,5 @@ if(any(ndviAll$date[ndviAll$mission=="landsat 8"] > dateLastL8) | any(ndviAll$da
 }
 
 summary(ndviLatest[ndviLatest$year==max(ndviLatest$year),])
-
+summary(ndviLatest[ndviLatest$type=="forest",])
 ##################### 

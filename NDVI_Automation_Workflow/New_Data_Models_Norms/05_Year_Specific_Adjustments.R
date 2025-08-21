@@ -66,14 +66,15 @@ yrNow <- max(ndviNew$year)
 ydayMax <- max(ndviNew$yday)
 yrNew <- data.frame(yday=rep(1:ydayMax), year=rep(yrNow, each=ydayMax), type=rep(unique(ndviNew$type), each=ydayMax*length(yrNow)), YrMean=NA, YrLwr=NA, YrUpr=NA)
 
-kYr <- max(round(ydayMax/30),3) # use 3 or the number of months we have
+kYr <- max(round(ydayMax/30)+2,3) # use 3 or the number of months we have plus 2: one for prev. Dec & 1 for added current-year flexibility
 
 for(LC in unique(ndviNew$type)){
   rowsLC <- which(ndviNew$type==LC)
   
   # 1. correct for the satellite
   # 1.a. load our satellite model
-  gamLC <- readRDS(file.path(pathMods, paste0("GAM-Mission_", LC, ".RDS")))
+  lcPull <- ifelse(LC=="forest", "forest-wet", "forest")
+  gamLC <- readRDS(file.path(pathMods, paste0("GAM-Mission_", lcPull, ".RDS")))
   summary(gamLC)
 
   # 1.b. figure our the resid now
@@ -91,7 +92,13 @@ for(LC in unique(ndviNew$type)){
   ndvi.base <- rbind(ndvi.base, ndviNew[rowsLC,])
 
   # 2. re-fit the year spline
-  gamYRs <-gam(NDVIReprojected ~ s(yday, k=kYr)  , data=ndvi.base[ndvi.base$type==LC & ndvi.base$year==yrNow,])
+  datTmp <- ndvi.base[ndvi.base$type==LC & ndvi.base$year==yrNow,]
+  datTmpDec <- ndvi.base[ndvi.base$type==LC & ndvi.base$year==yrNow-1 & ndvi.base$yday>=365-31,]
+  datTmpDec$yday <- datTmpDec$yday-365
+  
+  datTmp <- rbind(datTmp, datTmpDec)
+  
+  gamYRs <-gam(NDVIReprojected ~ s(yday, k=kYr)  , data=datTmp)
   # plot(gamYRs)
   YRpost <- post.distns(model.gam = gamYRs, newdata = yrNew[yrNew$type==LC & yrNew$year==yrNow,], vars=c("yday", "year"))
   # summary(YRpost)
@@ -172,6 +179,9 @@ dim(yrNew)
 dim(ndviYrs)
 ndviYrs <- rbind(ndviYrs, yrNew)
 dim(ndviYrs)
+
+summary(ndvi.base[ndvi.base$type=="forest",])
+summary(ndviYrs[ndviYrs$type=="forest",])
 
 # 1.c. 
 write.csv(ndvi.base, file.path(pathDat, "NDVIall_baseline_modeled.csv"), row.names=F)
