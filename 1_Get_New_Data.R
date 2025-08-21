@@ -62,9 +62,11 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
       dirsDupe <- dir(file.path(path.google, NDVIsave, ".."), NDVIsave)
       dirsDupe <- dirsDupe[dirsDupe!=NDVIsave]
       
+      # Fixing dupe dirs
       for(i in 1:length(dirsDupe)){
         fCP <- dir(file.path(path.google, NDVIsave, "..", dirsDupe[i]))
         
+        # Move files from extra directories to the right one
         for(j in seq_along(fCP)){
           file.copy(from=file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]), to=file.path(path.google, NDVIsave, fCP[j]), overwrite=T, copy.mode=T)
           file.remove(file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]))
@@ -80,15 +82,16 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
     if(matching_files >= length(expected_files[expected_files != "none"])) {
       message(paste("Found", matching_files, "expected files"))
       return(TRUE)
-    }
+    } # end matching files good
     
     message("Waiting for files... Found:", matching_files, "Expected:", length(expected_files[expected_files != "none"]))
     Sys.sleep(60)
-  }
+  } # End check for dupes
   
   warning(paste("Timeout reached. Only found", matching_files, "of", length(expected_files[expected_files != "none"]), "expected files"))
   return(FALSE)
-}
+  } # End while
+} # End function
 
 if(!all(flook == none)){
   files_ready <- waitForFiles(flook)
@@ -102,12 +105,15 @@ if(all(flook=="none")){
   print("No new data")
   
 } else {
+  print("Running next steps!")
   # Execute next steps
   source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")
   source("NDVI_Automation_Workflow/New_Data_Models_Norms/05_Year_Specific_Adjustments.R")
+  source("NDVI_Automation_Workflow/New_Data_Models_Norms/06_Optional_CheckFigs.R")
   
   if(pushData){
     source("Deploy_Drought_App.R")
   }
 }
+  
 

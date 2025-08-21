@@ -20,8 +20,8 @@ library(rgee); library(raster); library(terra); library(dplyr); library(tidyvers
 user.ee <- "crollinson@mortonarb.org"
 
 rgee::ee_Initialize(user =user.ee, drive=T, project = "urbanecodrought")
-path.google.CR <- "~/Google Drive/My Drive/UrbanEcoDrought/"
-path.google.share <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
+path.google.CR <- "/Users/crollinson/Google Drive/My Drive/UrbanEcoDrought/"
+path.google.share <- "/Users/crollinson/Google Drive/Shared drives/Urban Ecological Drought/"
 assetHome <- ee_get_assethome()
 NDVIsave <- ("UrbanEcoDrought_NDVI_LocalExtract-RAW")
 # pathDat <- "../data_all"

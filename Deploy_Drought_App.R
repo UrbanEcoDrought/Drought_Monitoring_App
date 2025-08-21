@@ -10,7 +10,7 @@ library(shiny)
 library(shinyWidgets)
 
 # First, copy over any updated data
-path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/data/DroughtApp-latest"
+path.UrbDrought <- "/Users/crollinson/Google Drive/Shared drives/Urban Ecological Drought/data/DroughtApp-latest"
 if(!dir.exists(path.UrbDrought)) dir.create(path.UrbDrought, recursive = T)
 
 #Should we overwrite existing files (really norms only)

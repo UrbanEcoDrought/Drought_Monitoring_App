@@ -6,7 +6,7 @@
 ####################################################################################################################
 # Packages ----
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
-library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(ggplot2);library(hrbrthemes)
+library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
 library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle);library(forcats)
 
@@ -24,7 +24,7 @@ paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2", "urb
 # heatmap_colors <-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 graphing_colors<-c("Significantly Browner than Normal"= "#D01C8B" , "Slightly Browner than Normal"= "#F1B6DA", "Normal"="gray", "Slightly Greener than Normal"= "#B8E186","Significantly Greener than Normal"="#4DAC26")
 
-heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="sucess")
+heatmap_colors <-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "olive","Significantly Greener than Normal"="success")
 # graphing_colors<-c("Significantly Browner than Normal"= "maroon" , "Slightly Browner than Normal"= "pink", "Normal"="gray", "Slightly Greener than Normal"= "#3d9970","Significantly Greener than Normal"="#28a745")
 # path.UrbDrought <- "/Users/jocelyngarcia/Library/CloudStorage/GoogleDrive-jgarcia@mortonarb.org/Shared drives/Urban Ecological Drought"
 # path.UrbDrought <- "~/Google Drive/Shared drives/Urban Ecological Drought/"
@@ -90,7 +90,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
 # All data overview graph ----
 all_data_graph <- function() {
   ggplot(NDVIall_years_modeled, aes(x = date, y = YrMean)) +
-    geom_ribbon(aes(ymin=YrLwr, yrmax=YrUpr, fill=type), alpha=0.2)
+    geom_ribbon(aes(ymin=YrLwr, ymax=YrUpr, fill=type), alpha=0.2) +
     geom_line(aes(color = type), size = 1) +
     # geom_smooth(method="gam", formula=y~s(x, bs="cs", k=12*25)) +
     scale_color_manual(values = paletteLC) +

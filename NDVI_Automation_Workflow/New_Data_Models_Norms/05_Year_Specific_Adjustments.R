@@ -12,7 +12,7 @@ library(MASS)
 
 #file paths
 # Sys.setenv(GOOGLE_DRIVE = "~/Google Drive/Shared drives/Urban Ecological Drought")
-path.google <- "~/Google Drive/"
+path.UrbDrought <- "/Users/crollinson/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives/Urban Ecological Drought/data/NDVI_drought_monitoring")
 pathDat <- "NDVI_Automation_Workflow/data_all"
 pathMods <- "NDVI_Automation_Workflow/gam_models"
@@ -33,11 +33,14 @@ ndviNew$date <- as.Date(ndviNew$date)
 ndviNew$type <- as.factor(ndviNew$type)
 ndviNew$mission <- as.factor(ndviNew$mission)
 summary(ndviNew)
+summary(ndviNew[ndviNew$type=="forest",])
+
 
 ndviLatest$date <- as.Date(ndviLatest$date)
 ndviLatest$type <- as.factor(ndviLatest$type)
 ndviLatest$mission <- as.factor(ndviLatest$mission)
 summary(ndviLatest)
+summary(ndviLatest[ndviLatest$type=="forest" & !is.na(ndviLatest$NDVI),])
 
 
 ndvi.base$date <- as.Date(ndvi.base$date)
@@ -165,6 +168,9 @@ for(LC in unique(ndviNew$type)){
 summary(ndvi.base)
 summary(ndviYrs)
 summary(yrNew)
+
+summary(ndvi.base[ndvi.base$type=="forest" & !is.na(ndvi.base$NDVIReprojected),]) # Has forest
+summary(yrNew[yrNew$type=="forest",]) # Has forest
 
 # add the new obs in here; note because we got rid of the old data in the ndviYrs, we need to add it back here
 ndvi.newAgg <- aggregate(NDVIReprojected ~ type + year + yday + date, data=ndvi.base[ndvi.base$year==yrNow,], FUN=mean, na.rm=T)

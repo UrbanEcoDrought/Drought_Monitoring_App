@@ -45,6 +45,8 @@ yrNow <- max(datYrs$year)
 datRaw <- read.csv(file.path(pathDat, "NDVIall_baseline_modeled.csv"))
 datRaw$date <- as.Date(datRaw$date)
 summary(datRaw)
+summary(datRaw[datRaw$type=="forest",])
+
 
 # Doing a test time series graph
 LC="urban-medium"

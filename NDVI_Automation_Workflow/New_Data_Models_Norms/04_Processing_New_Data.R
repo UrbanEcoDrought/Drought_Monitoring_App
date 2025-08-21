@@ -3,7 +3,7 @@
 ##################### 
 if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
-path.google <- "~/Google Drive/"
+path.google <- "/Users/crollinson/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")
 NDVIsave <- ("My Drive/UrbanEcoDrought_NDVI_LocalExtract-RAW")
 pathDat <- "NDVI_Automation_Workflow/data_all"
