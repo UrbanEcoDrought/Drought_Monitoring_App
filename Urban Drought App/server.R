@@ -6,7 +6,7 @@
 ####################################################################################################################
 # Packages ----
 library(shiny);library(shinydashboard);library(leaflet);library(leaflet.extras);library(sf)
-library(tidyverse);library(ggplot2);library(DT);library(lubridate);library(hrbrthemes)
+library(tidyverse);library(ggplot2);library(DT);library(lubridate);#library(hrbrthemes)
 library(dplyr);library(lubridate);library(tidyverse);library(tidyr);library(tidyquant);library(scales)
 library(plotly);library(dplyr);library(bs4Dash);library(shinyBS);library(shinycssloaders);library(shinyGovstyle);library(forcats)
 

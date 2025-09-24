@@ -55,10 +55,11 @@ timeEnd <- Sys.time() + 60*30 # Give things 30 minutes to finish
 
 waitForFiles <- function(expected_files, max_wait_minutes = 30) {
   timeout <- Sys.time() + (max_wait_minutes * 60)
-  
-  while(Sys.time() < timeout) {
-    
+  matching_files=0
+  while(Sys.time() < timeout & matching_files<length(expected_files[expected_files != "none"])) {
+    # message("Checking for files")
     if (length(dir(file.path(path.google, NDVIsave, ".."), NDVIsave))>1){
+      message("multiple NDVIsave directories found")
       dirsDupe <- dir(file.path(path.google, NDVIsave, ".."), NDVIsave)
       dirsDupe <- dirsDupe[dirsDupe!=NDVIsave]
       
@@ -70,31 +71,41 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
         for(j in seq_along(fCP)){
           file.copy(from=file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]), to=file.path(path.google, NDVIsave, fCP[j]), overwrite=T, copy.mode=T)
           file.remove(file.path(path.google, NDVIsave, "..", dirsDupe[i], fCP[j]))
-        }
+        } # end j loop
         file.remove(file.path(file.path(path.google, NDVIsave, ".."), dirsDupe[i]))
       }
+    } # End dupe fix
     
-    existing_files <- dir(file.path(path.google, NDVIsave))
-    expected_pattern <- paste0(strToday, "_")
+    fToday <- dir(file.path(path.google, NDVIsave), strToday)
+    # expected_pattern <- paste0(strToday, "_")
     
-    matching_files <- length(grep(expected_pattern, existing_files))
+    matching_files <- length(fToday)
     
     if(matching_files >= length(expected_files[expected_files != "none"])) {
-      message(paste("Found", matching_files, "expected files"))
+      message(paste("Found", matching_files, " expected files"))
       return(TRUE)
     } # end matching files good
     
-    message("Waiting for files... Found:", matching_files, "Expected:", length(expected_files[expected_files != "none"]))
+    message("Waiting for files... Found: ", matching_files, "Expected: ", length(expected_files[expected_files != "none"]))
     Sys.sleep(60)
-  } # End check for dupes
+  } # End While Loop
   
-  warning(paste("Timeout reached. Only found", matching_files, "of", length(expected_files[expected_files != "none"]), "expected files"))
-  return(FALSE)
-  } # End while
+  
+  if(matching_files == length(expected_files[expected_files != "none"])) {
+    message("All files found!  Proceeding to next step")
+    return(TRUE)
+  } # End extra success message
+  
+  
+  if(matching_files < length(expected_files[expected_files != "none"])) {
+    warning(paste("Timeout reached. Only found", matching_files, "of", length(expected_files[expected_files != "none"]), "expected files"))
+    return(FALSE)
+  } # End failed outcome
+  
 } # End function
 
-if(!all(flook == none)){
-  files_ready <- waitForFiles(flook)
+if(!all(flook == "none")){
+  files_ready <- waitForFiles(expected_files=flook)
   if(!files_ready){
     warning("Not all expected files were created within timeout period")
   }

@@ -53,6 +53,7 @@ LC="urban-medium"
 yrColors <- c("2025"="dodgerblue2", "2024"="cadetblue3", "2023"="orange2", "2012"="red3", "2005"="goldenrod2")
 
 png(file.path(pathShare, "TimeSeries.png"), height=8, width=12, units = "in", res=320)
+print(
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
   facet_wrap(~type) +
   geom_ribbon(data=datNorms[, ], aes(x=yday, ymin=NormLwr, ymax=NormUpr, fill="normal"), alpha=0.2) +
@@ -71,11 +72,13 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], ) +
   labs(x=NULL, y="NDVI") +
   # scale_y_discrete(name="NDVI") +
   theme_minimal()
+)
 dev.off()
   
 # Doing a test heatmap
 
 png(file.path(pathShare, "HeatMap-NDVI.png"), height=8, width=12, units = "in", res=320)
+print(
 ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrMean), width = 1, height = 1) +  
@@ -104,11 +107,12 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     panel.background = element_rect(fill = "gray99"),
     plot.background = element_rect(fill = "gray99")
   )
+)
 dev.off()
 
 
 png(file.path(pathShare, "HeatMap-NDVI-Anom.png"), height=8, width=12, units = "in", res=320)
-ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+print(ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +  
   scale_fill_manual(
@@ -136,11 +140,11 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     legend.title = element_text(size = 10),
     panel.background = element_rect(fill = "gray99"),
     plot.background = element_rect(fill = "gray99")
-  )
+  ))
 dev.off()
 
 png(file.path(pathShare, "HeatMap-Derivs-Anom.png"), height=8, width=12, units = "in", res=320)
-ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+print(ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = FlagTrend), width = 1, height = 1) +  
   scale_fill_manual(
@@ -168,11 +172,11 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     legend.title = element_text(size = 10),
     panel.background = element_rect(fill = "gray99"),
     plot.background = element_rect(fill = "gray99")
-  )
+  ))
 dev.off()
 
 png(file.path(pathShare, "HeatMap-Derivs.png"), height=8, width=12, units = "in", res=320)
-ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
+print(ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y = factor(year))) +
   facet_wrap(~type) +
   geom_tile(aes(fill = YrDerivTrend), width = 1, height = 1) +  
   scale_fill_manual(
@@ -200,7 +204,7 @@ ggplot(datYrs[datYrs$year %in% c(yrNow, yrNow-1, yrDrought), ], aes(x = yday, y 
     legend.title = element_text(size = 10),
     panel.background = element_rect(fill = "gray99"),
     plot.background = element_rect(fill = "gray99")
-  )
+  ))
 dev.off()
 
 

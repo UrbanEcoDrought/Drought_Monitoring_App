@@ -7,7 +7,8 @@
 # Libraries ----
 library(shiny);library(shinydashboard);library(shinyBS);library(shinyalert);library(DT);library(lubridate)
 library(leaflet);library(leaflet.extras);library(sf);library(tidyverse);library(ggplot2);library(plotly);
-library(ggplot2);library(hrbrthemes);library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
+library(ggplot2);#library(hrbrthemes);
+library(dplyr);library(tidyverse);library(tidyr); library(shinycssloaders)
 library(tidyquant);library(scales);library(bs4Dash);library(shinyjs);library(shinyGovstyle)
 
 
