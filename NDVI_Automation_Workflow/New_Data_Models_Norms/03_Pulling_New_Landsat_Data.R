@@ -110,14 +110,14 @@ lcnames <- c("forest-wet", "crop", "grassland", "urban-high", "urban-medium", "u
 
 ######################For updating data, START HERE##################### 
 
-forMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Forest'))
-forWetMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Forest-with-Wet'))
-grassMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Grass'))
-cropMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Crop'))
-urbOMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Urban-Open'))
-urbLMask <-ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Urban-Low'))
-urbMMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Urban-Medium'))
-urbHMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2025_Urban-High'))
+forMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Forest'))
+forWetMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Forest-with-Wet'))
+grassMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Grass'))
+cropMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Crop'))
+urbOMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Urban-Open'))
+urbLMask <-ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Urban-Low'))
+urbMMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Urban-Medium'))
+urbHMask <- ee$Image(file.path(assetHome, 'NLCD-Chicago_2000-2026_Urban-High'))
 
 ##################### 
 # Read in & Format Landsat 8 ----

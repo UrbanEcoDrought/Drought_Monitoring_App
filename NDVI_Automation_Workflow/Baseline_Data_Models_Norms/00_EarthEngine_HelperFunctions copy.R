@@ -101,6 +101,9 @@ maskByLC <- function(imcol, MASK){
   imcol <- imcol$map(function(img){
     # Note: This is very slow, but I don't know how else to match the bands
     yrNow = ee$Number(img$get('year'))$format()$slice(0) # May be able to work around the slice, but I kept getting format issues
+    # yrUse <- ifelse(yrNow$getInfo() > 2025, yrNow, ee$Number(2025))
+    
+    # if(yrNow$getInfo() > 2025) yrNow = ee$Number(2025)
     yrStr = ee$String("YR")$cat(yrNow) # Need to figure out how to pull the right band
     
     maskNow = MASK$select(yrStr); # Very clunky, but it works!
@@ -134,7 +137,7 @@ extractByLC <- function(imcol, landcover, outfolder, fileNamePrefix, ...){
   if(landcover=="urban-low") lcMask = urbLMask
   if(landcover=="urban-open") lcMask = urbOMask
 
-  ndviLCYear <- maskByLC(imcol, lcMask)
+  ndviLCYear <- maskByLC(imcol, MASK=lcMask)
 
   # regionNDVIMean is a function defied above
   LCMeans = ee$FeatureCollection(ndviLCYear$map(regionNDVIMean))
