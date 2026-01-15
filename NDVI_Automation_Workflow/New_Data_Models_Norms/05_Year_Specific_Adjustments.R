@@ -66,7 +66,10 @@ summary(ndviYrs)
 # 1.a. figure our the resid now
 # 2. re-fit the year spline
 yrNow <- max(ndviNew$year)
-ydayMax <- max(ndviNew$yday)
+if(max(ndviNew$yday[ndviNew$yday<30])) yrNow <- yrNow - 1 # Getting weird if we haven't finished last year!
+ydayMax <- max(ndviNew$yday[ndviNew$year==yrNow])
+
+ndviNew <- ndviNew[ndviNew$year==yrNow,]
 yrNew <- data.frame(yday=rep(1:ydayMax), year=rep(yrNow, each=ydayMax), type=rep(unique(ndviNew$type), each=ydayMax*length(yrNow)), YrMean=NA, YrLwr=NA, YrUpr=NA)
 
 kYr <- max(round(ydayMax/30)+2,3) # use 3 or the number of months we have plus 2: one for prev. Dec & 1 for added current-year flexibility
