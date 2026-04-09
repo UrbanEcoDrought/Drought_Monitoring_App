@@ -98,18 +98,17 @@ unique_dates <- imlist$map(function(img) {
 }
 
 maskByLC <- function(imcol, MASK){
+  maxMaskYr <- 2026  # Update this when 0X_setup_NLCD.R is rerun for new years
   imcol <- imcol$map(function(img){
     # Note: This is very slow, but I don't know how else to match the bands
-    yrNow = ee$Number(img$get('year'))$format()$slice(0) # May be able to work around the slice, but I kept getting format issues
-    # yrUse <- ifelse(yrNow$getInfo() > 2025, yrNow, ee$Number(2025))
-    
-    # if(yrNow$getInfo() > 2025) yrNow = ee$Number(2025)
+    # Cap year at maxMaskYr so we don't request a band that doesn't exist in the asset yet
+    yrNow = ee$Number(img$get('year'))$min(maxMaskYr)$format()$slice(0) # May be able to work around the slice, but I kept getting format issues
     yrStr = ee$String("YR")$cat(yrNow) # Need to figure out how to pull the right band
-    
+
     maskNow = MASK$select(yrStr); # Very clunky, but it works!
-    
+
     return(img$updateMask(maskNow))
-    
+
   })
   return(imcol)
 }

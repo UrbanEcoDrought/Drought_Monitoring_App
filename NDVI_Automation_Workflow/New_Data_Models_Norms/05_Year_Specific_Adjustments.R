@@ -66,7 +66,7 @@ summary(ndviYrs)
 # 1.a. figure our the resid now
 # 2. re-fit the year spline
 yrNow <- max(ndviNew$year)
-if(max(ndviNew$yday[ndviNew$yday<30])) yrNow <- yrNow - 1 # Getting weird if we haven't finished last year!
+if(any(ndviNew$yday < 30)) yrNow <- yrNow - 1 # Getting weird if we haven't finished last year!
 ydayMax <- max(ndviNew$yday[ndviNew$year==yrNow])
 
 ndviNew <- ndviNew[ndviNew$year==yrNow,]
@@ -79,7 +79,7 @@ for(LC in unique(ndviNew$type)){
   
   # 1. correct for the satellite
   # 1.a. load our satellite model
-  lcPull <- ifelse(LC=="forest", "forest-wet", "forest")
+  lcPull <- ifelse(LC=="forest", "forest-wet", LC)
   gamLC <- readRDS(file.path(pathMods, paste0("GAM-Mission_", lcPull, ".RDS")))
   summary(gamLC)
 

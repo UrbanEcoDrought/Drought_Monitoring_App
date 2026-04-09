@@ -19,7 +19,10 @@ if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 library(rgee); library(raster); library(terra); library(dplyr); library(tidyverse)
 user.ee <- "crollinson@mortonarb.org"
 
-rgee::ee_Initialize(user =user.ee, drive=T, project = "urbanecodrought")
+# Only initialize GEE if not already initialized (e.g., when sourced from 1_Get_New_Data.R)
+if(!exists("ee") || is.null(ee)) {
+  rgee::ee_Initialize(user = user.ee, drive=T, project = "urbanecodrought")
+}
 path.google.CR <- "/Users/crollinson/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "/Users/crollinson/Google Drive/Shared drives/Urban Ecological Drought/"
 assetHome <- ee_get_assethome()

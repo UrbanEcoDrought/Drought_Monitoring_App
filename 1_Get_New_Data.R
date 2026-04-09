@@ -18,15 +18,25 @@ if(!"NDVI_Automation_Workflow" %in% dir()) {
 
 message(paste("Working directory set to:", getwd()))
 
+# Simple logging helper — writes timestamped messages to workflow_log.txt
+log_file <- file.path(getwd(), "workflow_log.txt")
+log_msg <- function(msg) {
+  cat(paste0("[", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "] ", msg, "\n"),
+      file = log_file, append = TRUE)
+}
+log_msg("=== Workflow started ===")
 
-library(rgee); 
+
+library(rgee);
 
 # Add error handling for authentication
 user.ee <- "crollinson@mortonarb.org"
 tryCatch({
   rgee::ee_Initialize(user = user.ee, drive = T, project = "urbanecodrought")
   message("Google Earth Engine initialized successfully")
+  log_msg("GEE initialized successfully")
 }, error = function(e) {
+  log_msg(paste("ERROR: Failed to initialize GEE:", e$message))
   stop(paste("Failed to initialize Google Earth Engine:", e$message))
 })
 
@@ -114,17 +124,48 @@ if(!all(flook == "none")){
   
 if(all(flook=="none")){
   print("No new data")
-  
+  log_msg("No new data found. Workflow stopped.")
+
 } else {
   print("Running next steps!")
+  log_msg("New data found. Running processing pipeline.")
+
   # Execute next steps
-  source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")
-  source("NDVI_Automation_Workflow/New_Data_Models_Norms/05_Year_Specific_Adjustments.R")
-  source("NDVI_Automation_Workflow/New_Data_Models_Norms/06_Optional_CheckFigs.R")
-  
+  tryCatch({
+    source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")
+    log_msg("Script 04 (Processing New Data) completed successfully")
+  }, error = function(e) {
+    log_msg(paste("ERROR in script 04 (Processing New Data):", e$message))
+    stop(e)
+  })
+
+  tryCatch({
+    source("NDVI_Automation_Workflow/New_Data_Models_Norms/05_Year_Specific_Adjustments.R")
+    log_msg("Script 05 (Year Specific Adjustments) completed successfully")
+  }, error = function(e) {
+    log_msg(paste("ERROR in script 05 (Year Specific Adjustments):", e$message))
+    stop(e)
+  })
+
+  tryCatch({
+    source("NDVI_Automation_Workflow/New_Data_Models_Norms/06_Optional_CheckFigs.R")
+    log_msg("Script 06 (Check Figs) completed successfully")
+  }, error = function(e) {
+    log_msg(paste("ERROR in script 06 (Check Figs):", e$message))
+    stop(e)
+  })
+
   if(pushData){
-    source("Deploy_Drought_App.R")
+    tryCatch({
+      source("Deploy_Drought_App.R")
+      log_msg("Deploy_Drought_App.R completed successfully")
+    }, error = function(e) {
+      log_msg(paste("ERROR in Deploy_Drought_App.R:", e$message))
+      stop(e)
+    })
   }
+
+  log_msg("=== Workflow completed successfully ===")
 }
   
 
