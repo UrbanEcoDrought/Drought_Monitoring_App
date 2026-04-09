@@ -56,7 +56,7 @@ timeEnd <- Sys.time() + 60*30 # Give things 30 minutes to finish
 waitForFiles <- function(expected_files, max_wait_minutes = 30) {
   timeout <- Sys.time() + (max_wait_minutes * 60)
   matching_files=0
-  while(Sys.time() < timeout & matching_files<length(expected_files[expected_files != "none"])) {
+  while(Sys.time() < timeout && matching_files<length(expected_files[expected_files != "none"])) {
     # message("Checking for files")
     if (length(dir(file.path(path.google, NDVIsave, ".."), NDVIsave))>1){
       message("multiple NDVIsave directories found")
@@ -64,7 +64,7 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
       dirsDupe <- dirsDupe[dirsDupe!=NDVIsave]
       
       # Fixing dupe dirs
-      for(i in 1:length(dirsDupe)){
+      for(i in 1:seq_along(dirsDupe)){
         fCP <- dir(file.path(path.google, NDVIsave, "..", dirsDupe[i]))
         
         # Move files from extra directories to the right one
