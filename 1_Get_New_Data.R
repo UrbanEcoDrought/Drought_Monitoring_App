@@ -4,9 +4,16 @@
 # setwd(pathLocal)
 
 
-script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
-if(length(script_dir) == 0 || script_dir == "") {
-  # Fallback for non-interactive execution
+script_dir <- tryCatch(
+  dirname(rstudioapi::getActiveDocumentContext()$path),
+  error = function(e) {
+    # RStudio not running — get script path from Rscript command args
+    args <- commandArgs(trailingOnly = FALSE)
+    file_arg <- grep("--file=", args, value = TRUE)
+    if (length(file_arg) > 0) dirname(normalizePath(sub("--file=", "", file_arg))) else ""
+  }
+)
+if (length(script_dir) == 0 || !nzchar(script_dir)) {
   script_dir <- getwd()
 }
 setwd(script_dir)
