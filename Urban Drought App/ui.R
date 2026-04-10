@@ -77,14 +77,9 @@ il_counties <- subset(counties, counties$NAME %in% c(
 
 #Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
-  title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal</span>"),
+  title = HTML("Chicago Urban Greenness & Drought Portal"),
   titleWidth = 200
- 
- # shinyGovstyle::banner(
-  #  inputId = "banner", 
-   # type = "Beta Version:",
-    #HTML('<span style="background-color:#B9D3EE; padding: 2px;"><b>This portal is in beta and still under development. 
-     #   Some features may be incomplete or subject to change.</b></span>')
+
   )
 #)
 
