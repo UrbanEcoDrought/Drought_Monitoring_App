@@ -147,12 +147,42 @@ ui <- dashboardPage(skin = "black",
                       tags$head(
                         tags$style(HTML("
         body, .content-wrapper {
-          font-size: 15px;
+          font-size: 16px;
         }
 
         h6 {
-          font-size: 15px !important;
+          font-size: 16px !important;
           font-weight: normal;
+        }
+
+        /* White sidebar */
+        .main-sidebar, .left-side {
+          background-color: #ffffff !important;
+        }
+
+        /* Sidebar text and icons — dark on white, matched to skin-black specificity */
+        .skin-black .sidebar-menu li a,
+        .skin-black .sidebar a {
+          color: #333333 !important;
+          font-size: 16px !important;
+        }
+        .skin-black .sidebar-menu li a .fa,
+        .skin-black .sidebar-menu li a .glyphicon {
+          color: #555555 !important;
+        }
+        .skin-black .sidebar-menu li.active > a,
+        .skin-black .sidebar-menu li:hover > a {
+          color: #111111 !important;
+          background-color: #eeeeee !important;
+        }
+        .skin-black .sidebar-menu .treeview-menu li a {
+          color: #444444 !important;
+          font-size: 15px !important;
+        }
+        .skin-black .sidebar-menu .treeview-menu li.active > a,
+        .skin-black .sidebar-menu .treeview-menu li:hover > a {
+          color: #111111 !important;
+          background-color: #e0e0e0 !important;
         }
 
         .small-box {
@@ -202,7 +232,7 @@ ui <- dashboardPage(skin = "black",
                                 fluidRow(
                                   column(width = 12,
                                     p(HTML("<b>Note:</b> NDVI values for <b>November–March</b> should be interpreted with caution — winter vegetation signals in the Chicago region are less reliable due to snow cover, leaf-off conditions, and low solar angle."),
-                                      style = "color: #8B6914; background-color: #FFF8DC; border-left: 4px solid #DAA520; padding: 8px 12px; margin: 4px 0 10px 0; font-size: 14px;")
+                                      style = "color: #8B6914; background-color: #FFF8DC; border-left: 4px solid #DAA520; padding: 8px 12px; margin: 4px 0 10px 0; font-size: 16px;")
                                   )
                                 ),
                                 # Map layout
