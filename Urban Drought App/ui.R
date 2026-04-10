@@ -78,15 +78,15 @@ il_counties <- subset(counties, counties$NAME %in% c(
 #Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
   title = tags$div(
-    style = "display: flex; align-items: center; gap: 8px; padding: 4px 0;",
+    style = "display: flex; align-items: center; gap: 12px; padding: 4px 0;",
     tags$a(
       href = 'https://mortonarb.org',
-      tags$img(src = 'mortonarb.png', height = '42',
-               style = "background-color: white; padding: 3px; border-radius: 3px;")
+      tags$img(src = 'mortonarb.png', height = '48',
+               style = "background-color: white; padding: 4px; border-radius: 4px;")
     ),
     tags$a(
       href = 'https://www.drought.gov',
-      tags$img(src = 'NIDIS.png', height = '38')
+      tags$img(src = 'NIDIS.png', height = '46')
     )
   ),
   titleWidth = 220
@@ -142,23 +142,23 @@ ui <- dashboardPage(skin = "black",
                       tags$head(
                         tags$style(HTML("
         body, .content-wrapper {
-          font-size: 16px !important;
+          font-size: 18px !important;
         }
         .content-wrapper p, .content-wrapper label,
         .content-wrapper .control-label, .content-wrapper .shiny-input-container,
         .content-wrapper .tab-content, .content-wrapper .nav-tabs > li > a {
-          font-size: 16px !important;
+          font-size: 18px !important;
         }
 
         .sidebar-menu > li > a {
-          font-size: 15px !important;
+          font-size: 18px !important;
         }
         .sidebar-menu .treeview-menu > li > a {
-          font-size: 14px !important;
+          font-size: 16px !important;
         }
 
         h6 {
-          font-size: 16px !important;
+          font-size: 18px !important;
           font-weight: normal;
         }
 
@@ -209,7 +209,7 @@ ui <- dashboardPage(skin = "black",
                                 fluidRow(
                                   column(width = 12,
                                     p(HTML("<b>Note:</b> NDVI values for <b>November–March</b> should be interpreted with caution — winter vegetation signals in the Chicago region are less reliable due to snow cover, leaf-off conditions, and low solar angle."),
-                                      style = "color: #8B6914; background-color: #FFF8DC; border-left: 4px solid #DAA520; padding: 8px 12px; margin: 4px 0 10px 0; font-size: 16px;")
+                                      style = "color: #8B6914; background-color: #FFF8DC; border-left: 4px solid #DAA520; padding: 8px 12px; margin: 4px 0 10px 0; font-size: 18px;")
                                   )
                                 ),
                                 # Map layout
@@ -218,7 +218,7 @@ ui <- dashboardPage(skin = "black",
                                          leafletOutput("il_county_map", height = "350px")),
                                   #Density plot graphs, put here for formatting
                                   tabBox(
-                                    title = tagList(shiny::icon("bars"), "General Information"),
+                                    # title = tagList(shiny::icon("bars"), "General Information"),
                                     width = 7,
                                     tabPanel(
                                       "Latest Data Report",
@@ -236,32 +236,9 @@ ui <- dashboardPage(skin = "black",
                                       h6(HTML("<b>A lower percentile suggests below-average greenness, while a higher
                                       percentile indicates above-average greenness</b>")),
                                       p("For a more in-depth exploration, take a look at the other tabs or the directory.")
-                                    ),
-                                    tabPanel(
-                                      "Directory",
-                                      h6("Dashboard"),
-                                      HTML(
-                                        "<ul>
-      <li>Map of LC Types</li>
-      <li>Distribution Plots of LC Types</li>
-      <li>Status of LC Types</li>
-    </ul>"      ),
-                                      h6("Analysis"),
-                                      HTML(
-                                        "<ul>
-      <li>Yearly, Monthly & Weekly NDVI Graphs</li>
-      <li>Heat Maps for each LC Type</li>
-    </ul>"      ),
-                                      h6("About"),
-                                      HTML(
-                                        "<ul>
-      <li>Preliminary Information</li>
-      <li>Grant Information & Contributors</li>
-      <li>Github & Documentation Links</li>
-      <li>Workflows</li>
-    </ul>"      )
                                     )
-                                  )),
+                                  )
+                                  ),
                                 fluidRow(
                                   #Density plot graphs, put here for formatting
                                   tabBox(
