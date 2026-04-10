@@ -26,6 +26,24 @@ graphing_text_colors <- c("Significantly Browner than Normal" = "white",
                            "Slightly Greener than Normal"      = "#333333",
                            "Significantly Greener than Normal" = "white")
 
+# Trend direction (YrDerivTrend) — 3 levels
+trend_colors <- c(
+  "Getting Browner" = "#A0522D",
+  "No Change"       = "#CCCCCC",
+  "Getting Greener" = "#2E7D32"
+)
+
+# Trend anomaly (FlagTrend) — 7 levels; middle 5 match graphing_colors for visual consistency
+trend_flag_colors <- c(
+  "Abnormal Browning"           = "#8C0046",
+  "Browning Faster than Normal" = "#D01C8B",
+  "Browning Slower than Normal" = "#F1B6DA",
+  "Normal"                      = "#7C7779",
+  "Greening Slower than Normal" = "#B8E186",
+  "Greening Faster than Normal" = "#4DAC26",
+  "Abnormal Greening"           = "#1B6B00"
+)
+
 yrNow <- lubridate::year(Sys.Date())
 day.labels <- data.frame(Date = seq.Date(as.Date(paste0(yrNow, "-01-01")),
                                          as.Date(paste0(yrNow, "-12-01")), by = "month"))
@@ -368,27 +386,17 @@ yearly_change <- function(LC_type, date_needed, NDVIall_years_modeled) {
 }
 
 ####################################################################################################################
-# NDVI anomaly heatmap ----
-plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, naming) {
-  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))
+# Heatmap functions ----
 
-  filtered_data <- NDVIall_years_modeled %>%
-    filter(year %in% as.numeric(selected_years), type == LC_type)
-  filtered_data$FlagNDVI <- factor(filtered_data$FlagNDVI, levels = names(graphing_colors))
-
-  ggplot(filtered_data, aes(x = yday, y = factor(year))) +
-    geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +
-    scale_fill_manual(values = graphing_colors, name = "NDVI Category", drop = FALSE) +
-    scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
-    scale_y_discrete(expand = c(0, 0)) +
-    labs(x = "Date", y = "Year", title = paste0(naming, " Heat Map")) +
-    theme_minimal(base_size = 14) +
+heatmap_theme <- function() {
+  theme_minimal(base_size = 14) +
     theme(
       axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 11),
       axis.text.y       = element_text(size = 11),
       axis.title.x      = element_text(face = "bold", size = 13),
       axis.title.y      = element_text(face = "bold", size = 13),
       plot.title        = element_text(face = "bold", size = 14),
+      strip.text        = element_text(face = "bold", size = 12),
       legend.key.height = unit(1, "cm"),
       legend.position   = "bottom",
       legend.text       = element_text(size = 11),
@@ -396,6 +404,54 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
       panel.background  = element_rect(fill = "gray99"),
       plot.background   = element_rect(fill = "gray99")
     )
+}
+
+plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years) {
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))
+  filtered_data <- NDVIall_years_modeled %>%
+    filter(year %in% as.numeric(selected_years))
+  filtered_data$FlagNDVI <- factor(filtered_data$FlagNDVI, levels = names(graphing_colors))
+
+  ggplot(filtered_data, aes(x = yday, y = factor(year))) +
+    geom_tile(aes(fill = FlagNDVI), width = 1, height = 1) +
+    scale_fill_manual(values = graphing_colors, name = "NDVI Status", drop = FALSE) +
+    scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_wrap(~type, ncol = 4) +
+    labs(x = "Date", y = "Year", title = "NDVI Anomaly") +
+    heatmap_theme()
+}
+
+plot_trend_heatmap <- function(NDVIall_years_modeled, selected_years) {
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))
+  filtered_data <- NDVIall_years_modeled %>%
+    filter(year %in% as.numeric(selected_years))
+  filtered_data$YrDerivTrend <- factor(filtered_data$YrDerivTrend, levels = names(trend_colors))
+
+  ggplot(filtered_data, aes(x = yday, y = factor(year))) +
+    geom_tile(aes(fill = YrDerivTrend), width = 1, height = 1) +
+    scale_fill_manual(values = trend_colors, name = "Trend Direction", drop = FALSE) +
+    scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_wrap(~type, ncol = 4) +
+    labs(x = "Date", y = "Year", title = "Trend Direction") +
+    heatmap_theme()
+}
+
+plot_trend_anomaly_heatmap <- function(NDVIall_years_modeled, selected_years) {
+  if (length(selected_years) == 0) return(ggplot() + ggtitle("No years selected"))
+  filtered_data <- NDVIall_years_modeled %>%
+    filter(year %in% as.numeric(selected_years))
+  filtered_data$FlagTrend <- factor(filtered_data$FlagTrend, levels = names(trend_flag_colors))
+
+  ggplot(filtered_data, aes(x = yday, y = factor(year))) +
+    geom_tile(aes(fill = FlagTrend), width = 1, height = 1) +
+    scale_fill_manual(values = trend_flag_colors, name = "Trend Anomaly", drop = FALSE) +
+    scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_wrap(~type, ncol = 4) +
+    labs(x = "Date", y = "Year", title = "Trend Anomaly") +
+    heatmap_theme()
 }
 
 ####################################################################################################################
@@ -489,10 +545,23 @@ server <- function(input, output, session) {
       )
     })
 
-    output[[m$hm]] <- renderPlot({
-      req(input$selected_years)
-      plot_ndvi_heatmap(NDVIall_years_modeled, input$selected_years, m$lc, m$label)
-    })
+  })
+
+  ####################################################################################################################
+  # Heatmap graphs ----
+  output$ndvi_heatmap_all <- renderPlot({
+    req(input$selected_years)
+    plot_ndvi_heatmap(NDVIall_years_modeled, input$selected_years)
+  })
+
+  output$trend_heatmap_all <- renderPlot({
+    req(input$selected_years)
+    plot_trend_heatmap(NDVIall_years_modeled, input$selected_years)
+  })
+
+  output$trend_anomaly_heatmap_all <- renderPlot({
+    req(input$selected_years)
+    plot_trend_anomaly_heatmap(NDVIall_years_modeled, input$selected_years)
   })
 
   ####################################################################################################################

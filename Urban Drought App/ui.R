@@ -410,51 +410,54 @@ ui <- dashboardPage(skin = "blue",
                                   width = 12,
                                   tabPanel("Overview of Feature",
                                            h6(HTML("<b>Feature</b>: <u>Heatmaps</u><br><br>")),
-                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the data for NDVI status across an extended period of time(ie Was there a period 
-                                                   of the year that was consistently below the normal? In what months was this deficiency the strongest?)")),
-                                           h6(HTML("<b>Description</b>: Heat map of the NDVI status across all the years available in the data (<u>see visual below for status categories</u>). Current year
-                                           will update as more data is available. Years can be toggled on & off for comparisons.<br>")),
-                                           h6(HTML("<b>Considerations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
-                                                   Caution should be exercised to prevent over interpretation of November - March greenness values.</li><br><br>")),
+                                           h6(HTML("<b>Purpose</b>: To help users see patterns in NDVI data across all land cover types simultaneously — Was there a period of the year that was consistently below normal? Which land covers showed abnormal browning trends?")),
+                                           h6(HTML("<b>Description</b>: Three heatmap views, each showing all 7 land cover types in a single faceted figure. Years can be toggled on and off for comparison.<br><br>
+                                           <li><u>NDVI Anomaly</u> — how each year's NDVI compares to the long-term normal on each day (same categories as the Dashboard status boxes)</li>
+                                           <li><u>Trend Direction</u> — whether vegetation is actively getting greener, getting browner, or showing no change on each day</li>
+                                           <li><u>Trend Anomaly</u> — how the <i>rate of change</i> compares to the typical seasonal trajectory (e.g., 'Browning Faster than Normal' means greenness is declining more rapidly than expected for that time of year)</li><br>")),
+                                           h6(HTML("<b>Considerations</b>:<br>
+                                                   <li><b>November–March values should be interpreted with caution</b> — winter signals in the Chicago region are less reliable due to snow cover and leaf-off conditions.</li><br><br>")),
                                            div(
                                              style = "text-align: center;",
                                              tags$img(src = 'status_info_table.png', height = '400', width = '700')
                                            ),
                                            div(
                                              style = "text-align: center;",
-                                           p(HTML("<br><b>How status categories are determined:</b> Each year's smoothed NDVI curve (and its 95% confidence interval) is compared to the long-term normal curve (and its 95% CI) for each day of year.
+                                             p(HTML("<br><b>How NDVI Anomaly categories are determined:</b> Each year's smoothed NDVI curve (and its 95% confidence interval) is compared to the long-term normal curve (and its 95% CI) for each day of year.
                                              <b>Significantly Greener/Browner</b> means the year's CI does not overlap the normal CI at all.
                                              <b>Slightly Greener/Browner</b> means the year's mean falls outside the normal CI but the intervals still overlap.
                                              <b>Normal</b> means the year's mean falls within the normal 95% CI.
-                                             All comparisons use GAM-derived posterior confidence intervals."))),
-                                           
+                                             All comparisons use GAM-derived posterior confidence intervals.")))
                                   ),
                                   tabPanel("Heatmap Graphs",
-                                h6(HTML("<b>The graphs display NDVI trends over time. 
-                                        Each color represents a different status. Years can be toggled on an off for convenience & comparison.</b>")),
-                                # Adjust checkbox size and styling using tags$style
-                                tags$style(HTML("
+                                    tags$style(HTML("
   #selected_years label {
-    font-size: 13px;  /* Adjust label text size */
-    height: 10px;    /* Adjust height of the label */
+    font-size: 13px;
+    height: 10px;
   }
   #selected_years input[type='checkbox'] {
-    transform: scale(0.8);  /* Resize the checkboxes */
+    transform: scale(0.8);
   }
 ")),
-                                # The checkboxGroupInput with custom CSS
-                                checkboxGroupInput("selected_years", "Select Years:", 
-                                                   choices = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)), 
-                                                   selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE))[1:2],
-                                                   inline = TRUE),
-                                h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                plotOutput("ndvi_heatmap_crop"),
-                                plotOutput("ndvi_heatmap_forest"),
-                                plotOutput("ndvi_heatmap_grass"),
-                                plotOutput("ndvi_heatmap_uh"),
-                                plotOutput("ndvi_heatmap_um"),
-                                plotOutput("ndvi_heatmap_ul"),
-                                plotOutput("ndvi_heatmap_uo"))
+                                    checkboxGroupInput("selected_years", "Select Years:",
+                                                       choices  = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)),
+                                                       selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE))[1:2],
+                                                       inline   = TRUE),
+                                    tabsetPanel(
+                                      tabPanel("NDVI Anomaly",
+                                               p(HTML("<br>How each year's NDVI compares to the long-term normal. Colors match the Dashboard status boxes.<br>")),
+                                               plotOutput("ndvi_heatmap_all", height = "600px")
+                                      ),
+                                      tabPanel("Trend Direction",
+                                               p(HTML("<br>Whether vegetation is actively <b style='color:#A0522D;'>getting browner</b>, showing <b style='color:#888;'>no change</b>, or <b style='color:#2E7D32;'>getting greener</b> on each day. This reflects the direction of the smoothed NDVI curve, not its level relative to normal.<br>")),
+                                               plotOutput("trend_heatmap_all", height = "600px")
+                                      ),
+                                      tabPanel("Trend Anomaly",
+                                               p(HTML("<br>How the <i>rate of change</i> in NDVI compares to the typical seasonal trajectory. <b>'Browning Faster than Normal'</b> means greenness is declining more rapidly than expected for that time of year; <b>'Abnormal Browning'</b> indicates an extreme departure from the normal rate of change.<br>")),
+                                               plotOutput("trend_anomaly_heatmap_all", height = "600px")
+                                      )
+                                    )
+                                  )
                         )),
                         tabItem(tabName = "specifics",
                                 tabBox(
