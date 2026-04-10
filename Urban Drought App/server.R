@@ -137,7 +137,7 @@ plot_by_landcover <- function(selected_lcs, selected_years, start_yday, end_yday
                 aes(x = yday, ymin = YrLwr, ymax = YrUpr, fill = factor(year)), alpha = 0.2) +
     geom_line(data = yearly,
               aes(x = yday, y = YrMean, color = factor(year))) +
-    facet_wrap(~type, ncol = 4) +
+    facet_wrap(~type, ncol = 2) +
     scale_color_viridis_d(name = "Year", direction=1, option="turbo") +
     scale_fill_viridis_d(name = "Year", direction=1, option="turbo") +
     scale_x_continuous(name = "Date", breaks = yday_breaks, labels = yday_labels) +
@@ -145,9 +145,11 @@ plot_by_landcover <- function(selected_lcs, selected_years, start_yday, end_yday
     labs(title = "NDVI by Land Cover Type") +
     theme_minimal(base_size = 13) +
     theme(
-      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1, size=14),
       strip.text      = element_text(face = "bold"),
-      legend.position = "bottom"
+      legend.position = "bottom",
+      legend.key.size = unit(2, "lines"),
+      legend.text = element_text(size=14)
     )
 }
 
@@ -172,7 +174,7 @@ plot_by_year <- function(selected_years, selected_lcs, start_yday, end_yday) {
                 aes(x = yday, ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
     geom_line(data = yearly,
               aes(x = yday, y = YrMean, color = type)) +
-    facet_wrap(~year, ncol = 4) +
+    facet_wrap(~year, ncol = 2) +
     scale_color_manual(values = paletteLC, name = "Land Cover") +
     scale_fill_manual(values = paletteLC, name = "Land Cover") +
     scale_x_continuous(name = "Date", breaks = yday_breaks, labels = yday_labels) +
@@ -180,9 +182,11 @@ plot_by_year <- function(selected_years, selected_lcs, start_yday, end_yday) {
     labs(title = "NDVI by Year") +
     theme_minimal(base_size = 13) +
     theme(
-      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1, size=14),
       strip.text      = element_text(face = "bold"),
-      legend.position = "bottom"
+      legend.position = "bottom",
+      legend.key.size = unit(2, "lines"),
+      legend.text = element_text(size=14)
     )
 }
 
@@ -417,7 +421,7 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years) {
     scale_fill_manual(values = graphing_colors, name = "NDVI Status", drop = FALSE) +
     scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
     scale_y_discrete(expand = c(0, 0)) +
-    facet_wrap(~type, ncol = 4) +
+    facet_wrap(~type, ncol = 3) +
     labs(x = "Date", y = "Year", title = "NDVI Anomaly") +
     heatmap_theme()
 }
@@ -433,7 +437,7 @@ plot_trend_heatmap <- function(NDVIall_years_modeled, selected_years) {
     scale_fill_manual(values = trend_colors, name = "Trend Direction", drop = FALSE) +
     scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
     scale_y_discrete(expand = c(0, 0)) +
-    facet_wrap(~type, ncol = 4) +
+    facet_wrap(~type, ncol = 3) +
     labs(x = "Date", y = "Year", title = "Trend Direction") +
     heatmap_theme()
 }
@@ -449,7 +453,7 @@ plot_trend_anomaly_heatmap <- function(NDVIall_years_modeled, selected_years) {
     scale_fill_manual(values = trend_flag_colors, name = "Trend Anomaly", drop = FALSE) +
     scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
     scale_y_discrete(expand = c(0, 0)) +
-    facet_wrap(~type, ncol = 4) +
+    facet_wrap(~type, ncol = 3) +
     labs(x = "Date", y = "Year", title = "Trend Anomaly") +
     heatmap_theme()
 }
