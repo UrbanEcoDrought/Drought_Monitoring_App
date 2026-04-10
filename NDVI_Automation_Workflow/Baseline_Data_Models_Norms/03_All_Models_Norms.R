@@ -8,6 +8,9 @@ library(tibble)
 library(dplyr)
 library(MASS)
 
+# Overwrite baseline with the latest file?
+updateBaseline = FALSE
+
 # #Sys.setenv(GOOGLE_DRIVE = "~/Google Drive/Shared drives/Urban Ecological Drought")
 # rgee::ee_Initialize(user = 'jgarcia@mortonarb.org', drive=T)
 # google.drive <- Sys.getenv("GOOGLE_DRIVE")
@@ -17,6 +20,7 @@ path.google <- "~/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")
 pathDat <- "../data_all"
 pathMods <- "../gam_models"
+pathLatest <- "NDVI_Automation_Workflow/data_all"
 if(!dir.exists(pathDat)) dir.create(pathDat, recursive=T)
 if(!dir.exists(pathMods)) dir.create(pathMods, recursive = T)
 
@@ -27,6 +31,12 @@ source("0_Calculate_GAMM_Derivs_Copy.R")
 ######################
 #loading in and formatting latest NDVI data
 ######################
+if(updateBaseline & file.exists(file.path(pathLatest, "NDVIall_latest.csv"))){
+  file.copy(from=file.path(pathLatest, "NDVIall_latest.csv"), to=file.path(pathDat, "NDVIall_baseline.csv"), overwrite=T, copy.mode=T)
+  file.copy(from=file.path(pathLatest, "NDVIall_latest.csv"), to=file.path(pathShare, "NDVIall_baseline.csv"), overwrite=T, copy.mode=T)
+  
+}
+
 if(!file.exists(file.path(pathDat, "NDVIall_baseline.csv")) & file.exists(file.path(pathShare, "NDVIall_baseline.csv"))){
   file.copy(from=file.path(pathShare, "NDVIall_baseline.csv"), to=file.path(pathDat, "NDVIall_baseline.csv"), overwrite=T, copy.mode=T)
 }
@@ -205,7 +215,7 @@ ggplot(data=ndviyrs[ndviyrs$year==2012,]) +
   geom_line(aes(x=yday, y=YrMean), color="blue") +
   geom_point(aes(x=yday, y=YrMean, color=FlagNDVI), size=0.2)
 
-ggplot(data=ndviyrs[ndviyrs$year==2024,]) +
+ggplot(data=ndviyrs[ndviyrs$year==2026,]) +
   ggtitle("Year = 2014") +
   facet_wrap(~type) +
   geom_ribbon(data=ndvi.norms, aes(x=yday, ymin=NormLwr, ymax=NormUpr), fill="black", alpha=0.2) +

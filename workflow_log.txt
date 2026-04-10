@@ -1,0 +1,8 @@
+[2026-04-10 01:00:02] === Workflow started ===
+[2026-04-10 01:00:11] GEE initialized successfully
+[2026-04-10 01:00:15] No new data found. Workflow stopped.
+[2026-04-10 11:09:06] === Workflow started ===
+[2026-04-10 11:09:37] ERROR in script 04 (Processing New Data): No new NDVI data found. Stopping workflow.
+[2026-04-10 11:09:53] ERROR in script 05 (Year Specific Adjustments): A term has fewer unique covariate combinations than specified maximum degrees of freedom
+[2026-04-10 11:12:34] === Workflow started ===
+[2026-04-10 11:34:01] Deploy_Drought_App.R completed successfully

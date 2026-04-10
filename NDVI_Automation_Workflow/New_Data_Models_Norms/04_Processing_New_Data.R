@@ -90,7 +90,10 @@ summary(ndviAll[ndviAll$type=="forest",])
 summary(ndviAll[ndviAll$type=="urban-medium",])
 
 summary(ndviLatest)
+summary(ndviLatest[!is.na(ndviLatest$NDVI),])
+
 # Makes more sense to join old nvdi data and new ndvi data after new data is fit to spline since old data is already fit to spline
+
 #steps: take new data and save as csv and run it through spline in next script, read in old data and then join 
 #then run year specific adjustments
 
