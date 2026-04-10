@@ -13,15 +13,18 @@ library(shinyalert)
 paletteLC <- c("crop"="#ab6c28", "forest"="#68ab5f", "grassland"="#dfdfc2",
                "urban-high"="#ab0000", "urban-medium"="#eb0000", "urban-low"="#d99282", "urban-open"="#dec5c5")
 
-graphing_colors <- c("Significantly Browner than Normal"="#D01C8B", "Slightly Browner than Normal"="#F1B6DA",
-                     "Normal"="gray",
-                     "Slightly Greener than Normal"="#B8E186", "Significantly Greener than Normal"="#4DAC26")
+graphing_colors <- c("Significantly Browner than Normal" = "#D01C8B",
+                     "Slightly Browner than Normal"      = "#F1B6DA",
+                     "Normal"                            = "#7C7779",
+                     "Slightly Greener than Normal"      = "#B8E186",
+                     "Significantly Greener than Normal" = "#4DAC26")
 
-heatmap_colors <- c("Significantly Browner than Normal" = "maroon",
-                    "Slightly Browner than Normal"      = "fuchsia",
-                    "Normal"                            = "navy",
-                    "Slightly Greener than Normal"      = "olive",
-                    "Significantly Greener than Normal" = "green")
+# Text color for each status background — light backgrounds need dark text
+graphing_text_colors <- c("Significantly Browner than Normal" = "white",
+                           "Slightly Browner than Normal"      = "#333333",
+                           "Normal"                            = "white",
+                           "Slightly Greener than Normal"      = "#333333",
+                           "Significantly Greener than Normal" = "white")
 
 yrNow <- lubridate::year(Sys.Date())
 day.labels <- data.frame(Date = seq.Date(as.Date(paste0(yrNow, "-01-01")),
@@ -238,10 +241,14 @@ LC_status <- function(LC_type, NDVIall_years_modeled, NDVIall_normals_modeled, m
   CI_final_subset$NormUpr <- as.numeric(CI_final_subset$NormUpr)
   CI_final_subset$NormLwr <- as.numeric(CI_final_subset$NormLwr)
 
-  status <- round(most_recent_subset$YrMean - CI_final_subset$NormMean[1], digits = 2)
-  color  <- heatmap_colors[most_recent_subset$FlagNDVI]
+  norm_mean   <- CI_final_subset$NormMean[1]
+  status      <- round(most_recent_subset$YrMean - norm_mean, digits = 2)
+  pct_anomaly <- round((most_recent_subset$YrMean - norm_mean) / norm_mean * 100, 1)
+  flag        <- most_recent_subset$FlagNDVI
+  color       <- unname(graphing_colors[flag])
+  text_color  <- unname(graphing_text_colors[flag])
 
-  list(status = status, color = color)
+  list(status = status, pct_anomaly = pct_anomaly, color = color, text_color = text_color, flag = flag)
 }
 
 ####################################################################################################################
@@ -369,13 +376,27 @@ server <- function(input, output, session) {
     output[[m$box]] <- renderUI({
       result <- LC_status(m$lc, NDVIall_years_modeled, NDVIall_normals_modeled, most_recent_data)
       if (is.null(result)) {
-        return(valueBox(paste("No recent", m$label, "data available"),
-                        subtitle = "No Data", icon = icon("exclamation-circle"),
-                        color = "gray", width = 11))
+        return(div(class = "small-box",
+                   style = "background-color: #888888; color: white;",
+                   div(class = "inner",
+                       tags$h3(paste("No data:", m$label),
+                               style = "font-size: 14px; white-space: normal;"),
+                       tags$p("Data unavailable")),
+                   div(class = "icon", icon("circle-exclamation"))))
       }
-      valueBox(m$label,
-               subtitle = paste("is", result$status, "from normal"),
-               icon = icon(m$icon), color = result$color, width = 11)
+      div(class = "small-box",
+          style = paste0("background-color: ", result$color, "; color: ", result$text_color, ";"),
+          div(class = "inner",
+              tags$h3(m$label, style = "font-size: 15px; white-space: normal;"),
+              tags$p(HTML(paste0(
+                result$flag, "<br>",
+                "<small>",
+                ifelse(result$pct_anomaly >= 0,
+                       paste0("+", result$pct_anomaly, "% from average"),
+                       paste0(result$pct_anomaly, "% from average")),
+                "</small>"
+              )))),
+          div(class = "icon", icon(m$icon)))
     })
 
     output[[m$pct]] <- renderText({

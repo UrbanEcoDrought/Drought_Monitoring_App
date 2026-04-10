@@ -91,20 +91,21 @@ dbHeader <- dashboardHeader(
 #Needed to move this here to add the logo ----
 dbSidebar <- dashboardSidebar(
 
+  # Logos at the top of the sidebar
   tags$div(
-    style = "position: absolute; bottom: 10px; left: 60px;",  # Adjust position as needed
+    style = "display: flex; align-items: center; gap: 8px; padding: 10px 8px 6px 8px;",
     tags$a(
-      href = 'https://mortonarb.org', 
-      tags$img(src = 'mortonarb.png', height = '60', width = '150')
+      href = 'https://mortonarb.org',
+      tags$img(src = 'mortonarb.png', height = '50',
+               style = "background-color: white; padding: 3px; border-radius: 3px;")
+    ),
+    tags$a(
+      href = 'https://www.drought.gov',
+      tags$img(src = 'NIDIS.png', height = '44')
     )
   ),
-  tags$div(
-    style = "position: absolute; bottom: 15px; left: 5px;",  # Adjust position as needed
-    tags$a(
-      href = 'https://www.drought.gov', 
-      tags$img(src = 'NIDIS.png', height = '48', width = '55')
-    )
-  ),
+  tags$hr(style = "margin: 4px 0; border-color: rgba(255,255,255,0.2);"),
+
   sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("Analysis", tabName = "analysis", icon = icon("gears"),
@@ -118,7 +119,7 @@ dbSidebar <- dashboardSidebar(
 
 ####################################################################################################################
 # UI ----
-ui <- dashboardPage(skin = "black",
+ui <- dashboardPage(skin = "blue",
                     dbHeader,
                     dbSidebar,
                     dashboardBody(
@@ -155,36 +156,6 @@ ui <- dashboardPage(skin = "black",
           font-weight: normal;
         }
 
-        /* White sidebar */
-        .main-sidebar, .left-side {
-          background-color: #ffffff !important;
-        }
-
-        /* Sidebar text and icons — dark on white, matched to skin-black specificity */
-        .skin-black .sidebar-menu li a,
-        .skin-black .sidebar a {
-          color: #333333 !important;
-          font-size: 16px !important;
-        }
-        .skin-black .sidebar-menu li a .fa,
-        .skin-black .sidebar-menu li a .glyphicon {
-          color: #555555 !important;
-        }
-        .skin-black .sidebar-menu li.active > a,
-        .skin-black .sidebar-menu li:hover > a {
-          color: #111111 !important;
-          background-color: #eeeeee !important;
-        }
-        .skin-black .sidebar-menu .treeview-menu li a {
-          color: #444444 !important;
-          font-size: 15px !important;
-        }
-        .skin-black .sidebar-menu .treeview-menu li.active > a,
-        .skin-black .sidebar-menu .treeview-menu li:hover > a {
-          color: #111111 !important;
-          background-color: #e0e0e0 !important;
-        }
-
         .small-box {
           min-height: 60px !important;
           width: 210px !important;
@@ -218,13 +189,13 @@ ui <- dashboardPage(skin = "black",
         align-items: center; /* Aligns items vertically */
       ",
                                       # Each valueBoxOutput is treated as a flexible item
-                                      div(style = "display: inline-block;", valueBoxOutput("cropBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("forBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("grassBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("uoBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("ulBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("umBox", width = NULL)),
-                                      div(style = "display: inline-block;", valueBoxOutput("uhBox", width = NULL))
+                                      div(style = "display: inline-block;", uiOutput("cropBox")),
+                                      div(style = "display: inline-block;", uiOutput("forBox")),
+                                      div(style = "display: inline-block;", uiOutput("grassBox")),
+                                      div(style = "display: inline-block;", uiOutput("uoBox")),
+                                      div(style = "display: inline-block;", uiOutput("ulBox")),
+                                      div(style = "display: inline-block;", uiOutput("umBox")),
+                                      div(style = "display: inline-block;", uiOutput("uhBox"))
                                       
                                     )
                                   ),
