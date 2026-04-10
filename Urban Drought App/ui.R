@@ -77,7 +77,7 @@ il_counties <- subset(counties, counties$NAME %in% c(
 
 #Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
-  title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal BETA</span>"),
+  title = HTML("<span style='font-size: 16px; font-weight: bold;'>Urban Drought Portal</span>"),
   titleWidth = 200
  
  # shinyGovstyle::banner(
@@ -147,16 +147,21 @@ ui <- dashboardPage(skin = "black",
 '))),
                       tags$head(
                         tags$style(HTML("
+        body, .content-wrapper {
+          font-size: 15px;
+        }
+
         .small-box {
-          min-height: 10px !important;  
-          width: 150px !important;  
+          min-height: 60px !important;
+          width: 210px !important;
         }
-        
-        .small-box .inner h3 { 
-          font-size: 14px !important; 
+
+        .small-box .inner h3 {
+          font-size: 15px !important;
+          white-space: normal !important;
         }
-        
-        .small-box .inner p { 
+
+        .small-box .inner p {
           font-size: 14px !important;
         }
       "))
@@ -189,6 +194,12 @@ ui <- dashboardPage(skin = "black",
                                       
                                     )
                                   ),
+                                ),
+                                fluidRow(
+                                  column(width = 12,
+                                    p(HTML("<b>Note:</b> NDVI values for <b>November–March</b> should be interpreted with caution — winter vegetation signals in the Chicago region are less reliable due to snow cover, leaf-off conditions, and low solar angle."),
+                                      style = "color: #8B6914; background-color: #FFF8DC; border-left: 4px solid #DAA520; padding: 8px 12px; margin: 4px 0 10px 0; font-size: 14px;")
+                                  )
                                 ),
                                 # Map layout
                                 fluidRow(
@@ -248,8 +259,8 @@ ui <- dashboardPage(skin = "black",
                                       "Crop Plots",
                                       h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
                                       plotOutput("crop_currentTS_plot"),
-                                      h6(HTML("<br><br>Distribution of normal crop NDVI for an entire year with the current NDVI (Green Diamond) and
-                                              normal for the current day of the year (Purple Circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      h6(HTML("<br><br>Distribution of normal crop NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
                                       plotOutput("crop_density_plot"),
                                       textOutput("crop_daily")
                                     ),
@@ -285,8 +296,8 @@ ui <- dashboardPage(skin = "black",
                                       "Urban-Medium Plots",
                                       h6(HTML("Current smoothed NDVI time series (blue) versus normal (black).<br>")),
                                       plotOutput("um_currentTS_plot"),
-                                      h6(HTML("<br><br>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (orange circle) and
-                                              normal for the current day of the year (blue diamond) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
+                                      h6(HTML("<br><br>Distribution of normal medium intensity urban NDVI for an entire year with the current NDVI (blue diamond) and
+                                              normal for the current day of the year (orange circle) shown with a 95% confidence interval surrounding them. Non-overlapping intervals indicate the landcover is significantly greener or browner than normal.<br>")),
                                       plotOutput("um_density_plot"),
                                       textOutput("um_daily")
                                     ),
@@ -317,8 +328,7 @@ ui <- dashboardPage(skin = "black",
                                 # NDVI Data Tab Box
                                 tabBox(
                                   id = "tab1",
-                                  height = "3000px",
-                                  width = 12, 
+                                  width = 12,
                                   tabPanel("Overview of Feature",
                                            h6(HTML("<b>Feature</b>: <u>Trends in NDVI Data Visuals</u><br><br>")),
                                            h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the NDVI data across Land Cover Types (ie Was there a Land Cover Type that dipped or peaked
@@ -329,7 +339,7 @@ ui <- dashboardPage(skin = "black",
                                            <li><u>Monthly tab</u> - view where year and month are inputted by the user</li>
                                           <li><u>Weekly tab</u> - where start date is inputted by the user and the following 7 days of data are shown</li><br>
                                            Default start dates are set to the most current pull of data<br>")),
-                                           h6(HTML("<b>Condsiderdations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
+                                           h6(HTML("<b>Considerations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
                                                    Caution should be exercised to prevent over interpretation of November - March greenness values.</li>
                                                    <li>At the start of the new year there is a jump in the data marked by a vertical line. The jump is due to how the data was processed by the GAMs.</li><br><br>")),
                                            div(
@@ -369,15 +379,14 @@ ui <- dashboardPage(skin = "black",
                         tabItem(tabName = "ndvi_diff",
                                 tabBox(
                                   id = "tab2",
-                                  height = "3000px",
-                                  width = 12, 
+                                  width = 12,
                                   tabPanel("Overview of Feature",
                                            h6(HTML("<b>Feature</b>: <u>Heatmaps</u><br><br>")),
                                            h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the data for NDVI status across an extended period of time(ie Was there a period 
                                                    of the year that was consistently below the normal? In what months was this deficiency the strongest?)")),
                                            h6(HTML("<b>Description</b>: Heat map of the NDVI status across all the years available in the data (<u>see visual below for status categories</u>). Current year
                                            will update as more data is available. Years can be toggled on & off for comparisons.<br>")),
-                                           h6(HTML("<b>Condsiderdations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
+                                           h6(HTML("<b>Considerations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
                                                    Caution should be exercised to prevent over interpretation of November - March greenness values.</li><br><br>")),
                                            div(
                                              style = "text-align: center;",
@@ -385,7 +394,11 @@ ui <- dashboardPage(skin = "black",
                                            ),
                                            div(
                                              style = "text-align: center;",
-                                           h6(HTML("<br><b>Insert information on how categories were determined</b>"))),
+                                           p(HTML("<br><b>How status categories are determined:</b> Each year's smoothed NDVI curve (and its 95% confidence interval) is compared to the long-term normal curve (and its 95% CI) for each day of year.
+                                             <b>Significantly Greener/Browner</b> means the year's CI does not overlap the normal CI at all.
+                                             <b>Slightly Greener/Browner</b> means the year's mean falls outside the normal CI but the intervals still overlap.
+                                             <b>Normal</b> means the year's mean falls within the normal 95% CI.
+                                             All comparisons use GAM-derived posterior confidence intervals."))),
                                            
                                   ),
                                   tabPanel("Heatmap Graphs",
@@ -417,7 +430,6 @@ ui <- dashboardPage(skin = "black",
                         )),
                         tabItem(tabName = "specifics",
                                 tabBox(
-                                  height = "3000px",
                                   width = 12,
                                   tabPanel("Preliminary Information",
                                            h6(HTML("The Shiny App serves as a near real-time portal, providing a comprehensive view of the current conditions across seven land cover types.
