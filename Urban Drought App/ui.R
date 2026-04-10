@@ -90,8 +90,7 @@ dbHeader <- dashboardHeader(
 
 #Needed to move this here to add the logo ----
 dbSidebar <- dashboardSidebar(
-  style = "position: relative; height: 93vh;",  # Ensures the sidebar takes full height
-  
+
   tags$div(
     style = "position: absolute; bottom: 10px; left: 60px;",  # Adjust position as needed
     tags$a(
@@ -149,6 +148,11 @@ ui <- dashboardPage(skin = "black",
                         tags$style(HTML("
         body, .content-wrapper {
           font-size: 15px;
+        }
+
+        h6 {
+          font-size: 15px !important;
+          font-weight: normal;
         }
 
         .small-box {

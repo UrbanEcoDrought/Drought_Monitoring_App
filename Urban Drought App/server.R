@@ -17,9 +17,11 @@ graphing_colors <- c("Significantly Browner than Normal"="#D01C8B", "Slightly Br
                      "Normal"="gray",
                      "Slightly Greener than Normal"="#B8E186", "Significantly Greener than Normal"="#4DAC26")
 
-heatmap_colors <- c("Significantly Browner than Normal"="maroon", "Slightly Browner than Normal"="pink",
-                    "Normal"="gray",
-                    "Slightly Greener than Normal"="olive", "Significantly Greener than Normal"="success")
+heatmap_colors <- c("Significantly Browner than Normal" = "maroon",
+                    "Slightly Browner than Normal"      = "fuchsia",
+                    "Normal"                            = "navy",
+                    "Slightly Greener than Normal"      = "olive",
+                    "Significantly Greener than Normal" = "green")
 
 yrNow <- lubridate::year(Sys.Date())
 day.labels <- data.frame(Date = seq.Date(as.Date(paste0(yrNow, "-01-01")),
@@ -207,17 +209,17 @@ plot_timeseries_now <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall
     scale_fill_manual(name = "",  values = c("Normal NDVI" = "black", "Current NDVI" = "#74add1")) +
     scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
     scale_y_continuous(name = "NDVI", limits = c(0, max(NDVIall_years_modeled$YrUpr)), expand = c(0, 0)) +
-    theme_minimal(base_size = 10) +
+    theme_minimal(base_size = 14) +
     theme(
-      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
-      axis.text.y       = element_text(size = 8),
-      axis.title.x      = element_text(face = "bold", size = 10),
-      axis.title.y      = element_text(face = "bold", size = 10),
-      plot.title        = element_text(face = "bold", size = 12),
+      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 11),
+      axis.text.y       = element_text(size = 11),
+      axis.title.x      = element_text(face = "bold", size = 13),
+      axis.title.y      = element_text(face = "bold", size = 13),
+      plot.title        = element_text(face = "bold", size = 14),
       legend.key.height = unit(1, "cm"),
       legend.position   = "bottom",
-      legend.text       = element_text(size = 8),
-      legend.title      = element_text(size = 10),
+      legend.text       = element_text(size = 11),
+      legend.title      = element_text(size = 12),
       panel.background  = element_rect(fill = "gray99"),
       plot.background   = element_rect(fill = "gray99")
     )
@@ -304,17 +306,17 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
     scale_x_continuous(name = "Date", breaks = day.labels$yday, labels = day.labels$Text) +
     scale_y_discrete(expand = c(0, 0)) +
     labs(x = "Date", y = "Year", title = paste0(naming, " Heat Map")) +
-    theme_minimal(base_size = 10) +
+    theme_minimal(base_size = 14) +
     theme(
-      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8),
-      axis.text.y       = element_text(size = 8),
-      axis.title.x      = element_text(face = "bold", size = 10),
-      axis.title.y      = element_text(face = "bold", size = 10),
-      plot.title        = element_text(face = "bold", size = 12),
+      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 11),
+      axis.text.y       = element_text(size = 11),
+      axis.title.x      = element_text(face = "bold", size = 13),
+      axis.title.y      = element_text(face = "bold", size = 13),
+      plot.title        = element_text(face = "bold", size = 14),
       legend.key.height = unit(1, "cm"),
       legend.position   = "bottom",
-      legend.text       = element_text(size = 8),
-      legend.title      = element_text(size = 10),
+      legend.text       = element_text(size = 11),
+      legend.title      = element_text(size = 12),
       panel.background  = element_rect(fill = "gray99"),
       plot.background   = element_rect(fill = "gray99")
     )
