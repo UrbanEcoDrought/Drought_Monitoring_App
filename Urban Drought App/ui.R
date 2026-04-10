@@ -121,14 +121,14 @@ ui <- dashboardPage(skin = "blue",
                       div(
                         style = "
     height: 25px; 
-    background-color: #1A85FF; 
+    background-color: #BA8E23; 
     width: 100%; 
     position: relative; 
     display: flex; 
     justify-content: center; 
     align-items: center;",
-                        h6(HTML("<b style='color: white;'> ------------------------------------  This portal is in beta & still under development, some features 
-          may be incomplete or subject to change  ------------------------------------ </b>"))
+                        h6(HTML("<b style='color: white;'> ----- NOTE: This portal is in beta & still under development, some features 
+          may be incomplete or subject to change  ----- </b>"))
                       ),
                       br(),
                       useShinyalert(),
@@ -325,55 +325,83 @@ ui <- dashboardPage(skin = "blue",
                                 
                         ),
                         tabItem(tabName = "NDVI_data_review",
-                                # NDVI Data Tab Box
                                 tabBox(
                                   id = "tab1",
                                   width = 12,
                                   tabPanel("Overview of Feature",
-                                           h6(HTML("<b>Feature</b>: <u>Trends in NDVI Data Visuals</u><br><br>")),
-                                           h6(HTML("<b>Purpose</b>:To help users see visually if there are any patterns in the NDVI data across Land Cover Types (ie Was there a Land Cover Type that dipped or peaked
-                                                   when other Land Cover Types didn't?)")),
-                                           h6(HTML("<b>Description</b>: Plotted NDVI values with 4 time frame options.<br><br>
-                                           <li><u>Full Review tab</u> - overview with all data for all years in dataset</li>
-                                           <li><u>Yearly tab</u> - 12 month overview, where user can determine which years are shown with slider</li>
-                                           <li><u>Monthly tab</u> - view where year and month are inputted by the user</li>
-                                          <li><u>Weekly tab</u> - where start date is inputted by the user and the following 7 days of data are shown</li><br>
-                                           Default start dates are set to the most current pull of data<br>")),
-                                           h6(HTML("<b>Considerations</b>:<br><li>In the Chicago region, the winter season makes it difficult to interpret NDVI in the winter seasons.
-                                                   Caution should be exercised to prevent over interpretation of November - March greenness values.</li>
-                                                   <li>At the start of the new year there is a jump in the data marked by a vertical line. The jump is due to how the data was processed by the GAMs.</li><br><br>")),
+                                           h6(HTML("<b>Feature</b>: <u>NDVI Data Review</u><br><br>")),
+                                           h6(HTML("<b>Purpose</b>: To help users explore patterns in NDVI data across land cover types and years. Was there a land cover type that dipped during a particular drought period? How did one year compare to another?")),
+                                           h6(HTML("<b>Description</b>: Two views allow flexible exploration of the data:<br><br>
+                                           <li><u>By Landcover</u> — one panel per selected land cover type; each colored line is a selected year plotted against the long-term normal (gray ribbon with dashed mean line)</li>
+                                           <li><u>By Year</u> — one panel per selected year; each colored line is a selected land cover type plotted against the long-term normal</li><br>
+                                           Both views include a <b>date window</b> to zoom in on a specific time of year (e.g., a declared drought period such as June 3–27).
+                                           An optional <b>summary stats table</b> shows start, end, min, max, and change in NDVI for each land cover and year within the selected window, with the long-term normal appended for comparison.<br>")),
+                                           h6(HTML("<b>Considerations</b>:<br>
+                                                   <li><b>November–March NDVI values should be interpreted with caution</b> — winter vegetation signals in the Chicago region are less reliable due to snow cover, leaf-off conditions, and low solar angle.</li>
+                                                   <li>At the start of each new year there is a small jump in the data. This is due to how the GAM smooths are fit year-by-year.</li>
+                                                   <li>Date windows cannot span a year boundary (e.g., Dec 15 to Jan 15) — keep start and end in the same calendar year.</li><br><br>")),
                                            div(
                                              style = "text-align: center;",
                                              tags$img(src = 'LC_info_table.png', height = '400', width = '700')
                                            ),
                                            div(
                                              style = "text-align: center;",
-                                             h6(HTML("<br><b>Landcover designations are from the U.S. National Landcover Database (NLCD)</b>"))),
+                                             h6(HTML("<br><b>Landcover designations are from the U.S. National Landcover Database (NLCD)</b>")))
                                   ),
-                                  tabPanel("Full Review",
-                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("all_data_graph", height = "400px")),
-                                  tabPanel("Yearly",
-                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load. <br><br>
-                                           NOTE: At the start of the new year there is a jump in the data marked by a vertical line, this is from how
-                                                   the data was processed using GAMs.</b><br>")),
-                                           sliderInput("yearRange", "Select Year Range:",
-                                                       min = min(NDVIall_years_modeled$year),
-                                                       max = max(NDVIall_years_modeled$year),
-                                                       value = c(min(NDVIall_years_modeled$year), max(NDVIall_years_modeled$year)),
-                                                       sep = ""
-                                                       ),
-                                           plotOutput("yearly_graph", height = "400px")),
-                                           #dateInput(inputId = "start_date", label = "Enter Start Date", value = Sys.Date() - 365)),
-                                  tabPanel("Monthly", 
-                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("monthly_graph", height = "400px"),
-                                           dateInput(inputId = "mstart_date", label = "Enter Start Date", value = date_needed %m-% months(1))),
-                                  tabPanel("Weekly",
-                                           h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
-                                           plotOutput("weekly_graph",height = "400px"),
-                                           h6(HTML("If the graph isn't populating there might not be enough data currently, try an early date")),
-                                           dateInput(inputId = "wstart_date", label = "Enter Start Date", value = date_needed - 7))
+                                  tabPanel("By Landcover",
+                                           sidebarLayout(
+                                             sidebarPanel(width = 3,
+                                               dateRangeInput("lc_date_window",
+                                                              "Date window:",
+                                                              start = paste0(yrNow, "-01-01"),
+                                                              end   = paste0(yrNow, "-12-31")),
+                                               checkboxGroupInput("lc_years",
+                                                                  "Years to show:",
+                                                                  choices  = as.character(sort(unique(NDVIall_years_modeled$year))),
+                                                                  selected = as.character(tail(sort(unique(NDVIall_years_modeled$year)), 5)),
+                                                                  inline   = TRUE),
+                                               checkboxGroupInput("lc_types",
+                                                                  "Land covers:",
+                                                                  choices  = sort(unique(NDVIall_years_modeled$type)),
+                                                                  selected = sort(unique(NDVIall_years_modeled$type))),
+                                               checkboxInput("lc_show_stats", "Show summary stats", value = FALSE)
+                                             ),
+                                             mainPanel(width = 9,
+                                               plotOutput("plot_by_lc", height = "600px"),
+                                               conditionalPanel(
+                                                 condition = "input.lc_show_stats == true",
+                                                 tableOutput("stats_by_lc")
+                                               )
+                                             )
+                                           )
+                                  ),
+                                  tabPanel("By Year",
+                                           sidebarLayout(
+                                             sidebarPanel(width = 3,
+                                               dateRangeInput("yr_date_window",
+                                                              "Date window:",
+                                                              start = paste0(yrNow, "-01-01"),
+                                                              end   = paste0(yrNow, "-12-31")),
+                                               checkboxGroupInput("yr_years",
+                                                                  "Years to show:",
+                                                                  choices  = as.character(sort(unique(NDVIall_years_modeled$year))),
+                                                                  selected = as.character(tail(sort(unique(NDVIall_years_modeled$year)), 5)),
+                                                                  inline   = TRUE),
+                                               checkboxGroupInput("yr_types",
+                                                                  "Land covers:",
+                                                                  choices  = sort(unique(NDVIall_years_modeled$type)),
+                                                                  selected = sort(unique(NDVIall_years_modeled$type))),
+                                               checkboxInput("yr_show_stats", "Show summary stats", value = FALSE)
+                                             ),
+                                             mainPanel(width = 9,
+                                               plotOutput("plot_by_yr", height = "600px"),
+                                               conditionalPanel(
+                                                 condition = "input.yr_show_stats == true",
+                                                 tableOutput("stats_by_yr")
+                                               )
+                                             )
+                                           )
+                                  )
                                 )
                         ),
                         tabItem(tabName = "ndvi_diff",
@@ -417,7 +445,7 @@ ui <- dashboardPage(skin = "blue",
                                 # The checkboxGroupInput with custom CSS
                                 checkboxGroupInput("selected_years", "Select Years:", 
                                                    choices = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)), 
-                                                   selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE))[1:5],
+                                                   selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE))[1:2],
                                                    inline = TRUE),
                                 h6(HTML("<b>This feature may need additional time to load, please allow a few minutes for graphs to load.</b><br>")),
                                 plotOutput("ndvi_heatmap_crop"),

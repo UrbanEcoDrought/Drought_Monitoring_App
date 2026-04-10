@@ -90,75 +90,144 @@ lc_meta <- list(
 #Functions ------
 ####################################################################################################################
 
-# All data overview graph ----
-all_data_graph <- function() {
-  ggplot(NDVIall_years_modeled, aes(x = date, y = YrMean)) +
-    geom_ribbon(aes(ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
-    geom_line(aes(color = type), size = 1) +
-    scale_color_manual(values = paletteLC) +
-    scale_fill_manual(values = paletteLC) +
-    labs(x = "Date", y = "NDVI Value", title = "NDVI Trends Over Time for All Land Cover Types") +
-    scale_x_date(date_breaks = "6 months", date_labels = "%b %Y") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
+# By-landcover faceted plot ----
+plot_by_landcover <- function(selected_lcs, selected_years, start_yday, end_yday) {
+  yearly  <- NDVIall_years_modeled %>%
+    filter(type %in% selected_lcs, year %in% selected_years,
+           yday >= start_yday, yday <= end_yday)
+  normals <- NDVIall_normals_modeled %>%
+    filter(type %in% selected_lcs, yday >= start_yday, yday <= end_yday)
+
+  in_window <- day.labels$yday >= start_yday & day.labels$yday <= end_yday
+  if (any(in_window)) {
+    yday_breaks <- day.labels$yday[in_window]
+    yday_labels <- day.labels$Text[in_window]
+  } else {
+    yday_breaks <- c(start_yday, end_yday)
+    yday_labels <- format(as.Date(c(start_yday, end_yday) - 1,
+                                  origin = paste0(yrNow, "-01-01")), "%b %d")
+  }
+
+  ggplot() +
+    geom_ribbon(data = normals,
+                aes(x = yday, ymin = NormLwr, ymax = NormUpr),
+                fill = "gray70", alpha = 0.4) +
+    geom_line(data = normals,
+              aes(x = yday, y = NormMean),
+              color = "black", linetype = "dashed") +
+    geom_ribbon(data = yearly,
+                aes(x = yday, ymin = YrLwr, ymax = YrUpr, fill = factor(year)), alpha = 0.2) +
+    geom_line(data = yearly,
+              aes(x = yday, y = YrMean, color = factor(year))) +
+    facet_wrap(~type, ncol = 4) +
+    scale_color_viridis_d(name = "Year", direction=1, option="turbo") +
+    scale_fill_viridis_d(name = "Year", direction=1, option="turbo") +
+    scale_x_continuous(name = "Date", breaks = yday_breaks, labels = yday_labels) +
+    scale_y_continuous(name = "NDVI") +
+    labs(title = "NDVI by Land Cover Type") +
+    theme_minimal(base_size = 13) +
+    theme(
+      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      strip.text      = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
 }
 
-# 12-month overview graph ----
-twelve_month_graph <- function(start_year, end_year) {
-  start_year <- as.numeric(start_year)
-  end_year   <- as.numeric(end_year)
+# By-year faceted plot ----
+plot_by_year <- function(selected_years, selected_lcs, start_yday, end_yday) {
+  yearly  <- NDVIall_years_modeled %>%
+    filter(type %in% selected_lcs, year %in% selected_years,
+           yday >= start_yday, yday <= end_yday)
+  normals <- NDVIall_normals_modeled %>%
+    filter(type %in% selected_lcs, yday >= start_yday, yday <= end_yday)
 
-  yearly_filtered_data <- NDVIall_years_modeled %>%
-    filter(lubridate::year(date) >= start_year & lubridate::year(date) <= end_year)
+  # Replicate normal ribbon for each year facet
+  normals_faceted <- do.call(rbind, lapply(selected_years, function(yr) {
+    cbind(normals, year = yr)
+  }))
 
-  jan_1_dates <- unique(yearly_filtered_data$date[
-    lubridate::month(yearly_filtered_data$date) == 1 &
-      lubridate::day(yearly_filtered_data$date) == 1
-  ])
+  in_window <- day.labels$yday >= start_yday & day.labels$yday <= end_yday
+  if (any(in_window)) {
+    yday_breaks <- day.labels$yday[in_window]
+    yday_labels <- day.labels$Text[in_window]
+  } else {
+    yday_breaks <- c(start_yday, end_yday)
+    yday_labels <- format(as.Date(c(start_yday, end_yday) - 1,
+                                  origin = paste0(yrNow, "-01-01")), "%b %d")
+  }
 
-  ggplot(yearly_filtered_data, aes(x = date, y = YrMean)) +
-    geom_ribbon(aes(ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
-    geom_line(aes(color = type)) +
-    geom_vline(xintercept = jan_1_dates, linetype = "dashed") +
-    scale_color_manual(values = paletteLC) +
-    scale_fill_manual(values = paletteLC) +
-    labs(y = "NDVI Value", title = paste("NDVI Trends for Year", start_year)) +
-    scale_x_date(date_labels = "%b %Y")
+  ggplot() +
+    geom_ribbon(data = normals_faceted,
+                aes(x = yday, ymin = NormLwr, ymax = NormUpr),
+                fill = "gray70", alpha = 0.4) +
+    geom_line(data = normals_faceted,
+              aes(x = yday, y = NormMean),
+              color = "black", linetype = "dashed") +
+    geom_ribbon(data = yearly,
+                aes(x = yday, ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
+    geom_line(data = yearly,
+              aes(x = yday, y = YrMean, color = type)) +
+    facet_wrap(~year, ncol = 4) +
+    scale_color_manual(values = paletteLC, name = "Land Cover") +
+    scale_fill_manual(values = paletteLC, name = "Land Cover") +
+    scale_x_continuous(name = "Date", breaks = yday_breaks, labels = yday_labels) +
+    scale_y_continuous(name = "NDVI") +
+    labs(title = "NDVI by Year") +
+    theme_minimal(base_size = 13) +
+    theme(
+      axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      strip.text      = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
 }
 
-# Monthly overview graph ----
-monthly_graph <- function(mstart_date) {
-  mstart_date <- as.Date(mstart_date)
-  mend_date   <- mstart_date %m+% months(1)
+# Window summary stats table ----
+compute_window_stats <- function(selected_lcs, selected_years, start_yday, end_yday,
+                                 data_yearly, data_normals) {
+  selected_years <- as.numeric(selected_years)
 
-  month_data <- NDVIall_years_modeled %>%
-    filter(date >= mstart_date & date <= mend_date)
+  yearly_window <- data_yearly %>%
+    filter(type %in% selected_lcs, year %in% selected_years,
+           yday >= start_yday, yday <= end_yday)
+  normal_window <- data_normals %>%
+    filter(type %in% selected_lcs, yday >= start_yday, yday <= end_yday)
 
-  ggplot(month_data, aes(x = date, y = YrMean)) +
-    geom_ribbon(aes(ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
-    geom_line(aes(color = type)) +
-    scale_color_manual(values = paletteLC) +
-    scale_fill_manual(values = paletteLC) +
-    labs(x = "Date", y = "NDVI Value", title = "NDVI Trends for Month Following Selected Start Date") +
-    scale_x_date(breaks = seq(mstart_date, mend_date, by = "7 days"),
-                 labels = scales::date_format("%B %d"))
-}
-
-# Weekly overview graph ----
-weekly_graph <- function(wstart_date) {
-  wstart_date <- as.Date(wstart_date)
-  wend_date   <- wstart_date + 7
-
-  week_data <- NDVIall_years_modeled %>%
-    filter(date >= wstart_date & date <= wend_date)
-
-  ggplot(week_data, aes(x = date, y = YrMean)) +
-    geom_ribbon(aes(ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
-    geom_line(aes(color = type)) +
-    scale_color_manual(values = paletteLC) +
-    scale_fill_manual(values = paletteLC) +
-    labs(x = "Date", y = "NDVI Value", title = "NDVI Trends for Week Following Selected Start Date") +
-    scale_x_date(breaks = seq(wstart_date, wend_date, by = "1 day"),
-                 labels = scales::date_format("%B %d"))
+  rows <- list()
+  for (lc in selected_lcs) {
+    for (yr in selected_years) {
+      sub <- yearly_window[yearly_window$type == lc & yearly_window$year == yr, ]
+      if (nrow(sub) == 0) next
+      start_row <- sub[which.min(abs(sub$yday - start_yday)), ]
+      end_row   <- sub[which.min(abs(sub$yday - end_yday)),   ]
+      rows[[length(rows) + 1]] <- data.frame(
+        "Land Cover" = lc,
+        Year         = as.character(yr),
+        Start        = round(start_row$YrMean,                   3),
+        End          = round(end_row$YrMean,                     3),
+        Min          = round(min(sub$YrMean),                    3),
+        Max          = round(max(sub$YrMean),                    3),
+        Change       = round(end_row$YrMean - start_row$YrMean, 3),
+        check.names  = FALSE
+      )
+    }
+    norm_sub <- normal_window[normal_window$type == lc, ]
+    if (nrow(norm_sub) > 0) {
+      norm_start <- norm_sub[which.min(abs(norm_sub$yday - start_yday)), ]
+      norm_end   <- norm_sub[which.min(abs(norm_sub$yday - end_yday)),   ]
+      rows[[length(rows) + 1]] <- data.frame(
+        "Land Cover" = lc,
+        Year         = "Normal",
+        Start        = round(norm_start$NormMean,                        3),
+        End          = round(norm_end$NormMean,                          3),
+        Min          = round(min(norm_sub$NormMean),                     3),
+        Max          = round(max(norm_sub$NormMean),                     3),
+        Change       = round(norm_end$NormMean - norm_start$NormMean,   3),
+        check.names  = FALSE
+      )
+    }
+  }
+  if (length(rows) == 0) return(data.frame())
+  do.call(rbind, rows)
 }
 
 ####################################################################################################################
@@ -336,11 +405,6 @@ plot_ndvi_heatmap <- function(NDVIall_years_modeled, selected_years, LC_type, na
 # Define server logic ----
 server <- function(input, output, session) {
 
-  yearly_filtered_data <- reactive({
-    NDVIall_years_modeled %>%
-      filter(year >= input$yearRange[1] & year <= input$yearRange[2])
-  })
-
   # Render the map ----
   output$il_county_map <- renderLeaflet({
     map <- leaflet() %>%
@@ -433,22 +497,41 @@ server <- function(input, output, session) {
 
   ####################################################################################################################
   # NDVI Data Review graphs ----
-  output$all_data_graph <- renderPlot({ all_data_graph() })
-
-  output$yearly_graph <- renderPlot({
-    req(input$yearRange)
-    twelve_month_graph(input$yearRange[1], input$yearRange[2])
+  output$plot_by_lc <- renderPlot({
+    req(input$lc_years, input$lc_types)
+    start_yday <- lubridate::yday(input$lc_date_window[1])
+    end_yday   <- lubridate::yday(input$lc_date_window[2])
+    validate(need(start_yday <= end_yday,
+      "Date window cannot cross a year boundary (Jan 1). Please choose a start and end date within the same calendar year."))
+    plot_by_landcover(input$lc_types, as.numeric(input$lc_years), start_yday, end_yday)
   })
 
-  output$monthly_graph <- renderPlot({
-    req(input$mstart_date)
-    monthly_graph(input$mstart_date)
+  output$stats_by_lc <- renderTable({
+    req(input$lc_show_stats, input$lc_years, input$lc_types)
+    start_yday <- lubridate::yday(input$lc_date_window[1])
+    end_yday   <- lubridate::yday(input$lc_date_window[2])
+    compute_window_stats(input$lc_types, as.numeric(input$lc_years),
+                         start_yday, end_yday,
+                         NDVIall_years_modeled, NDVIall_normals_modeled)
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
+
+  output$plot_by_yr <- renderPlot({
+    req(input$yr_years, input$yr_types)
+    start_yday <- lubridate::yday(input$yr_date_window[1])
+    end_yday   <- lubridate::yday(input$yr_date_window[2])
+    validate(need(start_yday <= end_yday,
+      "Date window cannot cross a year boundary (Jan 1). Please choose a start and end date within the same calendar year."))
+    plot_by_year(as.numeric(input$yr_years), input$yr_types, start_yday, end_yday)
   })
 
-  output$weekly_graph <- renderPlot({
-    req(input$wstart_date)
-    weekly_graph(input$wstart_date)
-  })
+  output$stats_by_yr <- renderTable({
+    req(input$yr_show_stats, input$yr_years, input$yr_types)
+    start_yday <- lubridate::yday(input$yr_date_window[1])
+    end_yday   <- lubridate::yday(input$yr_date_window[2])
+    compute_window_stats(input$yr_types, as.numeric(input$yr_years),
+                         start_yday, end_yday,
+                         NDVIall_years_modeled, NDVIall_normals_modeled)
+  }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
   ####################################################################################################################
   # Welcome popup ----
