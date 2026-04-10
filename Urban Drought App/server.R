@@ -156,13 +156,6 @@ plot_by_year <- function(selected_years, selected_lcs, start_yday, end_yday) {
   yearly  <- NDVIall_years_modeled %>%
     filter(type %in% selected_lcs, year %in% selected_years,
            yday >= start_yday, yday <= end_yday)
-  normals <- NDVIall_normals_modeled %>%
-    filter(type %in% selected_lcs, yday >= start_yday, yday <= end_yday)
-
-  # Replicate normal ribbon for each year facet
-  normals_faceted <- do.call(rbind, lapply(selected_years, function(yr) {
-    cbind(normals, year = yr)
-  }))
 
   in_window <- day.labels$yday >= start_yday & day.labels$yday <= end_yday
   if (any(in_window)) {
@@ -175,12 +168,6 @@ plot_by_year <- function(selected_years, selected_lcs, start_yday, end_yday) {
   }
 
   ggplot() +
-    geom_ribbon(data = normals_faceted,
-                aes(x = yday, ymin = NormLwr, ymax = NormUpr),
-                fill = "gray70", alpha = 0.4) +
-    geom_line(data = normals_faceted,
-              aes(x = yday, y = NormMean),
-              color = "black", linetype = "dashed") +
     geom_ribbon(data = yearly,
                 aes(x = yday, ymin = YrLwr, ymax = YrUpr, fill = type), alpha = 0.2) +
     geom_line(data = yearly,
@@ -281,7 +268,20 @@ density_plot <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall_years_
                       values = c("Normal NDVI 95% CI" = "#f46d43", "Current NDVI 95% CI" = "#74add1",
                                  "Normal NDVI"        = "#f46d43", "Current NDVI"        = "#74add1")) +
     scale_shape_manual(name = "", values = c("Normal NDVI" = 16, "Current NDVI" = 18)) +
-    theme_minimal()
+    theme_minimal(base_size = 14) +
+    theme(
+      axis.text.x       = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 11),
+      axis.text.y       = element_text(size = 11),
+      axis.title.x      = element_text(face = "bold", size = 13),
+      axis.title.y      = element_text(face = "bold", size = 13),
+      plot.title        = element_text(face = "bold", size = 14),
+      legend.key.height = unit(1, "cm"),
+      legend.position   = "bottom",
+      legend.text       = element_text(size = 21),
+      legend.title      = element_text(size = 22),
+      panel.background  = element_rect(fill = "gray99"),
+      plot.background   = element_rect(fill = "gray99")
+    )
 }
 
 ####################################################################################################################
@@ -308,8 +308,8 @@ plot_timeseries_now <- function(LCtype, naming, NDVIall_normals_modeled, NDVIall
       plot.title        = element_text(face = "bold", size = 14),
       legend.key.height = unit(1, "cm"),
       legend.position   = "bottom",
-      legend.text       = element_text(size = 11),
-      legend.title      = element_text(size = 12),
+      legend.text       = element_text(size = 21),
+      legend.title      = element_text(size = 22),
       panel.background  = element_rect(fill = "gray99"),
       plot.background   = element_rect(fill = "gray99")
     )

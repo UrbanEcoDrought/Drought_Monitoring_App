@@ -77,29 +77,23 @@ il_counties <- subset(counties, counties$NAME %in% c(
 
 #Needed to move this here to add the banner ----
 dbHeader <- dashboardHeader(
-  title = HTML("Chicago Urban Greenness & Drought Portal"),
-  titleWidth = 200
-
-  )
-#)
-
-#Needed to move this here to add the logo ----
-dbSidebar <- dashboardSidebar(
-
-  # Logos at the top of the sidebar
-  tags$div(
-    style = "display: flex; align-items: center; gap: 8px; padding: 10px 8px 6px 8px;",
+  title = tags$div(
+    style = "display: flex; align-items: center; gap: 8px; padding: 4px 0;",
     tags$a(
       href = 'https://mortonarb.org',
-      tags$img(src = 'mortonarb.png', height = '50',
+      tags$img(src = 'mortonarb.png', height = '42',
                style = "background-color: white; padding: 3px; border-radius: 3px;")
     ),
     tags$a(
       href = 'https://www.drought.gov',
-      tags$img(src = 'NIDIS.png', height = '44')
+      tags$img(src = 'NIDIS.png', height = '38')
     )
   ),
-  tags$hr(style = "margin: 4px 0; border-color: rgba(255,255,255,0.2);"),
+  titleWidth = 220
+)
+
+#Needed to move this here to add the logo ----
+dbSidebar <- dashboardSidebar(
 
   sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
@@ -114,18 +108,23 @@ dbSidebar <- dashboardSidebar(
 
 ####################################################################################################################
 # UI ----
-ui <- dashboardPage(skin = "blue",
+ui <- dashboardPage(skin = "black",
                     dbHeader,
                     dbSidebar,
                     dashboardBody(
                       div(
+                        style = "text-align: center; padding: 8px 0 4px 0;",
+                        h4(HTML("<b>Chicago Urban Greenness & Drought Portal</b>"),
+                           style = "margin: 0; color: #333;")
+                      ),
+                      div(
                         style = "
-    height: 25px; 
-    background-color: #BA8E23; 
-    width: 100%; 
-    position: relative; 
-    display: flex; 
-    justify-content: center; 
+    height: 25px;
+    background-color: #BA8E23;
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
     align-items: center;",
                         h6(HTML("<b style='color: white;'> ----- NOTE: This portal is in beta & still under development, some features 
           may be incomplete or subject to change  ----- </b>"))
@@ -143,7 +142,19 @@ ui <- dashboardPage(skin = "blue",
                       tags$head(
                         tags$style(HTML("
         body, .content-wrapper {
-          font-size: 16px;
+          font-size: 16px !important;
+        }
+        .content-wrapper p, .content-wrapper label,
+        .content-wrapper .control-label, .content-wrapper .shiny-input-container,
+        .content-wrapper .tab-content, .content-wrapper .nav-tabs > li > a {
+          font-size: 16px !important;
+        }
+
+        .sidebar-menu > li > a {
+          font-size: 15px !important;
+        }
+        .sidebar-menu .treeview-menu > li > a {
+          font-size: 14px !important;
         }
 
         h6 {
@@ -358,7 +369,7 @@ ui <- dashboardPage(skin = "blue",
                                                checkboxGroupInput("lc_years",
                                                                   "Years to show:",
                                                                   choices  = as.character(sort(unique(NDVIall_years_modeled$year))),
-                                                                  selected = as.character(tail(sort(unique(NDVIall_years_modeled$year)), 5)),
+                                                                  selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)[1:2]),
                                                                   inline   = TRUE),
                                                checkboxGroupInput("lc_types",
                                                                   "Land covers:",
@@ -385,7 +396,7 @@ ui <- dashboardPage(skin = "blue",
                                                checkboxGroupInput("yr_years",
                                                                   "Years to show:",
                                                                   choices  = as.character(sort(unique(NDVIall_years_modeled$year))),
-                                                                  selected = as.character(tail(sort(unique(NDVIall_years_modeled$year)), 5)),
+                                                                  selected = as.character(sort(unique(NDVIall_years_modeled$year), decreasing = TRUE)[1:2]),
                                                                   inline   = TRUE),
                                                checkboxGroupInput("yr_types",
                                                                   "Land covers:",
