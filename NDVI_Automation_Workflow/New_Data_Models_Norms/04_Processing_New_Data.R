@@ -1,7 +1,7 @@
 ##################### 
 # Get data saved from Earth Engine and pull it together for analysis
 ##################### 
-if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
+# if(!"NDVI_Automation_Workflow" %in% dir()) setwd("../..")
 
 path.google <- "/Users/crollinson/Google Drive/"
 pathShare <- file.path(path.google, "Shared drives", "Urban Ecological Drought", "data", "UrbanEcoDrought_NDVI_LocalExtract-RAW")

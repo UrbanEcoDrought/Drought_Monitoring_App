@@ -21,7 +21,7 @@ user.ee <- "crollinson@mortonarb.org"
 
 # Only initialize GEE if not already initialized (e.g., when sourced from 1_Get_New_Data.R)
 if(!exists("ee") || is.null(ee)) {
-  rgee::ee_Initialize(user = user.ee, drive=T, project = "urbanecodrought")
+  rgee::ee_Initialize(user = user.ee, drive=F, project = "urbanecodrought")
 }
 path.google.CR <- "/Users/crollinson/Google Drive/My Drive/UrbanEcoDrought/"
 path.google.share <- "/Users/crollinson/Google Drive/Shared drives/Urban Ecological Drought/"

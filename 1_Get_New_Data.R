@@ -2,17 +2,16 @@
 # Ensure we're in the correct working directory
 # pathLocal <- "/Users/crollinson//Desktop/Research/UrbanDrought/Drought_Monitoring_App/"
 # setwd(pathLocal)
+library(rgee)
 
-
-script_dir <- tryCatch(
-  dirname(rstudioapi::getActiveDocumentContext()$path),
-  error = function(e) {
-    # RStudio not running — get script path from Rscript command args
-    args <- commandArgs(trailingOnly = FALSE)
-    file_arg <- grep("--file=", args, value = TRUE)
-    if (length(file_arg) > 0) dirname(normalizePath(sub("--file=", "", file_arg))) else ""
-  }
-)
+if (Sys.getenv("RSTUDIO") == "1") {
+  script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+} else {
+  # Running via Rscript (launchd, terminal) — get path from command args
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("--file=", args, value = TRUE)
+  script_dir <- if (length(file_arg) > 0) dirname(normalizePath(sub("--file=", "", file_arg))) else ""
+}
 if (length(script_dir) == 0 || !nzchar(script_dir)) {
   script_dir <- getwd()
 }
@@ -34,12 +33,10 @@ log_msg <- function(msg) {
 log_msg("=== Workflow started ===")
 
 
-library(rgee);
-
 # Add error handling for authentication
 user.ee <- "crollinson@mortonarb.org"
 tryCatch({
-  rgee::ee_Initialize(user = user.ee, drive = T, project = "urbanecodrought")
+  rgee::ee_Initialize(user = user.ee, drive = F, project = "urbanecodrought")
   message("Google Earth Engine initialized successfully")
   log_msg("GEE initialized successfully")
 }, error = function(e) {
@@ -81,7 +78,7 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
       dirsDupe <- dirsDupe[dirsDupe!=NDVIsave]
       
       # Fixing dupe dirs
-      for(i in 1:seq_along(dirsDupe)){
+      for(i in seq_along(dirsDupe)){
         fCP <- dir(file.path(path.google, NDVIsave, "..", dirsDupe[i]))
         
         # Move files from extra directories to the right one
@@ -94,8 +91,13 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
     } # End dupe fix
     
     fToday <- dir(file.path(path.google, NDVIsave), strToday)
-    # expected_pattern <- paste0(strToday, "_")
-    
+    # Filter out zero-byte stubs: Google Drive surfaces files in dir() before
+    # they finish syncing locally. Only count files that have actual content.
+    if(length(fToday) > 0) {
+      fPaths <- file.path(path.google, NDVIsave, fToday)
+      fToday <- fToday[file.info(fPaths)$size > 80]
+    }
+
     matching_files <- length(fToday)
     
     if(matching_files >= length(expected_files[expected_files != "none"])) {
