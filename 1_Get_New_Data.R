@@ -138,7 +138,7 @@ if(all(flook=="none")){
 } else {
   print("Running next steps!")
   log_msg("New data found. Running processing pipeline.")
-
+Sys.sleep(60*10) # Trying to add a wait step here to give Google Drive time to finish syncing before we try to read the files. This is a band-aid for now, but we should add a more robust check for file availability before processing in the future.
   # Execute next steps
   tryCatch({
     source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")
