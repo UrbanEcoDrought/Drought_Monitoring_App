@@ -32,27 +32,48 @@ day.labels$Text <- paste(lubridate::month(day.labels$Date, label=T), lubridate::
 day.labels
 summary(day.labels)
 
-# Clunky code, but should pull the latest file
-lcnames <- c("forest", "forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+# Clunky code, but should pull the latest file.
+# NOTE: only "forest-wet" is exported (it gets recoded to "forest" below). There is
+# no "Landsat*_forest_" file, so do NOT list a bare "forest" here -- doing so made
+# dir() return character(0), fileL8/fileL9 became character(0), and the file.exists()
+# check below threw "argument is of length zero" and killed the whole run.
+lcnames <- c("forest-wet", "crop", "grassland", "urban-high", "urban-medium", "urban-low", "urban-open")
+
+# Helper: grab the most recent downloaded file matching a prefix, or NA if none yet.
+latestFile <- function(prefix){
+  hits <- dir(file.path(path.google, NDVIsave), prefix)
+  if(length(hits)==0) return(NA_character_)
+  hits[length(hits)]  # filenames carry _YYYY_MM_DD_..., so last alphabetically = newest
+}
 
 ndviAll <- data.frame()
 for(LCTYPE in lcnames){
-  fileL8 <- dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE, "_"))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat8_", LCTYPE, "_")))]
-  fileL9 <- dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE, "_"))[length(dir(file.path(path.google, NDVIsave), paste0("Landsat9_", LCTYPE, "_")))]
-  
-  if(!file.exists(file.path(pathShare, fileL8))) file.copy(from=file.path(path.google, NDVIsave, fileL8), to=file.path(pathShare, fileL8), overwrite=T, copy.mode=T)
-  if(!file.exists(file.path(pathShare, fileL9))) file.copy(from=file.path(path.google, NDVIsave, fileL9), to=file.path(pathShare, fileL9), overwrite=T, copy.mode=T)
-  
-  landsat8 <- read.csv(file.path(path.google, NDVIsave, fileL8))
-  landsat9 <- read.csv(file.path(path.google, NDVIsave, fileL9))
-  
-  landsat8$mission <- "landsat 8"
-  landsat9$mission <- "landsat 9"
-  
-  landsatAll <- rbind(landsat8, landsat9)
-  # landsatAll <- rbind(landsat8, landsat9)
+  fileL8 <- latestFile(paste0("Landsat8_", LCTYPE, "_"))
+  fileL9 <- latestFile(paste0("Landsat9_", LCTYPE, "_"))
+
+  # Just open whatever the last file we downloaded is. If a mission has no file yet
+  # (e.g. Drive hasn't synced it), skip it rather than crashing -- the new-data
+  # check further down decides whether there's actually anything new to process.
+  landsatAll <- data.frame()
+  if(!is.na(fileL8)){
+    if(!file.exists(file.path(pathShare, fileL8))) file.copy(from=file.path(path.google, NDVIsave, fileL8), to=file.path(pathShare, fileL8), overwrite=T, copy.mode=T)
+    landsat8 <- read.csv(file.path(path.google, NDVIsave, fileL8))
+    landsat8$mission <- "landsat 8"
+    landsatAll <- rbind(landsatAll, landsat8)
+  }
+  if(!is.na(fileL9)){
+    if(!file.exists(file.path(pathShare, fileL9))) file.copy(from=file.path(path.google, NDVIsave, fileL9), to=file.path(pathShare, fileL9), overwrite=T, copy.mode=T)
+    landsat9 <- read.csv(file.path(path.google, NDVIsave, fileL9))
+    landsat9$mission <- "landsat 9"
+    landsatAll <- rbind(landsatAll, landsat9)
+  }
+
+  if(nrow(landsatAll)==0){
+    message(paste("No NDVI files found yet for", LCTYPE, "- skipping"))
+    next
+  }
+
   landsatAll$type <- LCTYPE
-  
   ndviAll <- rbind(ndviAll, landsatAll)
 }
 

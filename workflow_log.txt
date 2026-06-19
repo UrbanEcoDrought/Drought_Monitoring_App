@@ -1,9 +1,123 @@
-[2026-04-10 01:00:02] === Workflow started ===
-[2026-04-10 01:00:11] GEE initialized successfully
-[2026-04-10 01:00:15] No new data found. Workflow stopped.
-[2026-04-10 11:09:06] === Workflow started ===
-[2026-04-10 11:09:37] ERROR in script 04 (Processing New Data): No new NDVI data found. Stopping workflow.
-[2026-04-10 11:09:53] ERROR in script 05 (Year Specific Adjustments): A term has fewer unique covariate combinations than specified maximum degrees of freedom
-[2026-04-10 11:12:34] === Workflow started ===
-[2026-04-10 11:34:01] Deploy_Drought_App.R completed successfully
-[2026-04-10 12:17:59] Deploy_Drought_App.R completed successfully
+[2026-06-02 01:00:04] === Submit job (1a) started ===
+[2026-06-02 01:00:08] GEE initialized successfully
+[2026-06-02 01:00:10] Submit job complete: no new data found. Process job (1b) will stop.
+[2026-06-02 01:00:10] === Submit job (1a) finished ===
+[2026-06-02 01:30:02] === Process job (1b) started ===
+[2026-06-02 01:30:02] No new data found (per submit job). Workflow stopped.
+[2026-06-02 01:30:02] === Process job (1b) finished ===
+[2026-06-03 01:00:07] === Submit job (1a) started ===
+[2026-06-03 01:00:16] GEE initialized successfully
+[2026-06-03 01:00:20] Submit job complete: no new data found. Process job (1b) will stop.
+[2026-06-03 01:00:20] === Submit job (1a) finished ===
+[2026-06-03 01:30:03] === Process job (1b) started ===
+[2026-06-03 01:30:03] No new data found (per submit job). Workflow stopped.
+[2026-06-03 01:30:03] === Process job (1b) finished ===
+[2026-06-04 01:00:01] === Submit job (1a) started ===
+[2026-06-04 01:00:03] GEE initialized successfully
+[2026-06-04 01:00:06] Submit job complete: no new data found. Process job (1b) will stop.
+[2026-06-04 01:00:06] === Submit job (1a) finished ===
+[2026-06-04 01:30:02] === Process job (1b) started ===
+[2026-06-04 01:30:02] No new data found (per submit job). Workflow stopped.
+[2026-06-04 01:30:02] === Process job (1b) finished ===
+[2026-06-05 01:00:05] === Submit job (1a) started ===
+[2026-06-05 01:00:08] GEE initialized successfully
+[2026-06-05 01:00:13] Submit job complete: export tasks submitted for 7 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-05 01:00:13] === Submit job (1a) finished ===
+[2026-06-05 01:30:03] === Process job (1b) started ===
+[2026-06-05 01:30:03] WARNING: 6 of 7 expected files for 2026_06_05 are not yet synced/readable: Landsat8_crop, Landsat8_grassland, Landsat8_urban-high, Landsat8_urban-medium, Landsat8_urban-low, Landsat8_urban-open. Stopping without running 04/05/06 to avoid reprocessing stale data.
+[2026-06-06 01:00:01] === Submit job (1a) started ===
+[2026-06-06 01:00:03] GEE initialized successfully
+[2026-06-06 01:00:13] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-06 01:00:13] === Submit job (1a) finished ===
+[2026-06-06 01:30:03] === Process job (1b) started ===
+[2026-06-06 01:30:03] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-06 01:30:04] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-07 01:00:02] === Submit job (1a) started ===
+[2026-06-07 01:00:05] GEE initialized successfully
+[2026-06-07 01:00:12] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-07 01:00:12] === Submit job (1a) finished ===
+[2026-06-07 01:30:03] === Process job (1b) started ===
+[2026-06-07 01:30:03] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-07 01:30:04] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-08 01:00:02] === Submit job (1a) started ===
+[2026-06-08 01:00:04] GEE initialized successfully
+[2026-06-08 01:00:13] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-08 01:00:13] === Submit job (1a) finished ===
+[2026-06-08 01:30:04] === Process job (1b) started ===
+[2026-06-08 01:30:04] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-08 01:30:05] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-09 01:00:01] === Submit job (1a) started ===
+[2026-06-09 01:00:03] GEE initialized successfully
+[2026-06-09 01:00:11] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-09 01:00:11] === Submit job (1a) finished ===
+[2026-06-09 01:30:01] === Process job (1b) started ===
+[2026-06-09 01:30:01] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-09 01:30:02] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-10 01:00:01] === Submit job (1a) started ===
+[2026-06-10 01:00:03] GEE initialized successfully
+[2026-06-10 01:00:13] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-10 01:00:13] === Submit job (1a) finished ===
+[2026-06-10 01:30:01] === Process job (1b) started ===
+[2026-06-10 01:30:01] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-10 01:30:01] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-11 01:00:02] === Submit job (1a) started ===
+[2026-06-11 01:00:04] GEE initialized successfully
+[2026-06-11 01:00:13] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-11 01:00:13] === Submit job (1a) finished ===
+[2026-06-11 01:30:01] === Process job (1b) started ===
+[2026-06-11 01:30:01] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-11 01:30:02] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-12 01:00:01] === Submit job (1a) started ===
+[2026-06-12 01:00:03] GEE initialized successfully
+[2026-06-12 01:00:13] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-12 01:00:13] === Submit job (1a) finished ===
+[2026-06-12 01:30:02] === Process job (1b) started ===
+[2026-06-12 01:30:02] WARNING: 14 of 14 expected files for 2026_06_12 are not yet synced/readable: Landsat8_forest-wet, Landsat8_crop, Landsat8_grassland, Landsat8_urban-high, Landsat8_urban-medium, Landsat8_urban-low, Landsat8_urban-open, Landsat9_forest-wet, Landsat9_crop, Landsat9_grassland, Landsat9_urban-high, Landsat9_urban-medium, Landsat9_urban-low, Landsat9_urban-open. Stopping without running 04/05/06 to avoid reprocessing stale data.
+[2026-06-13 01:00:06] === Submit job (1a) started ===
+[2026-06-13 01:00:08] GEE initialized successfully
+[2026-06-13 01:00:16] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-13 01:00:16] === Submit job (1a) finished ===
+[2026-06-13 01:30:02] === Process job (1b) started ===
+[2026-06-13 01:30:02] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-13 01:30:02] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-14 01:00:01] === Submit job (1a) started ===
+[2026-06-14 01:00:03] GEE initialized successfully
+[2026-06-14 01:00:11] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-14 01:00:11] === Submit job (1a) finished ===
+[2026-06-14 01:30:02] === Process job (1b) started ===
+[2026-06-14 01:30:02] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-14 01:30:03] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-15 01:00:06] === Submit job (1a) started ===
+[2026-06-15 01:00:09] GEE initialized successfully
+[2026-06-15 01:00:17] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-15 01:00:17] === Submit job (1a) finished ===
+[2026-06-15 01:30:02] === Process job (1b) started ===
+[2026-06-15 01:30:02] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-15 01:30:03] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-16 01:00:02] === Submit job (1a) started ===
+[2026-06-16 01:00:05] GEE initialized successfully
+[2026-06-16 01:00:15] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-16 01:00:15] === Submit job (1a) finished ===
+[2026-06-16 01:30:00] === Process job (1b) started ===
+[2026-06-16 01:30:00] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-16 01:30:00] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-17 01:00:04] === Submit job (1a) started ===
+[2026-06-17 01:00:07] GEE initialized successfully
+[2026-06-17 01:00:16] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-17 01:00:16] === Submit job (1a) finished ===
+[2026-06-17 01:30:03] === Process job (1b) started ===
+[2026-06-17 01:30:03] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-17 01:30:04] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-18 01:00:03] === Submit job (1a) started ===
+[2026-06-18 01:00:06] GEE initialized successfully
+[2026-06-18 01:00:15] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-18 01:00:15] === Submit job (1a) finished ===
+[2026-06-18 01:30:04] === Process job (1b) started ===
+[2026-06-18 01:30:04] All 14 expected files present and readable. Running processing pipeline.
+[2026-06-18 01:30:04] ERROR in script 04 (Processing New Data): argument is of length zero
+[2026-06-19 01:00:01] === Submit job (1a) started ===
+[2026-06-19 01:00:04] GEE initialized successfully
+[2026-06-19 01:00:12] Submit job complete: export tasks submitted for 14 landcover/mission combinations. Process job (1b) should run after Drive sync.
+[2026-06-19 01:00:12] === Submit job (1a) finished ===
+[2026-06-19 01:30:02] === Process job (1b) started ===
+[2026-06-19 01:30:02] WARNING: 14 of 14 expected files for 2026_06_19 are not yet synced/readable: Landsat8_forest-wet, Landsat8_crop, Landsat8_grassland, Landsat8_urban-high, Landsat8_urban-medium, Landsat8_urban-low, Landsat8_urban-open, Landsat9_forest-wet, Landsat9_crop, Landsat9_grassland, Landsat9_urban-high, Landsat9_urban-medium, Landsat9_urban-low, Landsat9_urban-open. Stopping without running 04/05/06 to avoid reprocessing stale data.

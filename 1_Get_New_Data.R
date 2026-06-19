@@ -91,11 +91,20 @@ waitForFiles <- function(expected_files, max_wait_minutes = 30) {
     } # End dupe fix
     
     fToday <- dir(file.path(path.google, NDVIsave), strToday)
-    # Filter out zero-byte stubs: Google Drive surfaces files in dir() before
-    # they finish syncing locally. Only count files that have actual content.
+    # Verify each file is actually readable. Google Drive can list a file and
+    # report its full size from cloud metadata before the local content is
+    # hydrated — checking file size alone is not enough. Only count a file as
+    # ready when we can read at least a header + one data row.
     if(length(fToday) > 0) {
       fPaths <- file.path(path.google, NDVIsave, fToday)
-      fToday <- fToday[file.info(fPaths)$size > 80]
+      readable <- vapply(fPaths, function(f) {
+        lines <- tryCatch(
+          suppressWarnings(readLines(f, n = 2)),
+          error = function(e) character(0)
+        )
+        length(lines) >= 2
+      }, logical(1))
+      fToday <- fToday[readable]
     }
 
     matching_files <- length(fToday)
@@ -138,7 +147,6 @@ if(all(flook=="none")){
 } else {
   print("Running next steps!")
   log_msg("New data found. Running processing pipeline.")
-Sys.sleep(60*10) # Trying to add a wait step here to give Google Drive time to finish syncing before we try to read the files. This is a band-aid for now, but we should add a more robust check for file availability before processing in the future.
   # Execute next steps
   tryCatch({
     source("NDVI_Automation_Workflow/New_Data_Models_Norms/04_Processing_New_Data.R")
